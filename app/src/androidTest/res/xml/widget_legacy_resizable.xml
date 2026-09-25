@@ -1,0 +1,11 @@
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/fixture_legacy_description"
+    android:initialLayout="@layout/widget_fixture_live"
+    android:minWidth="900dp"
+    android:minHeight="150dp"
+    android:minResizeWidth="100dp"
+    android:minResizeHeight="70dp"
+    android:previewLayout="@layout/widget_fixture_legacy_preview"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

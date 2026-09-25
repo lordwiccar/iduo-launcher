@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from design/icon; the symbol is scaled to the adaptive icon's safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="1024" android:viewportHeight="1024">
+    <group android:pivotX="512" android:pivotY="512" android:scaleX="0.66" android:scaleY="0.66">
+        <path android:fillColor="#FFDBDBDB" android:pathData="M512,192.15l207.38-36.57c132.41-23.35,203.49,31.3,203.49,156.9v295.98c0,125.6-71.07,205.31-203.49,228.66l-207.38,36.57V192.15ZM717.43,718.68c48.68-8.58,69.13-33.61,69.13-84.24v-299.87c0-50.63-20.45-68.44-69.13-59.86l-69.13,12.19v443.97l69.13-12.19Z" />
+        <path android:fillColor="#FFA5A4A4" android:pathData="M512,873.68l-207.38-36.57c-132.41-23.35-203.49-103.06-203.49-228.66v-295.98c0-125.6,71.07-180.24,203.49-156.9l207.38,36.57v681.53ZM375.69,730.87v-443.97s-69.13-12.19-69.13-12.19c-48.68-8.58-69.13,9.23-69.13,59.86v299.87c0,50.63,20.45,75.65,69.13,84.24l69.13,12.19Z" />
+    </group>
+</vector>

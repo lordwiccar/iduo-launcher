@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- System integration -->
+    <string name="shade_service_label">Gesty panelu iDuo Launcher</string>
+    <string name="shade_service_description">Pozwala gestom na ekranie głównym iDuo Launcher otwierać systemowe powiadomienia i panel Szybkich ustawień. Nie odczytuje zawartości ekranu ani nie obserwuje aktywności w innych aplikacjach.</string>
+
+    <!-- Common actions -->
+    <string name="back">Wstecz</string>
+    <string name="cancel">Anuluj</string>
+    <string name="apply">Zastosuj</string>
+    <string name="done">Gotowe</string>
+    <string name="save">Zapisz</string>
+    <string name="restore">Przywróć</string>
+    <string name="replace">Zastąp</string>
+    <string name="remove">Usuń</string>
+    <string name="resume">Wznów</string>
+    <string name="retry">Spróbuj ponownie</string>
+    <string name="place">Umieść</string>
+    <string name="reconnect">Połącz ponownie</string>
+    <string name="not_now">Nie teraz</string>
+    <string name="turn_on">Włącz</string>
+    <string name="open_settings">Otwórz ustawienia</string>
+    <string name="open_google">Otwórz Google</string>
+    <string name="back_to_home">Wróć do ekranu głównego</string>
+    <string name="stay_on_home">Zostań na ekranie głównym</string>
+    <string name="value_dp">%1$d dp</string>
+    <string name="value_percent">%1$d%%</string>
+
+    <!-- Customization -->
+    <string name="customize_title">Dostosuj po swojemu</string>
+    <string name="customize_close">Zamknij dostosowywanie</string>
+    <string name="customize_launcher">Dostosuj launcher</string>
+    <string name="customize_wallpaper">Tapeta i wygląd</string>
+    <string name="customize_wallpaper_detail">Tło, kolory i jasność</string>
+    <string name="customize_wallpaper_pending">Zdjęcie czeka na sprawdzenie</string>
+    <string name="customize_home">Układ ekranu głównego</string>
+    <string name="customize_home_detail">Ikony, odstępy, dok i widżety</string>
+    <string name="customize_gestures">Gesty i wyszukiwanie</string>
+    <string name="customize_gestures_detail">Etykiety, stan i działanie wyszukiwania</string>
+    <string name="customize_language">Język</string>
+    <string name="language_system">Język systemu</string>
+    <string name="customize_backup">Kopia zapasowa</string>
+    <string name="customize_backup_detail">Zapisz lub przywróć ten układ</string>
+    <string name="customize_help">Pomoc i konfiguracja</string>
+    <string name="customize_help_detail">Aplikacja ekranu głównego, widżety, gesty i Discover</string>
+    <string name="set_as_home_app">Ustaw jako aplikację ekranu głównego</string>
+    <string name="change_home_app">Zmień aplikację ekranu głównego</string>
+    <string name="set_duo_as_home">Ustaw iDuo jako ekran główny</string>
+    <string name="undo_layout_change">Cofnij ostatnią zmianę układu</string>
+
+    <string name="choose_photo">Wybierz zdjęcie</string>
+    <string name="choose_different_photo">Wybierz inne zdjęcie</string>
+    <string name="android_wallpaper">Tapeta Androida</string>
+    <string name="wallpaper_detail">iDuo wyświetla tapetę Androida. Zdjęcie lub wydmy iDuo wybrane tutaj zostaną ustawione jako tapeta Androida.</string>
+    <string name="use_iduo_dunes">Użyj wydm iDuo</string>
+    <string name="android_wallpaper_detail">W ustawieniach Androida możesz wybrać dowolną tapetę, także animowaną. iDuo od razu ją wyświetli.</string>
+    <string name="open_wallpaper_settings">Otwórz ustawienia tapety</string>
+    <string name="wallpaper_settings_unavailable">Ustawienia tapety Androida są niedostępne.</string>
+    <string name="wallpaper_target_title">Ustaw tapetę na</string>
+    <string name="wallpaper_target_home">Ekranie głównym</string>
+    <string name="wallpaper_target_lock">Ekranie blokady</string>
+    <string name="wallpaper_target_both">Ekranie głównym i ekranie blokady</string>
+    <string name="wallpaper_set_failed">Android nie przyjął tapety.</string>
+    <string name="wallpaper_updated">Tapeta została zmieniona.</string>
+    <string name="restore_photo_note">Tapeta nie jest częścią kopii zapasowej układu.</string>
+
+    <string name="appearance">Wygląd</string>
+    <string name="appearance_light">Jasny</string>
+    <string name="appearance_dark">Ciemny</string>
+    <string name="appearance_system">Zgodnie z systemem</string>
+    <string name="appearance_sun">Wschód / zachód słońca</string>
+    <string name="place_name">Nazwa miejsca</string>
+    <string name="latitude_label">Szerokość geograficzna (−90 do 90)</string>
+    <string name="longitude_label">Długość geograficzna (−180 do 180)</string>
+    <string name="appearance_range_error">Wpisz szerokość geograficzną od −90 do 90 i długość od −180 do 180.</string>
+    <string name="use_this_place">Użyj tego miejsca</string>
+    <string name="use_device_location">Użyj lokalizacji urządzenia</string>
+    <string name="clear_location">Wyczyść lokalizację</string>
+    <string name="approximate_location">Przybliżona lokalizacja urządzenia</string>
+    <string name="appearance_fallback_no_location">Używany jest motyw systemowy, dopóki nie ustawisz lokalizacji</string>
+    <string name="appearance_fallback_stale">Używany jest motyw systemowy, ponieważ lokalizacja urządzenia jest nieaktualna</string>
+    <string name="appearance_fallback_unavailable">Używany jest motyw systemowy, ponieważ ta lokalizacja jest niedostępna</string>
+    <string name="location_waiting">Oczekiwanie na przybliżoną lokalizację urządzenia…</string>
+    <string name="location_denied">Nie przyznano uprawnień do lokalizacji. Do czasu ustawienia miejsca używany jest motyw systemowy.</string>
+    <string name="location_request_failed">Nie udało się poprosić o uprawnienia do lokalizacji. Używany jest motyw systemowy.</string>
+    <string name="location_permission_unavailable">Uprawnienia do lokalizacji są niedostępne. Używany jest motyw systemowy.</string>
+    <string name="location_no_provider">Brak dostawcy przybliżonej lokalizacji. Używany jest motyw systemowy.</string>
+    <string name="location_timeout">Upłynął limit czasu lokalizacji. Motyw systemowy będzie używany, dopóki nie spróbujesz ponownie lub nie wpiszesz miejsca.</string>
+    <string name="location_unavailable">Lokalizacja jest niedostępna. Używany jest motyw systemowy.</string>
+
+    <string name="display_cover">Ekran zewnętrzny</string>
+    <string name="display_inner">Ekran wewnętrzny</string>
+    <string name="choose_home_apps">Wybierz aplikacje na ekran główny</string>
+    <string name="pin_home_apps_title">Aplikacje na ekranie głównym</string>
+    <string name="dock_apps_setting">Aplikacje w doku · ekran zewnętrzny i wewnętrzny</string>
+    <string name="home_rows_setting">Wiersze ekranu głównego · ekran zewnętrzny i wewnętrzny</string>
+    <string name="grid_layout">Układ siatki</string>
+    <string name="home_rows_option">%1$d × %2$d aplikacji</string>
+    <string name="home_rows_no_room">Więcej wierszy wymaga mniejszych ikon lub mniejszego odstępu między wierszami na tym ekranie.</string>
+    <string name="icon_size">Rozmiar ikon</string>
+    <string name="row_spacing">Odstęp między wierszami</string>
+    <string name="dock_width">Szerokość doku</string>
+    <string name="dock_align">Wyrównaj dok do wierszy aplikacji</string>
+    <string name="dock_height">Wysokość doku na ekranie</string>
+    <string name="reset_layout">Resetuj ten układ</string>
+    <string name="widgets_on_page">Widżety · strona %1$d</string>
+    <string name="unfolded_only_page">Strona tylko dla rozłożonego telefonu</string>
+    <string name="widget_size_row">Widżet %1$d × %2$d · wiersz %3$d</string>
+    <string name="remove_widget">Usuń widżet</string>
+    <string name="remove_widget_leading">Usuń widżet ze strony tylko dla rozłożonego telefonu</string>
+    <string name="add_widget_to_page">Dodaj widżet do tej strony</string>
+
+    <string name="show_app_names">Pokaż nazwy aplikacji</string>
+    <string name="show_status">Pokaż stan w prawym górnym rogu</string>
+    <string name="search_opens_google">Przycisk wyszukiwania otwiera Google</string>
+    <string name="search_local_note">Lista wszystkich aplikacji zawsze ma własne wyszukiwanie.</string>
+    <string name="gestures_note">Przesuń w bok w dowolnym miejscu ekranu głównego, aby zmienić stronę. Przesuń w dół, aby otworzyć powiadomienia lub szybkie ustawienia.</string>
+
+    <string name="backup_detail">Zapisz bieżący układ ekranu głównego, foldery, widżety i ustawienia układu.</string>
+    <string name="backup_restore_note">Przed zmianą ekranu głównego przywracanie zawsze pokazuje podsumowanie.</string>
+
+    <string name="help_home_title">Aplikacja ekranu głównego</string>
+    <string name="help_home_default">iDuo jest Twoją aplikacją ekranu głównego. Launcher możesz zmienić w ustawieniach ekranu głównego Androida.</string>
+    <string name="help_home_not_default">Wybierz iDuo w ustawieniach ekranu głównego Androida, aby otwierało się po naciśnięciu przycisku ekranu głównego.</string>
+    <string name="help_customize_title">Dostosuj dowolną stronę</string>
+    <string name="help_customize">Przytrzymaj puste miejsce i wybierz Dostosuj launcher. Jeśli strona jest pełna, przytrzymaj wąski pasek przy jej lewej krawędzi.</string>
+    <string name="help_widgets">Dodawaj widżety Androida do pustych komórek ekranu głównego. Przytrzymaj widżet, aby go przenieść lub usunąć.</string>
+    <string name="help_shade_title">Powiadomienia i szybkie ustawienia</string>
+    <string name="help_shade">Przesuń w dół na ekranie głównym. Za pierwszym razem iDuo wyjaśni opcjonalne ustawienie Ułatwień dostępu w Androidzie. Usługa jedynie otwiera panele systemowe.</string>
+    <string name="help_shade_setup">Skonfiguruj gesty panelu</string>
+    <string name="help_discover">Przesuń w prawo z pierwszej strony ekranu głównego. Jeśli Google nie dostarczy kanału, iDuo zapewni powrót do ekranu głównego i opcje naprawy.</string>
+
+    <!-- Apps and profiles -->
+    <string name="all_apps">Wszystkie aplikacje</string>
+    <string name="all_apps_page">Strona wszystkich aplikacji</string>
+    <string name="your_apps">Twoje aplikacje</string>
+    <string name="search_apps">Szukaj aplikacji</string>
+    <string name="search_google">Szukaj w Google</string>
+    <string name="clear_search">Wyczyść wyszukiwanie</string>
+    <string name="loading_apps">Wczytywanie aplikacji…</string>
+    <string name="no_apps_found">Nie znaleziono aplikacji</string>
+    <string name="apps_load_failed">Nie udało się wczytać aplikacji. Kliknij, aby spróbować ponownie.</string>
+    <string name="layout_load_failed">Nie udało się odczytać zapisanego układu ekranu głównego; pozostał bez zmian.</string>
+    <string name="app_unavailable">Aplikacja %1$s jest niedostępna.</string>
+    <string name="app_options">Opcje aplikacji</string>
+    <string name="choose_app">Wybierz %1$s</string>
+    <string name="pin_app">Przypnij %1$s do ekranu głównego</string>
+    <string name="unpin_app">Usuń %1$s z ekranu głównego</string>
+    <plurals name="pinned_count">
+        <item quantity="one">%1$d przypięta</item>
+        <item quantity="few">%1$d przypięte</item>
+        <item quantity="many">%1$d przypiętych</item>
+        <item quantity="other">%1$d przypiętej</item>
+    </plurals>
+    <string name="profile_personal">Osobisty</string>
+    <string name="profile_work">Służbowy</string>
+    <string name="profile_label">Profil: %1$s</string>
+    <string name="profile_unavailable">%1$s – niedostępny</string>
+    <string name="profile_unavailable_long">Profil %1$s jest niedostępny</string>
+    <string name="profile_apps_paused">Aplikacje w profilu %1$s są wstrzymane</string>
+    <string name="unavailable_profile">Niedostępny profil</string>
+    <string name="work_paused">Aplikacje służbowe są wstrzymane</string>
+    <string name="work_unavailable">Profil służbowy jest niedostępny</string>
+    <string name="turn_on_work">Włącz aplikacje służbowe</string>
+
+    <!-- App actions -->
+    <string name="close_app_options">Zamknij opcje aplikacji</string>
+    <string name="move_app">Przenieś %1$s</string>
+    <string name="moving_app">Przenoszenie: %1$s</string>
+    <string name="move_first">Przenieś na pierwszą pozycję</string>
+    <string name="move_earlier">Przesuń wcześniej</string>
+    <string name="move_later">Przesuń później</string>
+    <string name="move_to_page">Przenieś na stronę %1$d</string>
+    <string name="move_to_leading_page">Przenieś na stronę tylko dla rozłożonego telefonu</string>
+    <string name="move_on_home">Przenieś na ekranie głównym</string>
+    <string name="add_to_home">Dodaj do ekranu głównego</string>
+    <string name="remove_from_home">Usuń z ekranu głównego</string>
+    <string name="app_info">Informacje o aplikacji</string>
+    <string name="create_folder">Utwórz folder</string>
+    <string name="create_folder_with">Utwórz folder z aplikacją %1$s</string>
+    <string name="close_empty_space_options">Zamknij opcje pustego miejsca</string>
+    <string name="empty_space_detail">Wybierz, co ma się znaleźć w tym miejscu.</string>
+    <string name="wallpaper">Tapeta</string>
+    <string name="home_options">Opcje ekranu głównego</string>
+
+    <!-- Folders -->
+    <string name="folder_default">Folder</string>
+    <string name="folder_name">Nazwa folderu</string>
+    <string name="rename_folder">Zmień nazwę folderu</string>
+    <string name="folder_name_save">Zapisz nazwę</string>
+    <string name="close_folder">Zamknij folder</string>
+    <string name="folder_options">Opcje folderu</string>
+    <string name="disband_folder">Rozgrupuj folder</string>
+    <string name="folder_transparency">Przezroczystość tła folderu</string>
+    <string name="all_apps_view">Widok wszystkich aplikacji</string>
+    <string name="all_apps_view_list">Lista</string>
+    <string name="all_apps_view_grid">Siatka ze stronami</string>
+    <string name="left_page">Lewa strona</string>
+    <string name="left_page_rss">Czytnik RSS</string>
+    <string name="rss_title">Wiadomości</string>
+    <string name="rss_manage">Zarządzaj źródłami</string>
+    <string name="rss_sources">Źródła</string>
+    <string name="rss_add_hint">Adres kanału lub strony</string>
+    <string name="rss_add">Dodaj</string>
+    <string name="rss_remove_source">Usuń %1$s</string>
+    <string name="rss_empty">Dodaj źródło wiadomości, aby wypełnić tę stronę.</string>
+    <string name="rss_add_first">Dodaj źródło</string>
+    <string name="rss_no_feed">Pod tym adresem nie znaleziono kanału RSS ani Atom.</string>
+    <string name="rss_load_failed">Nie udało się wczytać niektórych źródeł.</string>
+    <string name="rss_duplicate">To źródło jest już dodane.</string>
+    <string name="rss_refresh">Odśwież</string>
+    <string name="rss_adding">Sprawdzam adres…</string>
+    <plurals name="folder_description">
+        <item quantity="one">Folder %1$s, %2$d aplikacja</item>
+        <item quantity="few">Folder %1$s, %2$d aplikacje</item>
+        <item quantity="many">Folder %1$s, %2$d aplikacji</item>
+        <item quantity="other">Folder %1$s, %2$d aplikacji</item>
+    </plurals>
+
+    <!-- Home and dock -->
+    <string name="home_page">Strona ekranu głównego %1$d</string>
+    <string name="home_page_of">Strona ekranu głównego %1$d z %2$d</string>
+    <string name="new_home_page">Nowa strona ekranu głównego</string>
+    <string name="previous_home_page">Poprzednia strona ekranu głównego</string>
+    <string name="next_home_page">Następna strona ekranu głównego</string>
+    <string name="dock_full">Dok jest pełny • Najpierw przenieś z niego aplikację</string>
+    <string name="dock_position_label">Pozycja w doku %1$d</string>
+    <string name="dock_choose_app">Wybierz aplikację do doku</string>
+    <string name="dock_choose_slot">Wybierz aplikację do doku, pozycja %1$d</string>
+    <string name="dock_choose_on_home">Aplikację do doku wybierzesz na ekranie głównym</string>
+    <string name="dock_leave_empty">Pozostaw tę pozycję pustą</string>
+
+    <!-- Widgets -->
+    <string name="widget">Widżet</string>
+    <string name="widgets">Widżety</string>
+    <string name="add_widget">Dodaj widżet</string>
+    <string name="search_widgets">Szukaj widżetów</string>
+    <string name="no_widgets_found">Nie znaleziono widżetów</string>
+    <string name="widget_clock">Zegar</string>
+    <string name="widget_date">Data</string>
+    <string name="widget_panel">Panel widżetów</string>
+    <string name="widget_builtin_detail">2 × 2 · Kliknij, aby umieścić</string>
+    <string name="widget_place_hint">Kliknij, aby umieścić · Przytrzymaj, aby przeciągnąć</string>
+    <string name="widget_does_not_fit">Nie mieści się w tym układzie</string>
+    <string name="clock_widget_description">Widżet zegara; kliknij, aby zastąpić</string>
+    <string name="local_time">Czas lokalny</string>
+    <string name="info_card_title">Trochę więcej miejsca.</string>
+    <string name="info_card_detail">Dodaj kalendarz, zdjęcia lub inny widżet.</string>
+    <string name="your_widgets">Twoje widżety</string>
+    <string name="tap_to_choose">Kliknij, aby wybrać</string>
+    <string name="widget_unavailable">Widżet niedostępny</string>
+    <string name="saved_widget">Zapisany widżet</string>
+    <string name="widget_restore_unavailable">Ten dostawca lub profil jest niedostępny. Wybierz zamiennik.</string>
+    <string name="move_or_replace_widget">Przenieś lub zastąp widżet</string>
+    <string name="back_to_widgets">Wróć do widżetów</string>
+    <string name="replace_here">Zastąp tutaj</string>
+    <string name="ready_to_place">Gotowe do umieszczenia</string>
+    <string name="no_room_here">Brak miejsca</string>
+    <string name="widget_no_room_size">Brak miejsca na ten rozmiar. Wybierz inną stronę lub najpierw przenieś jakiś element.</string>
+    <string name="widget_no_room_card">Brak miejsca na tę kartę. Wybierz inną stronę lub najpierw przenieś jakiś element.</string>
+    <string name="widget_no_room_there">Tam nie ma miejsca. Spróbuj innego miejsca lub strony.</string>
+    <string name="widget_pending">Oczekuje: %1$s</string>
+    <string name="widget_options">Opcje widżetu</string>
+    <string name="close_widget_options">Zamknij opcje widżetu</string>
+    <string name="widget_settings">Ustawienia widżetu</string>
+    <string name="widget_settings_interrupted">Ustawienia widżetu zostały przerwane. Wznów konfigurację albo anuluj i pozostaw widżet bez zmian.</string>
+    <string name="widget_setup_title">Dokończ konfigurację widżetu</string>
+    <string name="widget_setup_detail">Widżet czeka w wybranym miejscu. Dokończ konfigurację, aby go dodać, albo anuluj, aby usunąć element zastępczy.</string>
+    <string name="widget_setup_finish">Dokończ konfigurację</string>
+    <string name="widget_setup_continue">Kontynuuj konfigurację widżetu</string>
+    <string name="widget_setup_cancel">Anuluj konfigurację widżetu</string>
+    <string name="widget_not_added">Nie dodano widżetu</string>
+    <string name="resize">Zmień rozmiar</string>
+    <string name="resize_on_home">Zmień rozmiar na ekranie głównym</string>
+    <string name="drag_to_resize">Przeciągnij, aby zmienić rozmiar widżetu</string>
+    <string name="widget_resize_outside">Przed zmianą rozmiaru przenieś widżet do siatki ekranu głównego.</string>
+    <string name="width">Szerokość</string>
+    <string name="height">Wysokość</string>
+    <string name="decrease_width">Zmniejsz szerokość widżetu</string>
+    <string name="increase_width">Zwiększ szerokość widżetu</string>
+    <string name="decrease_height">Zmniejsz wysokość widżetu</string>
+    <string name="increase_height">Zwiększ wysokość widżetu</string>
+    <plurals name="columns">
+        <item quantity="one">%1$d kolumna</item>
+        <item quantity="few">%1$d kolumny</item>
+        <item quantity="many">%1$d kolumn</item>
+        <item quantity="other">%1$d kolumny</item>
+    </plurals>
+    <plurals name="rows">
+        <item quantity="one">%1$d wiersz</item>
+        <item quantity="few">%1$d wiersze</item>
+        <item quantity="many">%1$d wierszy</item>
+        <item quantity="other">%1$d wiersza</item>
+    </plurals>
+    <string name="resize_overlap_note">Rozmiary nachodzące na inny element są pomijane.</string>
+    <string name="resize_invalid">Ten rozmiar nachodzi na inny element lub wykracza poza stronę.</string>
+    <string name="apply_size">Zastosuj rozmiar</string>
+    <string name="widget_no_room">Brak miejsca na ten widżet.</string>
+    <string name="widget_home_changed">Ekran główny zmienił się podczas konfigurowania widżetu. Wybierz miejsce ponownie.</string>
+    <string name="widget_unexpected_binding">Host widżetów zwrócił nieoczekiwane powiązanie. Spróbuj ponownie.</string>
+    <string name="widget_settings_open">Najpierw dokończ lub anuluj otwarte ustawienia widżetu.</string>
+    <string name="widget_add_failed">Nie udało się dodać tego widżetu. Spróbuj innego.</string>
+    <string name="widget_configure_gone">Tego widżetu nie można już skonfigurować.</string>
+    <string name="widget_configure_failed">Nie udało się otworzyć ustawień tego widżetu.</string>
+
+    <!-- Backup -->
+    <string name="backup_title">Kopia zapasowa układu</string>
+    <string name="backup_problem">Problem z kopią zapasową układu</string>
+    <string name="backup_saved">Kopia zapasowa układu została zapisana.</string>
+    <string name="backup_restored">Układ został przywrócony. Widżety są gotowe do ponownego połączenia.</string>
+    <string name="backup_already_active">Ten układ jest już aktywny.</string>
+    <string name="backup_prepare_failed">Nie udało się przygotować kopii zapasowej układu.</string>
+    <string name="backup_save_failed">Nie udało się zapisać kopii zapasowej układu.</string>
+    <string name="backup_read_failed">Nie udało się odczytać kopii zapasowej układu.</string>
+    <string name="backup_invalid">Ta kopia zapasowa układu jest nieprawidłowa.</string>
+    <string name="backup_no_longer_valid">Ta kopia zapasowa układu nie jest już aktualna.</string>
+    <string name="backup_too_large">Kopia zapasowa układu jest większa niż 2 MB.</string>
+    <string name="document_picker_unavailable">Wybór dokumentów jest niedostępny.</string>
+    <string name="backup_picker_title">Dokument z układem</string>
+    <string name="backup_picker_detail">Systemowy wybór dokumentów jest wciąż otwarty. Wróć do niego, aby dokończyć, lub anuluj tę operację.</string>
+    <string name="restore_review_title">Sprawdź przywracany układ</string>
+    <plurals name="restore_apps">
+        <item quantity="one">%1$d aplikacja</item>
+        <item quantity="few">%1$d aplikacje</item>
+        <item quantity="many">%1$d aplikacji</item>
+        <item quantity="other">%1$d aplikacji</item>
+    </plurals>
+    <plurals name="restore_folders">
+        <item quantity="one">%1$d folder</item>
+        <item quantity="few">%1$d foldery</item>
+        <item quantity="many">%1$d folderów</item>
+        <item quantity="other">%1$d folderu</item>
+    </plurals>
+    <plurals name="restore_widgets">
+        <item quantity="one">%1$d widżet</item>
+        <item quantity="few">%1$d widżety</item>
+        <item quantity="many">%1$d widżetów</item>
+        <item quantity="other">%1$d widżetu</item>
+    </plurals>
+    <string name="restore_includes_leading">Obejmuje Twoją stronę tylko dla rozłożonego telefonu.</string>
+    <string name="restore_settings_note">Przywrócone zostaną też układ ikon, etykiety, wyszukiwanie i ustawienia stanu.</string>
+    <string name="restore_unavailable_apps">Niedostępne aplikacje (%1$d)</string>
+    <string name="restore_unavailable_app">Niedostępna aplikacja</string>
+    <string name="restore_missing_app">• %1$s — jej zapisana pozycja pozostanie pusta</string>
+    <string name="restore_profile_attention">Profile wymagają uwagi</string>
+    <string name="restore_profile_issue">• %1$s (profil %2$s wymaga ręcznego przypisania)</string>
+    <plurals name="restore_reconnect">
+        <item quantity="one">%1$d widżet zachowa zapisane miejsce i po przywróceniu poprosi o ponowne połączenie.</item>
+        <item quantity="few">%1$d widżety zachowają zapisane miejsce i po przywróceniu poproszą o ponowne połączenie.</item>
+        <item quantity="many">%1$d widżetów zachowa zapisane miejsce i po przywróceniu poprosi o ponowne połączenie.</item>
+        <item quantity="other">%1$d widżetu zachowa zapisane miejsce i po przywróceniu poprosi o ponowne połączenie.</item>
+    </plurals>
+    <string name="restore_nothing_changes">Nic się nie zmieni, dopóki nie wybierzesz Przywróć.</string>
+
+    <!-- Launcher background photo -->
+    <string name="photo_picker_title">Zdjęcie tła</string>
+    <string name="photo_picker_detail">Wybieranie zdjęcia zostało przerwane. Wznów wybieranie albo anuluj i zachowaj obecne tło.</string>
+    <string name="photo_picker_unavailable">Wybór zdjęć jest niedostępny.</string>
+    <string name="photo_selection_lost">Nie udało się przywrócić rozpoczętego wyboru zdjęcia.</string>
+    <string name="photo_preview_lost">Nie udało się przywrócić rozpoczętego podglądu zdjęcia.</string>
+    <string name="photo_save_failed">Nie udało się zapisać tego zdjęcia.</string>
+    <string name="photo_unusable">Nie można użyć tego zdjęcia.</string>
+    <string name="photo_preview_save_failed">Nie udało się zapisać podglądu tego zdjęcia.</string>
+    <string name="photo_no_pixels">Wybrany obraz nie zawiera użytecznych pikseli.</string>
+    <string name="photo_too_large">Wybrany obraz jest za duży.</string>
+
+    <!-- Discover -->
+    <string name="discover">Discover</string>
+    <string name="discover_connecting">Łączenie z Discover…</string>
+    <string name="discover_unavailable">Discover jest teraz niedostępny.</string>
+    <string name="discover_rejected">Google nie zaakceptował połączenia z kanałem. Uruchom ponownie Google i spróbuj jeszcze raz.</string>
+    <string name="discover_disconnected">Rozłączono z Discover. Kliknij Spróbuj ponownie, aby połączyć się jeszcze raz.</string>
+    <string name="discover_no_feed">Aplikacja Google nie dostarczyła kanału.</string>
+    <string name="discover_install_google">Zainstaluj lub włącz aplikację Google, aby korzystać z Discover.</string>
+    <string name="discover_connect_failed">Aplikacja Google nie mogła połączyć się z Discover.</string>
+    <string name="discover_slow">Discover wczytuje się dłużej. Możesz spróbować ponownie lub otworzyć Google.</string>
+    <string name="discover_version">Ta wersja aplikacji Google nie mogła otworzyć Discover.</string>
+    <string name="discover_start_failed">Nie udało się uruchomić Discover. Kliknij Spróbuj ponownie, aby połączyć się jeszcze raz.</string>
+    <string name="discover_no_fit">Discover nie zmieścił się obok doku.</string>
+    <string name="discover_no_fit_return">Discover nie zmieścił się obok doku. Wróć do ekranu głównego i spróbuj ponownie.</string>
+    <string name="discover_device_unsupported">To urządzenie nie może wyświetlić Discover obok doku.</string>
+    <string name="install_google_first">Najpierw zainstaluj lub włącz aplikację Google.</string>
+    <string name="discover_fallback_title">Discover nie jest tu dostępny</string>
+    <string name="discover_fallback_message">iDuo nie może umieścić kanału Discover obok ekranu głównego na tym urządzeniu. Możesz otworzyć aplikację Google lub zostać na ekranie głównym.</string>
+
+    <!-- Shade gestures -->
+    <string name="shade_setup_title">Włącz gesty panelu</string>
+    <string name="shade_setup_message">Android wymaga włączenia gestów panelu iDuo Launcher w ustawieniach Ułatwień dostępu. Usługa jedynie otwiera powiadomienia lub szybkie ustawienia; nie odczytuje zawartości ekranu ani nie obserwuje innych aplikacji.</string>
+    <string name="shade_starting">Gesty panelu uruchamiają się. Przesuń ponownie w dół.</string>
+    <string name="shade_rejected">Android nie mógł otworzyć panelu systemowego.</string>
+    <string name="accessibility_unavailable">Ustawienia Ułatwień dostępu są niedostępne.</string>
+
+    <!-- First run -->
+    <string name="setup_welcome">Witaj w iDuo</string>
+    <string name="setup_tagline">Spokojny ekran główny stworzony dla obu stron Twojego składanego telefonu.</string>
+    <string name="setup_close">Zamknij powitanie</string>
+    <string name="setup_is_home">iDuo jest Twoją aplikacją ekranu głównego</string>
+    <string name="setup_is_home_detail">Przycisk ekranu głównego przeniesie Cię tutaj.</string>
+    <string name="setup_choose_home">Wybierz iDuo jako aplikację ekranu głównego</string>
+    <string name="setup_choose_home_detail">Android pokaże wybór aplikacji ekranu głównego. W każdej chwili możesz to zmienić.</string>
+    <string name="setup_choose_home_button">Wybierz aplikację ekranu głównego</string>
+    <string name="setup_space_title">Wykorzystaj przestrzeń</string>
+    <string name="setup_space_detail">Dodaj widżet teraz lub później przytrzymaj puste miejsce, aby dostosować dowolną stronę.</string>
+    <string name="setup_add_widget">Dodaj widżet</string>
+    <string name="setup_explore">Poznaj ekran główny</string>
+
+    <!-- Status rail (spoken) -->
+    <string name="status_location">Lokalizacja w użyciu</string>
+    <string name="status_battery">Bateria %1$d%%</string>
+    <string name="status_battery_charging">Bateria %1$d%%, ładowanie</string>
+    <string name="status_battery_unavailable">Stan baterii niedostępny</string>
+    <string name="status_wifi">Wi-Fi połączone</string>
+    <string name="status_wifi_level">Wi-Fi połączone, sygnał %1$d z 4</string>
+    <string name="status_wifi_off">Wi-Fi rozłączone</string>
+    <string name="status_airplane">Tryb samolotowy</string>
+    <string name="status_airplane_short">Samolot</string>
+    <string name="status_cellular">Sygnał komórkowy %1$d z 4</string>
+    <string name="status_cellular_unavailable">Sygnał komórkowy niedostępny</string>
+</resources>

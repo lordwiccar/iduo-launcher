@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- System integration -->
+    <string name="shade_service_label">Gesta panelu iDuo Launcher</string>
+    <string name="shade_service_description">Umožňuje gestům na ploše iDuo Launcher otevírat systémová oznámení a panel Rychlé nastavení. Nečte obsah obrazovky ani nesleduje činnost v jiných aplikacích.</string>
+
+    <!-- Common actions -->
+    <string name="back">Zpět</string>
+    <string name="cancel">Zrušit</string>
+    <string name="apply">Použít</string>
+    <string name="done">Hotovo</string>
+    <string name="save">Uložit</string>
+    <string name="restore">Obnovit</string>
+    <string name="replace">Nahradit</string>
+    <string name="remove">Odebrat</string>
+    <string name="resume">Pokračovat</string>
+    <string name="retry">Zkusit znovu</string>
+    <string name="place">Umístit</string>
+    <string name="reconnect">Znovu připojit</string>
+    <string name="not_now">Teď ne</string>
+    <string name="turn_on">Zapnout</string>
+    <string name="open_settings">Otevřít nastavení</string>
+    <string name="open_google">Otevřít Google</string>
+    <string name="back_to_home">Zpět na plochu</string>
+    <string name="stay_on_home">Zůstat na ploše</string>
+    <string name="value_dp">%1$d dp</string>
+    <string name="value_percent">%1$d %%</string>
+
+    <!-- Customization -->
+    <string name="customize_title">Přizpůsobení</string>
+    <string name="customize_close">Zavřít přizpůsobení</string>
+    <string name="customize_launcher">Přizpůsobit spouštěč</string>
+    <string name="customize_wallpaper">Tapeta a vzhled</string>
+    <string name="customize_wallpaper_detail">Pozadí, barvy a světlo</string>
+    <string name="customize_wallpaper_pending">Fotka čeká na kontrolu</string>
+    <string name="customize_home">Rozložení plochy</string>
+    <string name="customize_home_detail">Ikony, rozestupy, dok a widgety</string>
+    <string name="customize_gestures">Gesta a vyhledávání</string>
+    <string name="customize_gestures_detail">Popisky, stav a chování vyhledávání</string>
+    <string name="customize_language">Jazyk</string>
+    <string name="language_system">Jazyk systému</string>
+    <string name="customize_backup">Záloha</string>
+    <string name="customize_backup_detail">Uložit nebo obnovit toto rozložení</string>
+    <string name="customize_help">Nápověda a nastavení</string>
+    <string name="customize_help_detail">Domovská aplikace, widgety, gesta a Discover</string>
+    <string name="set_as_home_app">Nastavit jako domovskou aplikaci</string>
+    <string name="change_home_app">Změnit domovskou aplikaci</string>
+    <string name="set_duo_as_home">Nastavit iDuo jako plochu</string>
+    <string name="undo_layout_change">Vrátit poslední změnu rozložení</string>
+
+    <string name="choose_photo">Vybrat fotku</string>
+    <string name="choose_different_photo">Vybrat jinou fotku</string>
+    <string name="android_wallpaper">Tapeta Androidu</string>
+    <string name="wallpaper_detail">iDuo zobrazuje tapetu Androidu. Fotka nebo duny iDuo vybrané zde se nastaví jako tapeta Androidu.</string>
+    <string name="use_iduo_dunes">Použít duny iDuo</string>
+    <string name="android_wallpaper_detail">V nastavení Androidu můžete vybrat libovolnou tapetu, i živou. iDuo ji hned zobrazí.</string>
+    <string name="open_wallpaper_settings">Otevřít nastavení tapety</string>
+    <string name="wallpaper_settings_unavailable">Nastavení tapety v Androidu není dostupné.</string>
+    <string name="wallpaper_target_title">Nastavit tapetu na</string>
+    <string name="wallpaper_target_home">Domovskou obrazovku</string>
+    <string name="wallpaper_target_lock">Zamykací obrazovku</string>
+    <string name="wallpaper_target_both">Domovskou i zamykací obrazovku</string>
+    <string name="wallpaper_set_failed">Android tapetu nepřijal.</string>
+    <string name="wallpaper_updated">Tapeta byla změněna.</string>
+    <string name="restore_photo_note">Tapeta není součástí zálohy rozložení.</string>
+
+    <string name="appearance">Vzhled</string>
+    <string name="appearance_light">Světlý</string>
+    <string name="appearance_dark">Tmavý</string>
+    <string name="appearance_system">Podle systému</string>
+    <string name="appearance_sun">Východ / západ slunce</string>
+    <string name="place_name">Název místa</string>
+    <string name="latitude_label">Zeměpisná šířka (−90 až 90)</string>
+    <string name="longitude_label">Zeměpisná délka (−180 až 180)</string>
+    <string name="appearance_range_error">Zadejte zeměpisnou šířku od −90 do 90 a délku od −180 do 180.</string>
+    <string name="use_this_place">Použít toto místo</string>
+    <string name="use_device_location">Použít polohu zařízení</string>
+    <string name="clear_location">Vymazat polohu</string>
+    <string name="approximate_location">Přibližná poloha zařízení</string>
+    <string name="appearance_fallback_no_location">Používá se motiv systému, dokud nenastavíte polohu</string>
+    <string name="appearance_fallback_stale">Používá se motiv systému, protože poloha zařízení je zastaralá</string>
+    <string name="appearance_fallback_unavailable">Používá se motiv systému, protože tato poloha není dostupná</string>
+    <string name="location_waiting">Čekání na přibližnou polohu zařízení…</string>
+    <string name="location_denied">Oprávnění k poloze nebylo uděleno. Do nastavení místa se používá motiv systému.</string>
+    <string name="location_request_failed">O oprávnění k poloze se nepodařilo požádat. Používá se motiv systému.</string>
+    <string name="location_permission_unavailable">Oprávnění k poloze není k dispozici. Používá se motiv systému.</string>
+    <string name="location_no_provider">Není k dispozici žádný zdroj přibližné polohy. Používá se motiv systému.</string>
+    <string name="location_timeout">Zjištění polohy vypršelo. Používá se motiv systému, dokud to nezkusíte znovu nebo nezadáte místo.</string>
+    <string name="location_unavailable">Poloha není dostupná. Používá se motiv systému.</string>
+
+    <string name="display_cover">Vnější displej</string>
+    <string name="display_inner">Vnitřní displej</string>
+    <string name="choose_home_apps">Vybrat aplikace na plochu</string>
+    <string name="pin_home_apps_title">Aplikace na plochu</string>
+    <string name="dock_apps_setting">Aplikace v doku · vnější i vnitřní displej</string>
+    <string name="home_rows_setting">Řádky plochy · vnější i vnitřní displej</string>
+    <string name="grid_layout">Rozvržení mřížky</string>
+    <string name="home_rows_option">%1$d × %2$d aplikací</string>
+    <string name="home_rows_no_room">Pro více řádků zmenšete na této obrazovce ikony nebo rozestup řádků.</string>
+    <string name="icon_size">Velikost ikon</string>
+    <string name="row_spacing">Rozestup řádků</string>
+    <string name="dock_width">Šířka doku</string>
+    <string name="dock_align">Zarovnat dok s řádky aplikací</string>
+    <string name="dock_height">Výška doku na obrazovce</string>
+    <string name="reset_layout">Obnovit toto rozložení</string>
+    <string name="widgets_on_page">Widgety · stránka %1$d</string>
+    <string name="unfolded_only_page">Stránka jen pro rozložený telefon</string>
+    <string name="widget_size_row">Widget %1$d × %2$d · řádek %3$d</string>
+    <string name="remove_widget">Odebrat widget</string>
+    <string name="remove_widget_leading">Odebrat widget ze stránky jen pro rozložený telefon</string>
+    <string name="add_widget_to_page">Přidat widget na tuto stránku</string>
+
+    <string name="show_app_names">Zobrazit názvy aplikací</string>
+    <string name="show_status">Zobrazit stav vpravo nahoře</string>
+    <string name="search_opens_google">Tlačítko hledání otevře Google</string>
+    <string name="search_local_note">Seznam všech aplikací má vždy vlastní vyhledávání.</string>
+    <string name="gestures_note">Stránky přepnete přejetím do strany kdekoli na ploše. Přejetím dolů otevřete oznámení nebo rychlé nastavení.</string>
+
+    <string name="backup_detail">Uloží aktuální rozložení plochy, složky, widgety a nastavení rozložení.</string>
+    <string name="backup_restore_note">Před změnou plochy obnovení vždy zobrazí přehled.</string>
+
+    <string name="help_home_title">Domovská aplikace</string>
+    <string name="help_home_default">iDuo je vaše domovská aplikace. Spouštěč můžete změnit v nastavení domovské obrazovky Androidu.</string>
+    <string name="help_home_not_default">Vyberte iDuo v nastavení domovské obrazovky Androidu, aby se otevřelo po stisknutí tlačítka Domů.</string>
+    <string name="help_customize_title">Přizpůsobení libovolné stránky</string>
+    <string name="help_customize">Podržte prst na volném místě a zvolte Přizpůsobit spouštěč. Pokud je stránka plná, podržte prst na úzkém pruhu u jejího levého okraje.</string>
+    <string name="help_widgets">Přidávejte widgety Androidu do prázdných buněk plochy. Podržením widget přesunete nebo odeberete.</string>
+    <string name="help_shade_title">Oznámení a rychlé nastavení</string>
+    <string name="help_shade">Přejeďte na ploše dolů. Poprvé iDuo vysvětlí volitelné nastavení Usnadnění přístupu v Androidu. Služba pouze otevírá systémové panely.</string>
+    <string name="help_shade_setup">Nastavit gesta panelu</string>
+    <string name="help_discover">Přejeďte doprava z první stránky plochy. Pokud Google kanál nedodá, iDuo nabídne návrat na plochu a možnosti obnovení.</string>
+
+    <!-- Apps and profiles -->
+    <string name="all_apps">Všechny aplikace</string>
+    <string name="all_apps_page">Stránka všech aplikací</string>
+    <string name="your_apps">Vaše aplikace</string>
+    <string name="search_apps">Hledat aplikace</string>
+    <string name="search_google">Hledat na Googlu</string>
+    <string name="clear_search">Vymazat hledání</string>
+    <string name="loading_apps">Načítání aplikací…</string>
+    <string name="no_apps_found">Žádné aplikace nenalezeny</string>
+    <string name="apps_load_failed">Aplikace se nepodařilo načíst. Klepnutím to zkusíte znovu.</string>
+    <string name="layout_load_failed">Uložené rozložení plochy se nepodařilo přečíst; zůstalo beze změny.</string>
+    <string name="app_unavailable">Aplikace %1$s není dostupná.</string>
+    <string name="app_options">Možnosti aplikace</string>
+    <string name="choose_app">Vybrat %1$s</string>
+    <string name="pin_app">Připnout %1$s na plochu</string>
+    <string name="unpin_app">Odebrat %1$s z plochy</string>
+    <plurals name="pinned_count">
+        <item quantity="one">%1$d připnutá</item>
+        <item quantity="few">%1$d připnuté</item>
+        <item quantity="many">%1$d připnuté</item>
+        <item quantity="other">%1$d připnutých</item>
+    </plurals>
+    <string name="profile_personal">Osobní</string>
+    <string name="profile_work">Pracovní</string>
+    <string name="profile_label">Profil: %1$s</string>
+    <string name="profile_unavailable">%1$s – nedostupné</string>
+    <string name="profile_unavailable_long">Profil %1$s není dostupný</string>
+    <string name="profile_apps_paused">Aplikace v profilu %1$s jsou pozastavené</string>
+    <string name="unavailable_profile">Nedostupný profil</string>
+    <string name="work_paused">Pracovní aplikace jsou pozastavené</string>
+    <string name="work_unavailable">Pracovní profil není dostupný</string>
+    <string name="turn_on_work">Zapnout pracovní aplikace</string>
+
+    <!-- App actions -->
+    <string name="close_app_options">Zavřít možnosti aplikace</string>
+    <string name="move_app">Přesunout %1$s</string>
+    <string name="moving_app">Přesouvání: %1$s</string>
+    <string name="move_first">Přesunout na první pozici</string>
+    <string name="move_earlier">Posunout dopředu</string>
+    <string name="move_later">Posunout dozadu</string>
+    <string name="move_to_page">Přesunout na stránku %1$d</string>
+    <string name="move_to_leading_page">Přesunout na stránku jen pro rozložený telefon</string>
+    <string name="move_on_home">Přesunout na ploše</string>
+    <string name="add_to_home">Přidat na plochu</string>
+    <string name="remove_from_home">Odebrat z plochy</string>
+    <string name="app_info">Informace o aplikaci</string>
+    <string name="create_folder">Vytvořit složku</string>
+    <string name="create_folder_with">Vytvořit složku s aplikací %1$s</string>
+    <string name="close_empty_space_options">Zavřít možnosti volného místa</string>
+    <string name="empty_space_detail">Vyberte, co na toto místo patří.</string>
+    <string name="wallpaper">Tapeta</string>
+    <string name="home_options">Možnosti plochy</string>
+
+    <!-- Folders -->
+    <string name="folder_default">Složka</string>
+    <string name="folder_name">Název složky</string>
+    <string name="rename_folder">Přejmenovat složku</string>
+    <string name="folder_name_save">Uložit název</string>
+    <string name="close_folder">Zavřít složku</string>
+    <string name="folder_options">Možnosti složky</string>
+    <string name="disband_folder">Zrušit složku</string>
+    <string name="folder_transparency">Průhlednost pozadí složky</string>
+    <string name="all_apps_view">Zobrazení všech aplikací</string>
+    <string name="all_apps_view_list">Seznam</string>
+    <string name="all_apps_view_grid">Mřížka po stránkách</string>
+    <string name="left_page">Levá stránka</string>
+    <string name="left_page_rss">Čtečka RSS</string>
+    <string name="rss_title">Zprávy</string>
+    <string name="rss_manage">Spravovat zdroje</string>
+    <string name="rss_sources">Zdroje</string>
+    <string name="rss_add_hint">Adresa kanálu nebo webu</string>
+    <string name="rss_add">Přidat</string>
+    <string name="rss_remove_source">Odebrat %1$s</string>
+    <string name="rss_empty">Přidejte zdroj zpráv, aby se tu něco zobrazilo.</string>
+    <string name="rss_add_first">Přidat zdroj</string>
+    <string name="rss_no_feed">Na této adrese nebyl nalezen kanál RSS ani Atom.</string>
+    <string name="rss_load_failed">Některé zdroje se nepodařilo načíst.</string>
+    <string name="rss_duplicate">Tento zdroj už je přidaný.</string>
+    <string name="rss_refresh">Obnovit</string>
+    <string name="rss_adding">Ověřuji adresu…</string>
+    <plurals name="folder_description">
+        <item quantity="one">Složka %1$s, %2$d aplikace</item>
+        <item quantity="few">Složka %1$s, %2$d aplikace</item>
+        <item quantity="many">Složka %1$s, %2$d aplikace</item>
+        <item quantity="other">Složka %1$s, %2$d aplikací</item>
+    </plurals>
+
+    <!-- Home and dock -->
+    <string name="home_page">Stránka plochy %1$d</string>
+    <string name="home_page_of">Stránka plochy %1$d z %2$d</string>
+    <string name="new_home_page">Nová stránka plochy</string>
+    <string name="previous_home_page">Předchozí stránka plochy</string>
+    <string name="next_home_page">Další stránka plochy</string>
+    <string name="dock_full">Dok je plný • Nejdřív z něj aplikaci přesuňte</string>
+    <string name="dock_position_label">Pozice v doku %1$d</string>
+    <string name="dock_choose_app">Vybrat aplikaci do doku</string>
+    <string name="dock_choose_slot">Vybrat aplikaci do doku, pozice %1$d</string>
+    <string name="dock_choose_on_home">Aplikaci do doku vyberete na ploše</string>
+    <string name="dock_leave_empty">Nechat tuto pozici prázdnou</string>
+
+    <!-- Widgets -->
+    <string name="widget">Widget</string>
+    <string name="widgets">Widgety</string>
+    <string name="add_widget">Přidat widget</string>
+    <string name="search_widgets">Hledat widgety</string>
+    <string name="no_widgets_found">Žádné widgety nenalezeny</string>
+    <string name="widget_clock">Hodiny</string>
+    <string name="widget_date">Datum</string>
+    <string name="widget_panel">Panel widgetů</string>
+    <string name="widget_builtin_detail">2 × 2 · Klepnutím umístíte</string>
+    <string name="widget_place_hint">Klepnutím umístíte · Podržením přetáhnete</string>
+    <string name="widget_does_not_fit">Do tohoto rozložení se nevejde</string>
+    <string name="clock_widget_description">Widget hodin; klepnutím ho nahradíte</string>
+    <string name="local_time">Místní čas</string>
+    <string name="info_card_title">Trochu víc místa.</string>
+    <string name="info_card_detail">Přidejte kalendář, fotky nebo jiný widget.</string>
+    <string name="your_widgets">Vaše widgety</string>
+    <string name="tap_to_choose">Klepnutím vyberete</string>
+    <string name="widget_unavailable">Widget není dostupný</string>
+    <string name="saved_widget">Uložený widget</string>
+    <string name="widget_restore_unavailable">Tento poskytovatel nebo profil není dostupný. Vyberte náhradu.</string>
+    <string name="move_or_replace_widget">Přesunout nebo nahradit widget</string>
+    <string name="back_to_widgets">Zpět na widgety</string>
+    <string name="replace_here">Nahradit zde</string>
+    <string name="ready_to_place">Připraveno k umístění</string>
+    <string name="no_room_here">Tady není místo</string>
+    <string name="widget_no_room_size">Pro tuto velikost není místo. Vyberte jinou stránku nebo nejdřív něco přesuňte.</string>
+    <string name="widget_no_room_card">Pro tuto kartu není místo. Vyberte jinou stránku nebo nejdřív něco přesuňte.</string>
+    <string name="widget_no_room_there">Tam není místo. Zkuste jiné místo nebo stránku.</string>
+    <string name="widget_pending">Čeká: %1$s</string>
+    <string name="widget_options">Možnosti widgetu</string>
+    <string name="close_widget_options">Zavřít možnosti widgetu</string>
+    <string name="widget_settings">Nastavení widgetu</string>
+    <string name="widget_settings_interrupted">Nastavení widgetu bylo přerušeno. Pokračujte v nastavení, nebo ho zrušte a widget ponechte beze změny.</string>
+    <string name="widget_setup_title">Dokončit nastavení widgetu</string>
+    <string name="widget_setup_detail">Widget čeká na zvoleném místě. Dokončete nastavení, nebo ho zrušte a zástupný prvek se odstraní.</string>
+    <string name="widget_setup_finish">Dokončit nastavení</string>
+    <string name="widget_setup_continue">Pokračovat v nastavení widgetu</string>
+    <string name="widget_setup_cancel">Zrušit nastavení widgetu</string>
+    <string name="widget_not_added">Widget nebyl přidán</string>
+    <string name="resize">Změnit velikost</string>
+    <string name="resize_on_home">Změnit velikost na ploše</string>
+    <string name="drag_to_resize">Přetažením změníte velikost widgetu</string>
+    <string name="widget_resize_outside">Před změnou velikosti přesuňte widget do mřížky plochy.</string>
+    <string name="width">Šířka</string>
+    <string name="height">Výška</string>
+    <string name="decrease_width">Zúžit widget</string>
+    <string name="increase_width">Rozšířit widget</string>
+    <string name="decrease_height">Snížit widget</string>
+    <string name="increase_height">Zvýšit widget</string>
+    <plurals name="columns">
+        <item quantity="one">%1$d sloupec</item>
+        <item quantity="few">%1$d sloupce</item>
+        <item quantity="many">%1$d sloupce</item>
+        <item quantity="other">%1$d sloupců</item>
+    </plurals>
+    <plurals name="rows">
+        <item quantity="one">%1$d řádek</item>
+        <item quantity="few">%1$d řádky</item>
+        <item quantity="many">%1$d řádku</item>
+        <item quantity="other">%1$d řádků</item>
+    </plurals>
+    <string name="resize_overlap_note">Velikosti, které by překryly jiný prvek, se ignorují.</string>
+    <string name="resize_invalid">Tato velikost překrývá jiný prvek nebo přesahuje stránku.</string>
+    <string name="apply_size">Použít velikost</string>
+    <string name="widget_no_room">Pro tento widget tu není místo.</string>
+    <string name="widget_home_changed">Během nastavování widgetu se plocha změnila. Vyberte místo znovu.</string>
+    <string name="widget_unexpected_binding">Hostitel widgetů vrátil neočekávané propojení. Zkuste to znovu.</string>
+    <string name="widget_settings_open">Nejdřív dokončete nebo zrušte otevřené nastavení widgetu.</string>
+    <string name="widget_add_failed">Tento widget se nepodařilo přidat. Zkuste jiný.</string>
+    <string name="widget_configure_gone">Tento widget už nelze nastavit.</string>
+    <string name="widget_configure_failed">Nastavení tohoto widgetu se nepodařilo otevřít.</string>
+
+    <!-- Backup -->
+    <string name="backup_title">Záloha rozložení</string>
+    <string name="backup_problem">Problém se zálohou rozložení</string>
+    <string name="backup_saved">Záloha rozložení byla uložena.</string>
+    <string name="backup_restored">Rozložení bylo obnoveno. Widgety jsou připravené k opětovnému připojení.</string>
+    <string name="backup_already_active">Toto rozložení už je aktivní.</string>
+    <string name="backup_prepare_failed">Zálohu rozložení se nepodařilo připravit.</string>
+    <string name="backup_save_failed">Zálohu rozložení se nepodařilo uložit.</string>
+    <string name="backup_read_failed">Zálohu rozložení se nepodařilo přečíst.</string>
+    <string name="backup_invalid">Tato záloha rozložení je neplatná.</string>
+    <string name="backup_no_longer_valid">Tato záloha rozložení už není platná.</string>
+    <string name="backup_too_large">Záloha rozložení je větší než 2 MB.</string>
+    <string name="document_picker_unavailable">Výběr dokumentů není dostupný.</string>
+    <string name="backup_picker_title">Dokument s rozložením</string>
+    <string name="backup_picker_detail">Systémový výběr dokumentů je stále otevřený. Vraťte se do něj a dokončete akci, nebo ji zrušte.</string>
+    <string name="restore_review_title">Kontrola obnoveného rozložení</string>
+    <plurals name="restore_apps">
+        <item quantity="one">%1$d aplikace</item>
+        <item quantity="few">%1$d aplikace</item>
+        <item quantity="many">%1$d aplikace</item>
+        <item quantity="other">%1$d aplikací</item>
+    </plurals>
+    <plurals name="restore_folders">
+        <item quantity="one">%1$d složka</item>
+        <item quantity="few">%1$d složky</item>
+        <item quantity="many">%1$d složky</item>
+        <item quantity="other">%1$d složek</item>
+    </plurals>
+    <plurals name="restore_widgets">
+        <item quantity="one">%1$d widget</item>
+        <item quantity="few">%1$d widgety</item>
+        <item quantity="many">%1$d widgetu</item>
+        <item quantity="other">%1$d widgetů</item>
+    </plurals>
+    <string name="restore_includes_leading">Zahrnuje vaši stránku jen pro rozložený telefon.</string>
+    <string name="restore_settings_note">Obnoví se také rozložení ikon, popisky, vyhledávání a nastavení stavu.</string>
+    <string name="restore_unavailable_apps">Nedostupné aplikace (%1$d)</string>
+    <string name="restore_unavailable_app">Nedostupná aplikace</string>
+    <string name="restore_missing_app">• %1$s — její uložená pozice zůstane prázdná</string>
+    <string name="restore_profile_attention">Profily vyžadují pozornost</string>
+    <string name="restore_profile_issue">• %1$s (profil %2$s je třeba přiřadit ručně)</string>
+    <plurals name="restore_reconnect">
+        <item quantity="one">%1$d widget si ponechá uložené místo a po obnovení požádá o opětovné připojení.</item>
+        <item quantity="few">%1$d widgety si ponechají uložené místo a po obnovení požádají o opětovné připojení.</item>
+        <item quantity="many">%1$d widgetu si ponechá uložené místo a po obnovení požádá o opětovné připojení.</item>
+        <item quantity="other">%1$d widgetů si ponechá uložené místo a po obnovení požádá o opětovné připojení.</item>
+    </plurals>
+    <string name="restore_nothing_changes">Dokud nezvolíte Obnovit, nic se nezmění.</string>
+
+    <!-- Launcher background photo -->
+    <string name="photo_picker_title">Fotka na pozadí</string>
+    <string name="photo_picker_detail">Výběr fotek byl přerušen. Pokračujte ve výběru fotky, nebo ho zrušte a ponechte současné pozadí.</string>
+    <string name="photo_picker_unavailable">Výběr fotek není dostupný.</string>
+    <string name="photo_selection_lost">Rozpracovaný výběr fotky se nepodařilo obnovit.</string>
+    <string name="photo_preview_lost">Rozpracovaný náhled fotky se nepodařilo obnovit.</string>
+    <string name="photo_save_failed">Tuto fotku se nepodařilo uložit.</string>
+    <string name="photo_unusable">Tuto fotku nelze použít.</string>
+    <string name="photo_preview_save_failed">Náhled této fotky se nepodařilo uložit.</string>
+    <string name="photo_no_pixels">Vybraný obrázek neobsahuje použitelné pixely.</string>
+    <string name="photo_too_large">Vybraný obrázek je příliš velký.</string>
+
+    <!-- Discover -->
+    <string name="discover">Discover</string>
+    <string name="discover_connecting">Připojování k Discover…</string>
+    <string name="discover_unavailable">Discover teď není dostupný.</string>
+    <string name="discover_rejected">Google nepřijal připojení ke kanálu. Restartujte Google a zkuste to znovu.</string>
+    <string name="discover_disconnected">Discover se odpojil. Klepnutím na Zkusit znovu se znovu připojíte.</string>
+    <string name="discover_no_feed">Aplikace Google neposkytla kanál.</string>
+    <string name="discover_install_google">Pro používání Discover nainstalujte nebo povolte aplikaci Google.</string>
+    <string name="discover_connect_failed">Aplikace Google se nemohla připojit k Discover.</string>
+    <string name="discover_slow">Discover se načítá déle. Můžete to zkusit znovu nebo otevřít Google.</string>
+    <string name="discover_version">Tato verze aplikace Google nedokázala otevřít Discover.</string>
+    <string name="discover_start_failed">Discover se nepodařilo spustit. Klepnutím na Zkusit znovu se znovu připojíte.</string>
+    <string name="discover_no_fit">Discover se nevešel vedle doku.</string>
+    <string name="discover_no_fit_return">Discover se nevešel vedle doku. Vraťte se na plochu a zkuste to znovu.</string>
+    <string name="discover_device_unsupported">Toto zařízení nedokáže zobrazit Discover vedle doku.</string>
+    <string name="install_google_first">Nejdřív nainstalujte nebo povolte aplikaci Google.</string>
+    <string name="discover_fallback_title">Discover tu není k dispozici</string>
+    <string name="discover_fallback_message">iDuo na tomto zařízení nedokáže umístit kanál Discover vedle plochy. Můžete otevřít aplikaci Google nebo zůstat na ploše.</string>
+
+    <!-- Shade gestures -->
+    <string name="shade_setup_title">Zapnout gesta panelu</string>
+    <string name="shade_setup_message">Android vyžaduje, abyste gesta panelu iDuo Launcher zapnuli v nastavení Usnadnění přístupu. Služba pouze otevírá oznámení nebo rychlé nastavení; nečte obsah obrazovky ani nesleduje jiné aplikace.</string>
+    <string name="shade_starting">Gesta panelu se spouštějí. Přejeďte znovu dolů.</string>
+    <string name="shade_rejected">Android nedokázal otevřít systémový panel.</string>
+    <string name="accessibility_unavailable">Nastavení Usnadnění přístupu není dostupné.</string>
+
+    <!-- First run -->
+    <string name="setup_welcome">Vítejte v iDuo</string>
+    <string name="setup_tagline">Klidná plocha navržená pro obě strany vašeho skládacího telefonu.</string>
+    <string name="setup_close">Zavřít uvítání</string>
+    <string name="setup_is_home">iDuo je vaše domovská aplikace</string>
+    <string name="setup_is_home_detail">Tlačítko Domů vás vrátí sem.</string>
+    <string name="setup_choose_home">Nastavte iDuo jako domovskou aplikaci</string>
+    <string name="setup_choose_home_detail">Android zobrazí výběr domovské aplikace. Kdykoli to můžete vrátit.</string>
+    <string name="setup_choose_home_button">Vybrat domovskou aplikaci</string>
+    <string name="setup_space_title">Využijte prostor</string>
+    <string name="setup_space_detail">Přidejte widget hned, nebo později podržte prst na volném místě a přizpůsobte libovolnou stránku.</string>
+    <string name="setup_add_widget">Přidat widget</string>
+    <string name="setup_explore">Prozkoumat plochu</string>
+
+    <!-- Status rail (spoken) -->
+    <string name="status_location">Poloha se používá</string>
+    <string name="status_battery">Baterie %1$d %%</string>
+    <string name="status_battery_charging">Baterie %1$d %%, nabíjí se</string>
+    <string name="status_battery_unavailable">Stav baterie není dostupný</string>
+    <string name="status_wifi">Wi-Fi připojeno</string>
+    <string name="status_wifi_level">Wi-Fi připojeno, signál %1$d ze 4</string>
+    <string name="status_wifi_off">Wi-Fi odpojeno</string>
+    <string name="status_airplane">Režim Letadlo</string>
+    <string name="status_airplane_short">Letadlo</string>
+    <string name="status_cellular">Mobilní signál %1$d ze 4</string>
+    <string name="status_cellular_unavailable">Mobilní signál není dostupný</string>
+</resources>

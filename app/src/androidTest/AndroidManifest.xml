@@ -1,0 +1,54 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:label="Widget Fixture Application">
+        <provider android:name="media.whitewhale.iduo.test.BlockingContentProvider"
+            android:authorities="media.whitewhale.iduo.test.blocking"
+            android:exported="true" />
+        <provider android:name="media.whitewhale.iduo.test.BackupDocumentsProvider"
+            android:authorities="media.whitewhale.iduo.test.documents"
+            android:exported="true" android:grantUriPermissions="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+        </provider>
+        <receiver android:name="media.whitewhale.iduo.test.ProfileAdminReceiver"
+            android:permission="android.permission.BIND_DEVICE_ADMIN" android:exported="true">
+            <meta-data android:name="android.app.device_admin" android:resource="@xml/profile_admin" />
+            <intent-filter><action android:name="android.app.action.DEVICE_ADMIN_ENABLED" /></intent-filter>
+        </receiver>
+        <activity android:name="media.whitewhale.iduo.test.ProfileFixtureActivity"
+            android:exported="true" android:label="Duo Profile Fixture">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- Disabled second launch alias: enabling it and disabling the activity mimics an app that
+             changes its icon by switching aliases. -->
+        <activity-alias android:name="media.whitewhale.iduo.test.ProfileFixtureAlternateIcon"
+            android:targetActivity="media.whitewhale.iduo.test.ProfileFixtureActivity"
+            android:enabled="false" android:exported="true" android:label="Duo Profile Fixture">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <receiver android:name=".widgetfixture.ModernTargetWidgetProvider" android:exported="false" android:label="@string/fixture_modern_widget_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_modern_target" />
+        </receiver>
+        <receiver android:name=".widgetfixture.LegacyResizableWidgetProvider" android:exported="false" android:label="@string/fixture_legacy_widget_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_legacy_resizable" />
+        </receiver>
+        <receiver android:name=".widgetfixture.RequiredConfigWidgetProvider" android:exported="false" android:label="@string/fixture_required_widget_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_required_config" />
+        </receiver>
+        <receiver android:name=".widgetfixture.OptionalConfigWidgetProvider" android:exported="false" android:label="@string/fixture_optional_widget_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_optional_config" />
+        </receiver>
+        <activity android:name=".widgetfixture.WidgetFixtureConfigActivity" android:exported="true" />
+    </application>
+</manifest>

@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- System integration -->
+    <string name="shade_service_label">iDuo Launcher-Leistengesten</string>
+    <string name="shade_service_description">Ermöglicht es den Startbildschirm-Gesten von iDuo Launcher, die Systembenachrichtigungen und die Schnelleinstellungen zu öffnen. Es werden weder Bildschirminhalte gelesen noch Aktivitäten in anderen Apps beobachtet.</string>
+
+    <!-- Common actions -->
+    <string name="back">Zurück</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="apply">Übernehmen</string>
+    <string name="done">Fertig</string>
+    <string name="save">Speichern</string>
+    <string name="restore">Wiederherstellen</string>
+    <string name="replace">Ersetzen</string>
+    <string name="remove">Entfernen</string>
+    <string name="resume">Fortsetzen</string>
+    <string name="retry">Erneut versuchen</string>
+    <string name="place">Platzieren</string>
+    <string name="reconnect">Neu verbinden</string>
+    <string name="not_now">Nicht jetzt</string>
+    <string name="turn_on">Aktivieren</string>
+    <string name="open_settings">Einstellungen öffnen</string>
+    <string name="open_google">Google öffnen</string>
+    <string name="back_to_home">Zurück zum Startbildschirm</string>
+    <string name="stay_on_home">Auf dem Startbildschirm bleiben</string>
+    <string name="value_dp">%1$d dp</string>
+    <string name="value_percent">%1$d %%</string>
+
+    <!-- Customization -->
+    <string name="customize_title">Ganz nach deinem Geschmack</string>
+    <string name="customize_close">Anpassung schließen</string>
+    <string name="customize_launcher">Launcher anpassen</string>
+    <string name="customize_wallpaper">Hintergrund &amp; Darstellung</string>
+    <string name="customize_wallpaper_detail">Hintergrund, Farben und Helligkeit</string>
+    <string name="customize_wallpaper_pending">Foto bereit zur Prüfung</string>
+    <string name="customize_home">Startbildschirm-Layout</string>
+    <string name="customize_home_detail">Symbole, Abstände, Dock und Widgets</string>
+    <string name="customize_gestures">Gesten &amp; Suche</string>
+    <string name="customize_gestures_detail">Beschriftungen, Status und Suchverhalten</string>
+    <string name="customize_language">Sprache</string>
+    <string name="language_system">Systemsprache</string>
+    <string name="customize_backup">Sicherung</string>
+    <string name="customize_backup_detail">Dieses Layout speichern oder wiederherstellen</string>
+    <string name="customize_help">Hilfe &amp; Einrichtung</string>
+    <string name="customize_help_detail">Start-App, Widgets, Gesten und Discover</string>
+    <string name="set_as_home_app">Als Start-App festlegen</string>
+    <string name="change_home_app">Start-App ändern</string>
+    <string name="set_duo_as_home">iDuo als Startbildschirm festlegen</string>
+    <string name="undo_layout_change">Letzte Layoutänderung rückgängig machen</string>
+
+    <string name="choose_photo">Foto auswählen</string>
+    <string name="choose_different_photo">Anderes Foto auswählen</string>
+    <string name="android_wallpaper">Android-Hintergrund</string>
+    <string name="wallpaper_detail">iDuo zeigt deinen Android-Hintergrund. Ein hier gewähltes Foto oder die iDuo-Dünen werden als Android-Hintergrund festgelegt.</string>
+    <string name="use_iduo_dunes">iDuo-Dünen verwenden</string>
+    <string name="android_wallpaper_detail">Wähle in den Android-Einstellungen einen beliebigen Hintergrund, auch Live-Hintergründe. iDuo zeigt ihn sofort an.</string>
+    <string name="open_wallpaper_settings">Hintergrundeinstellungen öffnen</string>
+    <string name="wallpaper_settings_unavailable">Die Hintergrundeinstellungen von Android sind nicht verfügbar.</string>
+    <string name="wallpaper_target_title">Hintergrund festlegen für</string>
+    <string name="wallpaper_target_home">Startbildschirm</string>
+    <string name="wallpaper_target_lock">Sperrbildschirm</string>
+    <string name="wallpaper_target_both">Start- und Sperrbildschirm</string>
+    <string name="wallpaper_set_failed">Android hat den Hintergrund nicht übernommen.</string>
+    <string name="wallpaper_updated">Hintergrund aktualisiert.</string>
+    <string name="restore_photo_note">Dein Hintergrund ist nicht Teil der Layout-Sicherung.</string>
+
+    <string name="appearance">Darstellung</string>
+    <string name="appearance_light">Hell</string>
+    <string name="appearance_dark">Dunkel</string>
+    <string name="appearance_system">Wie System</string>
+    <string name="appearance_sun">Sonnenaufgang / -untergang</string>
+    <string name="place_name">Ortsname</string>
+    <string name="latitude_label">Breitengrad (−90 bis 90)</string>
+    <string name="longitude_label">Längengrad (−180 bis 180)</string>
+    <string name="appearance_range_error">Gib einen Breitengrad von −90 bis 90 und einen Längengrad von −180 bis 180 ein.</string>
+    <string name="use_this_place">Diesen Ort verwenden</string>
+    <string name="use_device_location">Gerätestandort verwenden</string>
+    <string name="clear_location">Standort löschen</string>
+    <string name="approximate_location">Ungefährer Gerätestandort</string>
+    <string name="appearance_fallback_no_location">Systemdesign wird verwendet, bis ein Standort festgelegt ist</string>
+    <string name="appearance_fallback_stale">Systemdesign wird verwendet, da der Gerätestandort veraltet ist</string>
+    <string name="appearance_fallback_unavailable">Systemdesign wird verwendet, da dieser Standort nicht verfügbar ist</string>
+    <string name="location_waiting">Warten auf ungefähren Gerätestandort…</string>
+    <string name="location_denied">Die Standortberechtigung wurde nicht erteilt. Bis du einen Ort festlegst, wird das Systemdesign verwendet.</string>
+    <string name="location_request_failed">Die Standortberechtigung konnte nicht angefragt werden. Das Systemdesign wird verwendet.</string>
+    <string name="location_permission_unavailable">Die Standortberechtigung ist nicht verfügbar. Das Systemdesign wird verwendet.</string>
+    <string name="location_no_provider">Kein Anbieter für den ungefähren Standort verfügbar. Das Systemdesign wird verwendet.</string>
+    <string name="location_timeout">Zeitüberschreitung bei der Standortbestimmung. Das Systemdesign wird verwendet, bis du es erneut versuchst oder einen Ort eingibst.</string>
+    <string name="location_unavailable">Standort nicht verfügbar. Das Systemdesign wird verwendet.</string>
+
+    <string name="display_cover">Außendisplay</string>
+    <string name="display_inner">Innendisplay</string>
+    <string name="choose_home_apps">Apps für den Startbildschirm auswählen</string>
+    <string name="pin_home_apps_title">Apps auf dem Startbildschirm</string>
+    <string name="dock_apps_setting">Apps im Dock · Außen- und Innendisplay</string>
+    <string name="home_rows_setting">Startbildschirm-Zeilen · Außen- und Innendisplay</string>
+    <string name="grid_layout">Rasterlayout</string>
+    <string name="home_rows_option">%1$d × %2$d Apps</string>
+    <string name="home_rows_no_room">Für mehr Zeilen auf diesem Bildschirm kleinere Symbole oder weniger Zeilenabstand wählen.</string>
+    <string name="icon_size">Symbolgröße</string>
+    <string name="row_spacing">Zeilenabstand</string>
+    <string name="dock_width">Dock-Breite</string>
+    <string name="dock_align">Dock an App-Zeilen ausrichten</string>
+    <string name="dock_height">Dock-Höhe auf dem Bildschirm</string>
+    <string name="reset_layout">Dieses Layout zurücksetzen</string>
+    <string name="widgets_on_page">Widgets · Seite %1$d</string>
+    <string name="unfolded_only_page">Seite nur im aufgeklappten Zustand</string>
+    <string name="widget_size_row">%1$d × %2$d-Widget · Zeile %3$d</string>
+    <string name="remove_widget">Widget entfernen</string>
+    <string name="remove_widget_leading">Widget von der Seite für den aufgeklappten Zustand entfernen</string>
+    <string name="add_widget_to_page">Widget zu dieser Seite hinzufügen</string>
+
+    <string name="show_app_names">App-Namen anzeigen</string>
+    <string name="show_status">Status oben rechts anzeigen</string>
+    <string name="search_opens_google">Suchtaste öffnet Google</string>
+    <string name="search_local_note">Die App-Übersicht behält immer ihre eigene App-Suche.</string>
+    <string name="gestures_note">Wische irgendwo auf dem Startbildschirm seitwärts, um die Seite zu wechseln. Wische nach unten für Benachrichtigungen oder Schnelleinstellungen.</string>
+
+    <string name="backup_detail">Speichert das aktuelle Startbildschirm-Layout, Ordner, Widgets und Layouteinstellungen.</string>
+    <string name="backup_restore_note">Vor einer Änderung des Startbildschirms zeigt die Wiederherstellung eine Übersicht.</string>
+
+    <string name="help_home_title">Start-App</string>
+    <string name="help_home_default">iDuo ist deine Start-App. Du kannst den Launcher in den Android-Einstellungen für den Startbildschirm wechseln.</string>
+    <string name="help_home_not_default">Wähle iDuo in den Android-Einstellungen für den Startbildschirm, damit es beim Drücken der Home-Taste erscheint.</string>
+    <string name="help_customize_title">Jede Seite anpassen</string>
+    <string name="help_customize">Halte eine freie Stelle gedrückt und wähle „Launcher anpassen“. Ist eine Seite voll, halte den schmalen Bereich am linken Rand gedrückt.</string>
+    <string name="help_widgets">Füge Android-Widgets in leere Felder des Startbildschirms ein. Halte ein Widget gedrückt, um es zu verschieben oder zu entfernen.</string>
+    <string name="help_shade_title">Benachrichtigungen und Schnelleinstellungen</string>
+    <string name="help_shade">Wische auf dem Startbildschirm nach unten. Beim ersten Mal erklärt iDuo die optionale Bedienungshilfen-Einstellung von Android. Der Dienst öffnet nur die Systemleisten.</string>
+    <string name="help_shade_setup">Leistengesten einrichten</string>
+    <string name="help_discover">Wische auf der ersten Startbildschirmseite nach rechts. Falls Google den Feed nicht liefert, bietet iDuo eine Rückkehr zum Startbildschirm und Wiederherstellungsoptionen.</string>
+
+    <!-- Apps and profiles -->
+    <string name="all_apps">Alle Apps</string>
+    <string name="all_apps_page">Seite „Alle Apps“</string>
+    <string name="your_apps">Deine Apps</string>
+    <string name="search_apps">Apps suchen</string>
+    <string name="search_google">Mit Google suchen</string>
+    <string name="clear_search">Suche löschen</string>
+    <string name="loading_apps">Apps werden geladen…</string>
+    <string name="no_apps_found">Keine Apps gefunden</string>
+    <string name="apps_load_failed">Apps konnten nicht geladen werden. Zum Wiederholen tippen.</string>
+    <string name="layout_load_failed">Das gespeicherte Startbildschirm-Layout konnte nicht gelesen werden und bleibt unverändert.</string>
+    <string name="app_unavailable">%1$s ist nicht verfügbar.</string>
+    <string name="app_options">App-Optionen</string>
+    <string name="choose_app">%1$s auswählen</string>
+    <string name="pin_app">%1$s an den Startbildschirm anheften</string>
+    <string name="unpin_app">%1$s vom Startbildschirm entfernen</string>
+    <plurals name="pinned_count">
+        <item quantity="one">%1$d angeheftet</item>
+        <item quantity="other">%1$d angeheftet</item>
+    </plurals>
+    <string name="profile_personal">Privat</string>
+    <string name="profile_work">Arbeit</string>
+    <string name="profile_label">Profil: %1$s</string>
+    <string name="profile_unavailable">%1$s – nicht verfügbar</string>
+    <string name="profile_unavailable_long">Profil „%1$s“ ist nicht verfügbar</string>
+    <string name="profile_apps_paused">Apps im Profil „%1$s“ sind pausiert</string>
+    <string name="unavailable_profile">Nicht verfügbares Profil</string>
+    <string name="work_paused">Arbeits-Apps sind pausiert</string>
+    <string name="work_unavailable">Arbeitsprofil ist nicht verfügbar</string>
+    <string name="turn_on_work">Arbeits-Apps aktivieren</string>
+
+    <!-- App actions -->
+    <string name="close_app_options">App-Optionen schließen</string>
+    <string name="move_app">%1$s verschieben</string>
+    <string name="moving_app">%1$s wird verschoben</string>
+    <string name="move_first">An die erste Position verschieben</string>
+    <string name="move_earlier">Nach vorne verschieben</string>
+    <string name="move_later">Nach hinten verschieben</string>
+    <string name="move_to_page">Auf Seite %1$d verschieben</string>
+    <string name="move_to_leading_page">Auf die Seite für den aufgeklappten Zustand verschieben</string>
+    <string name="move_on_home">Auf dem Startbildschirm verschieben</string>
+    <string name="add_to_home">Zum Startbildschirm hinzufügen</string>
+    <string name="remove_from_home">Vom Startbildschirm entfernen</string>
+    <string name="app_info">App-Info</string>
+    <string name="create_folder">Ordner erstellen</string>
+    <string name="create_folder_with">Ordner mit %1$s erstellen</string>
+    <string name="close_empty_space_options">Optionen für freie Stelle schließen</string>
+    <string name="empty_space_detail">Wähle, was an diese Stelle gehört.</string>
+    <string name="wallpaper">Hintergrund</string>
+    <string name="home_options">Startbildschirm-Optionen</string>
+
+    <!-- Folders -->
+    <string name="folder_default">Ordner</string>
+    <string name="folder_name">Ordnername</string>
+    <string name="rename_folder">Ordner umbenennen</string>
+    <string name="folder_name_save">Namen speichern</string>
+    <string name="close_folder">Ordner schließen</string>
+    <string name="folder_options">Ordneroptionen</string>
+    <string name="disband_folder">Ordner auflösen</string>
+    <string name="folder_transparency">Transparenz des Ordnerhintergrunds</string>
+    <string name="all_apps_view">Ansicht aller Apps</string>
+    <string name="all_apps_view_list">Liste</string>
+    <string name="all_apps_view_grid">Raster mit Seiten</string>
+    <string name="left_page">Linke Seite</string>
+    <string name="left_page_rss">RSS-Reader</string>
+    <string name="rss_title">Nachrichten</string>
+    <string name="rss_manage">Quellen verwalten</string>
+    <string name="rss_sources">Quellen</string>
+    <string name="rss_add_hint">Feed- oder Website-Adresse</string>
+    <string name="rss_add">Hinzufügen</string>
+    <string name="rss_remove_source">%1$s entfernen</string>
+    <string name="rss_empty">Füge eine Nachrichtenquelle hinzu, um diese Seite zu füllen.</string>
+    <string name="rss_add_first">Quelle hinzufügen</string>
+    <string name="rss_no_feed">Unter dieser Adresse wurde kein RSS- oder Atom-Feed gefunden.</string>
+    <string name="rss_load_failed">Einige Quellen konnten nicht geladen werden.</string>
+    <string name="rss_duplicate">Diese Quelle ist bereits hinzugefügt.</string>
+    <string name="rss_refresh">Aktualisieren</string>
+    <string name="rss_adding">Adresse wird geprüft…</string>
+    <plurals name="folder_description">
+        <item quantity="one">Ordner %1$s, %2$d App</item>
+        <item quantity="other">Ordner %1$s, %2$d Apps</item>
+    </plurals>
+
+    <!-- Home and dock -->
+    <string name="home_page">Startbildschirmseite %1$d</string>
+    <string name="home_page_of">Startbildschirmseite %1$d von %2$d</string>
+    <string name="new_home_page">Neue Startbildschirmseite</string>
+    <string name="previous_home_page">Vorherige Startbildschirmseite</string>
+    <string name="next_home_page">Nächste Startbildschirmseite</string>
+    <string name="dock_full">Dock voll • Zuerst eine App herausnehmen</string>
+    <string name="dock_position_label">Dock-Position %1$d</string>
+    <string name="dock_choose_app">Dock-App auswählen</string>
+    <string name="dock_choose_slot">Dock-App %1$d auswählen</string>
+    <string name="dock_choose_on_home">Dock-App auf dem Startbildschirm auswählen</string>
+    <string name="dock_leave_empty">Diese Position leer lassen</string>
+
+    <!-- Widgets -->
+    <string name="widget">Widget</string>
+    <string name="widgets">Widgets</string>
+    <string name="add_widget">Widget hinzufügen</string>
+    <string name="search_widgets">Widgets suchen</string>
+    <string name="no_widgets_found">Keine Widgets gefunden</string>
+    <string name="widget_clock">Uhr</string>
+    <string name="widget_date">Datum</string>
+    <string name="widget_panel">Widget-Feld</string>
+    <string name="widget_builtin_detail">2 × 2 · Zum Platzieren tippen</string>
+    <string name="widget_place_hint">Zum Platzieren tippen · Zum Ziehen gedrückt halten</string>
+    <string name="widget_does_not_fit">Passt nicht in dieses Layout</string>
+    <string name="clock_widget_description">Uhr-Widget; zum Ersetzen tippen</string>
+    <string name="local_time">Ortszeit</string>
+    <string name="info_card_title">Etwas mehr Platz.</string>
+    <string name="info_card_detail">Füge einen Kalender, Fotos oder ein anderes Widget hinzu.</string>
+    <string name="your_widgets">Deine Widgets</string>
+    <string name="tap_to_choose">Zum Auswählen tippen</string>
+    <string name="widget_unavailable">Widget nicht verfügbar</string>
+    <string name="saved_widget">Gespeichertes Widget</string>
+    <string name="widget_restore_unavailable">Dieser Anbieter oder dieses Profil ist nicht verfügbar. Wähle einen Ersatz.</string>
+    <string name="move_or_replace_widget">Widget verschieben oder ersetzen</string>
+    <string name="back_to_widgets">Zurück zu den Widgets</string>
+    <string name="replace_here">Hier ersetzen</string>
+    <string name="ready_to_place">Bereit zum Platzieren</string>
+    <string name="no_room_here">Hier ist kein Platz</string>
+    <string name="widget_no_room_size">Für diese Größe ist kein Platz. Wähle eine andere Seite oder verschiebe zuerst ein Element.</string>
+    <string name="widget_no_room_card">Für diese Karte ist kein Platz. Wähle eine andere Seite oder verschiebe zuerst ein Element.</string>
+    <string name="widget_no_room_there">Dort ist kein Platz. Versuche eine andere Stelle oder Seite.</string>
+    <string name="widget_pending">Ausstehend: %1$s</string>
+    <string name="widget_options">Widget-Optionen</string>
+    <string name="close_widget_options">Widget-Optionen schließen</string>
+    <string name="widget_settings">Widget-Einstellungen</string>
+    <string name="widget_settings_interrupted">Die Widget-Einstellungen wurden unterbrochen. Setze die Konfiguration fort oder brich ab, um das Widget unverändert zu lassen.</string>
+    <string name="widget_setup_title">Widget-Einrichtung abschließen</string>
+    <string name="widget_setup_detail">Das Widget wartet an der gewählten Stelle. Schließe die Einrichtung ab, um es hinzuzufügen, oder brich ab, um den Platzhalter zu entfernen.</string>
+    <string name="widget_setup_finish">Einrichtung abschließen</string>
+    <string name="widget_setup_continue">Widget-Einrichtung fortsetzen</string>
+    <string name="widget_setup_cancel">Widget-Einrichtung abbrechen</string>
+    <string name="widget_not_added">Widget nicht hinzugefügt</string>
+    <string name="resize">Größe ändern</string>
+    <string name="resize_on_home">Größe auf dem Startbildschirm ändern</string>
+    <string name="drag_to_resize">Ziehen, um die Widget-Größe zu ändern</string>
+    <string name="widget_resize_outside">Verschiebe dieses Widget vor dem Ändern der Größe in das Raster des Startbildschirms.</string>
+    <string name="width">Breite</string>
+    <string name="height">Höhe</string>
+    <string name="decrease_width">Widget schmaler machen</string>
+    <string name="increase_width">Widget breiter machen</string>
+    <string name="decrease_height">Widget niedriger machen</string>
+    <string name="increase_height">Widget höher machen</string>
+    <plurals name="columns">
+        <item quantity="one">%1$d Spalte</item>
+        <item quantity="other">%1$d Spalten</item>
+    </plurals>
+    <plurals name="rows">
+        <item quantity="one">%1$d Zeile</item>
+        <item quantity="other">%1$d Zeilen</item>
+    </plurals>
+    <string name="resize_overlap_note">Größen, die ein anderes Element überdecken, werden ignoriert.</string>
+    <string name="resize_invalid">Diese Größe überdeckt ein anderes Element oder ragt über die Seite hinaus.</string>
+    <string name="apply_size">Größe übernehmen</string>
+    <string name="widget_no_room">Für dieses Widget ist hier kein Platz.</string>
+    <string name="widget_home_changed">Der Startbildschirm hat sich während der Widget-Konfiguration geändert. Wähle erneut eine Stelle.</string>
+    <string name="widget_unexpected_binding">Der Widget-Host hat eine unerwartete Verknüpfung zurückgegeben. Versuche es erneut.</string>
+    <string name="widget_settings_open">Schließe zuerst die geöffneten Widget-Einstellungen ab oder brich sie ab.</string>
+    <string name="widget_add_failed">Dieses Widget konnte nicht hinzugefügt werden. Versuche ein anderes.</string>
+    <string name="widget_configure_gone">Dieses Widget kann nicht mehr konfiguriert werden.</string>
+    <string name="widget_configure_failed">Die Einstellungen dieses Widgets konnten nicht geöffnet werden.</string>
+
+    <!-- Backup -->
+    <string name="backup_title">Layout-Sicherung</string>
+    <string name="backup_problem">Problem mit der Layout-Sicherung</string>
+    <string name="backup_saved">Layout-Sicherung gespeichert.</string>
+    <string name="backup_restored">Layout wiederhergestellt. Widgets sind bereit zum Neuverbinden.</string>
+    <string name="backup_already_active">Dieses Layout ist bereits aktiv.</string>
+    <string name="backup_prepare_failed">Die Layout-Sicherung konnte nicht vorbereitet werden.</string>
+    <string name="backup_save_failed">Die Layout-Sicherung konnte nicht gespeichert werden.</string>
+    <string name="backup_read_failed">Die Layout-Sicherung konnte nicht gelesen werden.</string>
+    <string name="backup_invalid">Diese Layout-Sicherung ist ungültig.</string>
+    <string name="backup_no_longer_valid">Diese Layout-Sicherung ist nicht mehr gültig.</string>
+    <string name="backup_too_large">Die Layout-Sicherung ist größer als 2 MB.</string>
+    <string name="document_picker_unavailable">Die Dokumentauswahl ist nicht verfügbar.</string>
+    <string name="backup_picker_title">Layout-Dokument</string>
+    <string name="backup_picker_detail">Die Dokumentauswahl des Systems ist noch geöffnet. Kehre dorthin zurück, um den Vorgang abzuschließen, oder brich ihn ab.</string>
+    <string name="restore_review_title">Wiederhergestelltes Layout prüfen</string>
+    <plurals name="restore_apps">
+        <item quantity="one">%1$d App</item>
+        <item quantity="other">%1$d Apps</item>
+    </plurals>
+    <plurals name="restore_folders">
+        <item quantity="one">%1$d Ordner</item>
+        <item quantity="other">%1$d Ordner</item>
+    </plurals>
+    <plurals name="restore_widgets">
+        <item quantity="one">%1$d Widget</item>
+        <item quantity="other">%1$d Widgets</item>
+    </plurals>
+    <string name="restore_includes_leading">Enthält deine Seite für den aufgeklappten Zustand.</string>
+    <string name="restore_settings_note">Außerdem werden Symbollayout, Beschriftungen, Suche und Statuseinstellungen wiederhergestellt.</string>
+    <string name="restore_unavailable_apps">Nicht verfügbare Apps (%1$d)</string>
+    <string name="restore_unavailable_app">Nicht verfügbare App</string>
+    <string name="restore_missing_app">• %1$s — ihre gespeicherte Position bleibt leer</string>
+    <string name="restore_profile_attention">Profile erfordern Aufmerksamkeit</string>
+    <string name="restore_profile_issue">• %1$s (Profil „%2$s“ muss manuell zugeordnet werden)</string>
+    <plurals name="restore_reconnect">
+        <item quantity="one">%1$d Widget behält seinen gespeicherten Platz und fordert nach der Wiederherstellung zum Neuverbinden auf.</item>
+        <item quantity="other">%1$d Widgets behalten ihren gespeicherten Platz und fordern nach der Wiederherstellung zum Neuverbinden auf.</item>
+    </plurals>
+    <string name="restore_nothing_changes">Nichts ändert sich, bis du „Wiederherstellen“ wählst.</string>
+
+    <!-- Launcher background photo -->
+    <string name="photo_picker_title">Hintergrundfoto</string>
+    <string name="photo_picker_detail">Die Fotoauswahl wurde unterbrochen. Setze die Auswahl fort oder brich ab und behalte den aktuellen Hintergrund.</string>
+    <string name="photo_picker_unavailable">Die Fotoauswahl ist nicht verfügbar.</string>
+    <string name="photo_selection_lost">Die ausstehende Fotoauswahl konnte nicht wiederhergestellt werden.</string>
+    <string name="photo_preview_lost">Die ausstehende Fotovorschau konnte nicht wiederhergestellt werden.</string>
+    <string name="photo_save_failed">Dieses Foto konnte nicht gespeichert werden.</string>
+    <string name="photo_unusable">Dieses Foto kann nicht verwendet werden.</string>
+    <string name="photo_preview_save_failed">Die Vorschau dieses Fotos konnte nicht gespeichert werden.</string>
+    <string name="photo_no_pixels">Das ausgewählte Bild enthält keine verwendbaren Pixel.</string>
+    <string name="photo_too_large">Das ausgewählte Bild ist zu groß.</string>
+
+    <!-- Discover -->
+    <string name="discover">Discover</string>
+    <string name="discover_connecting">Verbindung mit Discover wird hergestellt…</string>
+    <string name="discover_unavailable">Discover ist gerade nicht verfügbar.</string>
+    <string name="discover_rejected">Google hat die Feed-Verbindung nicht angenommen. Starte Google neu und versuche es erneut.</string>
+    <string name="discover_disconnected">Discover wurde getrennt. Tippe auf „Erneut versuchen“, um die Verbindung wiederherzustellen.</string>
+    <string name="discover_no_feed">Die Google App hat keinen Feed bereitgestellt.</string>
+    <string name="discover_install_google">Installiere oder aktiviere die Google App, um Discover zu nutzen.</string>
+    <string name="discover_connect_failed">Die Google App konnte keine Verbindung zu Discover herstellen.</string>
+    <string name="discover_slow">Discover braucht etwas länger. Du kannst es erneut versuchen oder Google öffnen.</string>
+    <string name="discover_version">Diese Version der Google App konnte Discover nicht öffnen.</string>
+    <string name="discover_start_failed">Discover konnte nicht gestartet werden. Tippe auf „Erneut versuchen“, um die Verbindung wiederherzustellen.</string>
+    <string name="discover_no_fit">Discover passte nicht neben das Dock.</string>
+    <string name="discover_no_fit_return">Discover passte nicht neben das Dock. Kehre zum Startbildschirm zurück und versuche es erneut.</string>
+    <string name="discover_device_unsupported">Dieses Gerät kann Discover nicht neben dem Dock anzeigen.</string>
+    <string name="install_google_first">Installiere oder aktiviere zuerst die Google App.</string>
+    <string name="discover_fallback_title">Discover ist hier nicht verfügbar</string>
+    <string name="discover_fallback_message">iDuo kann den Discover-Feed auf diesem Gerät nicht neben dem Startbildschirm platzieren. Du kannst die Google App öffnen oder auf dem Startbildschirm bleiben.</string>
+
+    <!-- Shade gestures -->
+    <string name="shade_setup_title">Leistengesten aktivieren</string>
+    <string name="shade_setup_message">Android verlangt, dass du die Leistengesten von iDuo Launcher in den Bedienungshilfen aktivierst. Dieser Dienst öffnet nur Benachrichtigungen oder Schnelleinstellungen; er liest keine Bildschirminhalte und beobachtet keine anderen Apps.</string>
+    <string name="shade_starting">Leistengesten werden gestartet. Wische erneut nach unten.</string>
+    <string name="shade_rejected">Android konnte die Systemleiste nicht öffnen.</string>
+    <string name="accessibility_unavailable">Die Bedienungshilfen-Einstellungen sind nicht verfügbar.</string>
+
+    <!-- First run -->
+    <string name="setup_welcome">Willkommen bei iDuo</string>
+    <string name="setup_tagline">Ein ruhiger Startbildschirm für beide Seiten deines Foldables.</string>
+    <string name="setup_close">Begrüßung schließen</string>
+    <string name="setup_is_home">iDuo ist deine Start-App</string>
+    <string name="setup_is_home_detail">Die Home-Taste führt hierher zurück.</string>
+    <string name="setup_choose_home">iDuo als Start-App wählen</string>
+    <string name="setup_choose_home_detail">Android zeigt die Auswahl der Start-App an. Du kannst jederzeit zurückwechseln.</string>
+    <string name="setup_choose_home_button">Start-App auswählen</string>
+    <string name="setup_space_title">Den Platz sinnvoll nutzen</string>
+    <string name="setup_space_detail">Füge jetzt ein Widget hinzu oder halte später eine freie Stelle gedrückt, um eine beliebige Seite anzupassen.</string>
+    <string name="setup_add_widget">Widget hinzufügen</string>
+    <string name="setup_explore">Startbildschirm entdecken</string>
+
+    <!-- Status rail (spoken) -->
+    <string name="status_location">Standort wird verwendet</string>
+    <string name="status_battery">Akku %1$d %%</string>
+    <string name="status_battery_charging">Akku %1$d %%, wird geladen</string>
+    <string name="status_battery_unavailable">Akkustand nicht verfügbar</string>
+    <string name="status_wifi">WLAN verbunden</string>
+    <string name="status_wifi_level">WLAN verbunden, Signal %1$d von 4</string>
+    <string name="status_wifi_off">WLAN getrennt</string>
+    <string name="status_airplane">Flugmodus</string>
+    <string name="status_airplane_short">Flugmodus</string>
+    <string name="status_cellular">Mobilfunksignal %1$d von 4</string>
+    <string name="status_cellular_unavailable">Mobilfunksignal nicht verfügbar</string>
+</resources>

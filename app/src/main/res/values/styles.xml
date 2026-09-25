@@ -1,0 +1,21 @@
+<resources>
+    <style name="Theme.Duo" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <!-- Launcher windows show Android's wallpaper; iDuo draws no background of its own. -->
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorAccent">#30596D</item>
+    </style>
+    <style name="Theme.Duo.Discover" parent="Theme.Duo">
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+    <style name="Theme.Duo.LiveDiscover" parent="Theme.Duo.Discover">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+</resources>

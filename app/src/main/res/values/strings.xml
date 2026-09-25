@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- System integration -->
+    <string name="shade_service_label">iDuo Launcher shade gestures</string>
+    <string name="shade_service_description">Allows iDuo Launcher’s Home screen gestures to open the system notifications and Quick Settings panels. It does not read screen content or observe activity in other apps.</string>
+
+    <!-- Common actions -->
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="apply">Apply</string>
+    <string name="done">Done</string>
+    <string name="save">Save</string>
+    <string name="restore">Restore</string>
+    <string name="replace">Replace</string>
+    <string name="remove">Remove</string>
+    <string name="resume">Resume</string>
+    <string name="retry">Retry</string>
+    <string name="place">Place</string>
+    <string name="reconnect">Reconnect</string>
+    <string name="not_now">Not now</string>
+    <string name="turn_on">Turn on</string>
+    <string name="open_settings">Open settings</string>
+    <string name="open_google">Open Google</string>
+    <string name="back_to_home">Back to Home</string>
+    <string name="stay_on_home">Stay on Home</string>
+    <string name="value_dp">%1$d dp</string>
+    <string name="value_percent">%1$d%%</string>
+
+    <!-- Customization -->
+    <string name="customize_title">Make it yours</string>
+    <string name="customize_close">Close customization</string>
+    <string name="customize_launcher">Customize launcher</string>
+    <string name="customize_wallpaper">Wallpaper &amp; appearance</string>
+    <string name="customize_wallpaper_detail">Background, colors, and light</string>
+    <string name="customize_wallpaper_pending">Photo ready to review</string>
+    <string name="customize_home">Home layout</string>
+    <string name="customize_home_detail">Icons, spacing, dock, and widgets</string>
+    <string name="customize_gestures">Gestures &amp; search</string>
+    <string name="customize_gestures_detail">Labels, status, and search behavior</string>
+    <string name="customize_language">Language</string>
+    <string name="language_system">System language</string>
+    <string name="customize_backup">Backup</string>
+    <string name="customize_backup_detail">Save or restore this layout</string>
+    <string name="customize_help">Help &amp; setup</string>
+    <string name="customize_help_detail">Home app, widgets, gestures, and Discover</string>
+    <string name="set_as_home_app">Set as home app</string>
+    <string name="change_home_app">Change home app</string>
+    <string name="set_duo_as_home">Set iDuo as Home</string>
+    <string name="undo_layout_change">Undo last layout change</string>
+
+    <string name="choose_photo">Choose a photo</string>
+    <string name="choose_different_photo">Choose a different photo</string>
+    <string name="android_wallpaper">Android wallpaper</string>
+    <string name="wallpaper_detail">iDuo shows your Android wallpaper. A photo or the iDuo dunes chosen here become the Android wallpaper.</string>
+    <string name="use_iduo_dunes">Use iDuo dunes</string>
+    <string name="android_wallpaper_detail">Choose any wallpaper in Android’s settings, including live wallpapers. iDuo shows it right away.</string>
+    <string name="open_wallpaper_settings">Open wallpaper settings</string>
+    <string name="wallpaper_settings_unavailable">Android’s wallpaper settings are unavailable.</string>
+    <string name="wallpaper_target_title">Set wallpaper on</string>
+    <string name="wallpaper_target_home">Home screen</string>
+    <string name="wallpaper_target_lock">Lock screen</string>
+    <string name="wallpaper_target_both">Home and lock screens</string>
+    <string name="wallpaper_set_failed">Android did not accept the wallpaper.</string>
+    <string name="wallpaper_updated">Wallpaper updated.</string>
+    <string name="restore_photo_note">Your wallpaper is not included in layout backups.</string>
+
+    <string name="appearance">Appearance</string>
+    <string name="appearance_light">Light</string>
+    <string name="appearance_dark">Dark</string>
+    <string name="appearance_system">Follow system</string>
+    <string name="appearance_sun">Sunrise / sunset</string>
+    <string name="place_name">Place name</string>
+    <string name="latitude_label">Latitude (−90 to 90)</string>
+    <string name="longitude_label">Longitude (−180 to 180)</string>
+    <string name="appearance_range_error">Enter a latitude from −90 to 90 and longitude from −180 to 180.</string>
+    <string name="use_this_place">Use this place</string>
+    <string name="use_device_location">Use device location</string>
+    <string name="clear_location">Clear location</string>
+    <string name="approximate_location">Approximate device location</string>
+    <string name="appearance_fallback_no_location">Using system theme until a location is set</string>
+    <string name="appearance_fallback_stale">Using system theme because the device location is stale</string>
+    <string name="appearance_fallback_unavailable">Using system theme because this location is unavailable</string>
+    <string name="location_waiting">Waiting for approximate device location…</string>
+    <string name="location_denied">Location permission wasn’t granted. Using the system theme until you set a place.</string>
+    <string name="location_request_failed">Location permission couldn’t be requested. Using the system theme.</string>
+    <string name="location_permission_unavailable">Location permission isn’t available. Using the system theme.</string>
+    <string name="location_no_provider">No approximate location provider is available. Using the system theme.</string>
+    <string name="location_timeout">Location timed out. Using the system theme until you try again or enter a place.</string>
+    <string name="location_unavailable">Location is unavailable. Using the system theme.</string>
+
+    <string name="display_cover">Cover</string>
+    <string name="display_inner">Inner</string>
+    <string name="choose_home_apps">Choose Home apps</string>
+    <string name="pin_home_apps_title">Choose home apps</string>
+    <string name="dock_apps_setting">Apps in dock · cover and inner</string>
+    <string name="home_rows_setting">Home rows · cover and inner</string>
+    <string name="grid_layout">Grid layout</string>
+    <string name="home_rows_option" tools:ignore="PluralsCandidate">%1$d × %2$d apps</string>
+    <string name="home_rows_no_room">More rows need a smaller icon size or less row spacing on this screen.</string>
+    <string name="icon_size">App icon size</string>
+    <string name="row_spacing">Space between rows</string>
+    <string name="dock_width">Dock width</string>
+    <string name="dock_align">Align dock with app rows</string>
+    <string name="dock_height">Dock height on screen</string>
+    <string name="reset_layout">Reset this layout</string>
+    <string name="widgets_on_page">Widgets · Page %1$d</string>
+    <string name="unfolded_only_page">Unfolded-only page</string>
+    <string name="widget_size_row" tools:ignore="PluralsCandidate">%1$d × %2$d widget · row %3$d</string>
+    <string name="remove_widget">Remove widget</string>
+    <string name="remove_widget_leading">Remove widget from Unfolded-only page</string>
+    <string name="add_widget_to_page">Add widget to this page</string>
+
+    <string name="show_app_names">Show app names</string>
+    <string name="show_status">Show status at upper right</string>
+    <string name="search_opens_google">Search button opens Google</string>
+    <string name="search_local_note">All apps always keeps local app search.</string>
+    <string name="gestures_note">Swipe sideways anywhere on Home to change pages. Swipe down for notifications or quick settings.</string>
+
+    <string name="backup_detail">Save the current Home layout, folders, widgets, and layout settings.</string>
+    <string name="backup_restore_note">Restore shows a review before changing Home.</string>
+
+    <string name="help_home_title">Home app</string>
+    <string name="help_home_default">iDuo is your Home app. You can switch launchers in Android’s Home settings.</string>
+    <string name="help_home_not_default">Choose iDuo in Android’s Home settings to use it when you press Home.</string>
+    <string name="help_customize_title">Customize any page</string>
+    <string name="help_customize">Long-press empty space, then choose Customize launcher. If a page is full, long-press the slim area at its left edge.</string>
+    <string name="help_widgets">Add Android widgets to empty Home cells. Hold a widget to move or remove it.</string>
+    <string name="help_shade_title">Notifications and quick settings</string>
+    <string name="help_shade">Swipe down on Home. The first time, iDuo explains Android’s optional Accessibility setting. The service only opens the system panels.</string>
+    <string name="help_shade_setup">Set up shade gestures</string>
+    <string name="help_discover">Swipe right from the first Home page. If Google can’t provide the feed, iDuo keeps a Home return and recovery actions available.</string>
+
+    <!-- Apps and profiles -->
+    <string name="all_apps">All apps</string>
+    <string name="all_apps_page">All apps page</string>
+    <string name="your_apps">Your apps</string>
+    <string name="search_apps">Search apps</string>
+    <string name="search_google">Search Google</string>
+    <string name="clear_search">Clear search</string>
+    <string name="loading_apps">Loading apps…</string>
+    <string name="no_apps_found">No apps found</string>
+    <string name="apps_load_failed">Apps could not be loaded. Tap to retry.</string>
+    <string name="layout_load_failed">Saved Home layout could not be read; it was left unchanged.</string>
+    <string name="app_unavailable">%1$s is unavailable.</string>
+    <string name="app_options">App options</string>
+    <string name="choose_app">Choose %1$s</string>
+    <string name="pin_app">Pin %1$s to home</string>
+    <string name="unpin_app">Remove %1$s from home</string>
+    <plurals name="pinned_count">
+        <item quantity="one">%1$d pinned</item>
+        <item quantity="other">%1$d pinned</item>
+    </plurals>
+    <string name="profile_personal">Personal</string>
+    <string name="profile_work">Work</string>
+    <string name="profile_label">%1$s profile</string>
+    <string name="profile_unavailable">%1$s unavailable</string>
+    <string name="profile_unavailable_long">%1$s profile is unavailable</string>
+    <string name="profile_apps_paused">%1$s apps are paused</string>
+    <string name="unavailable_profile">Unavailable profile</string>
+    <string name="work_paused">Work apps are paused</string>
+    <string name="work_unavailable">Work profile is unavailable</string>
+    <string name="turn_on_work">Turn on work apps</string>
+
+    <!-- App actions -->
+    <string name="close_app_options">Close app options</string>
+    <string name="move_app">Move %1$s</string>
+    <string name="moving_app">Moving %1$s</string>
+    <string name="move_first">Move to first position</string>
+    <string name="move_earlier">Move earlier</string>
+    <string name="move_later">Move later</string>
+    <string name="move_to_page">Move to page %1$d</string>
+    <string name="move_to_leading_page">Move to Unfolded-only page</string>
+    <string name="move_on_home">Move on Home</string>
+    <string name="add_to_home">Add to Home</string>
+    <string name="remove_from_home">Remove from Home</string>
+    <string name="app_info">App info</string>
+    <string name="create_folder">Create folder</string>
+    <string name="create_folder_with">Create folder with %1$s</string>
+    <string name="close_empty_space_options">Close empty space options</string>
+    <string name="empty_space_detail">Choose what belongs in this space.</string>
+    <string name="wallpaper">Wallpaper</string>
+    <string name="home_options">Home options</string>
+
+    <!-- Folders -->
+    <string name="folder_default">Folder</string>
+    <string name="folder_name">Folder name</string>
+    <string name="rename_folder">Rename folder</string>
+    <string name="folder_name_save">Save name</string>
+    <string name="close_folder">Close folder</string>
+    <string name="folder_options">Folder options</string>
+    <string name="disband_folder">Ungroup folder</string>
+    <string name="folder_transparency">Folder background transparency</string>
+    <string name="all_apps_view">All apps view</string>
+    <string name="all_apps_view_list">List</string>
+    <string name="all_apps_view_grid">Grid in pages</string>
+    <string name="left_page">Left page</string>
+    <string name="left_page_discover" translatable="false">Google Discover</string>
+    <string name="left_page_rss">RSS reader</string>
+    <string name="rss_title">News</string>
+    <string name="rss_manage">Manage sources</string>
+    <string name="rss_sources">Sources</string>
+    <string name="rss_add_hint">Feed or website address</string>
+    <string name="rss_add">Add</string>
+    <string name="rss_remove_source">Remove %1$s</string>
+    <string name="rss_empty">Add a news source to fill this page.</string>
+    <string name="rss_add_first">Add a source</string>
+    <string name="rss_no_feed">No RSS or Atom feed was found at that address.</string>
+    <string name="rss_load_failed">Some sources could not be loaded.</string>
+    <string name="rss_duplicate">This source is already added.</string>
+    <string name="rss_refresh">Refresh</string>
+    <string name="rss_adding">Checking address…</string>
+    <plurals name="folder_description">
+        <item quantity="one">Folder %1$s, %2$d app</item>
+        <item quantity="other">Folder %1$s, %2$d apps</item>
+    </plurals>
+
+    <!-- Home and dock -->
+    <string name="home_page">Home page %1$d</string>
+    <string name="home_page_of">Home page %1$d of %2$d</string>
+    <string name="new_home_page">New home page</string>
+    <string name="previous_home_page">Previous home page</string>
+    <string name="next_home_page">Next home page</string>
+    <string name="dock_full">Dock full • Move an app out first</string>
+    <string name="dock_position_label">Dock position %1$d</string>
+    <string name="dock_choose_app">Choose dock app</string>
+    <string name="dock_choose_slot">Choose dock app %1$d</string>
+    <string name="dock_choose_on_home">Choose dock app on home</string>
+    <string name="dock_leave_empty">Leave this position empty</string>
+
+    <!-- Widgets -->
+    <string name="widget">Widget</string>
+    <string name="widgets">Widgets</string>
+    <string name="add_widget">Add widget</string>
+    <string name="search_widgets">Search widgets</string>
+    <string name="no_widgets_found">No widgets found</string>
+    <string name="widget_clock">Clock</string>
+    <string name="widget_date">Date</string>
+    <string name="widget_panel">Widget panel</string>
+    <string name="widget_builtin_detail">2 × 2 · Tap to place</string>
+    <string name="widget_place_hint">Tap to place · Hold to drag</string>
+    <string name="widget_does_not_fit">Doesn’t fit this layout</string>
+    <string name="clock_widget_description">Clock widget; tap to replace</string>
+    <string name="local_time">Local time</string>
+    <string name="info_card_title">A little more room.</string>
+    <string name="info_card_detail">Add a calendar, photos, or another widget.</string>
+    <string name="your_widgets">Your widgets</string>
+    <string name="tap_to_choose">Tap to choose</string>
+    <string name="widget_unavailable">Widget unavailable</string>
+    <string name="saved_widget">Saved widget</string>
+    <string name="widget_restore_unavailable">That provider or profile isn’t available. Choose a replacement.</string>
+    <string name="move_or_replace_widget">Move or replace widget</string>
+    <string name="back_to_widgets">Back to widgets</string>
+    <string name="replace_here">Replace here</string>
+    <string name="ready_to_place">Ready to place</string>
+    <string name="no_room_here">No room here</string>
+    <string name="widget_no_room_size">There isn’t room for this size. Choose another page or move an item first.</string>
+    <string name="widget_no_room_card">There isn’t room for this card. Choose another page or move an item first.</string>
+    <string name="widget_no_room_there">There isn’t room there. Try another space or page.</string>
+    <string name="widget_pending">Pending %1$s</string>
+    <string name="widget_options">Widget options</string>
+    <string name="close_widget_options">Close widget options</string>
+    <string name="widget_settings">Widget settings</string>
+    <string name="widget_settings_interrupted">Widget settings were interrupted. Resume configuration, or cancel and keep the widget unchanged.</string>
+    <string name="widget_setup_title">Finish widget setup</string>
+    <string name="widget_setup_detail">The widget is waiting at its chosen spot. Finish setup to add it, or cancel to remove the placeholder.</string>
+    <string name="widget_setup_finish">Finish setup</string>
+    <string name="widget_setup_continue">Continue widget setup</string>
+    <string name="widget_setup_cancel">Cancel widget setup</string>
+    <string name="widget_not_added">Widget not added</string>
+    <string name="resize">Resize</string>
+    <string name="resize_on_home">Resize on Home</string>
+    <string name="drag_to_resize">Drag to resize widget</string>
+    <string name="widget_resize_outside">Move this widget into the Home grid before resizing.</string>
+    <string name="width">Width</string>
+    <string name="height">Height</string>
+    <string name="decrease_width">Decrease widget width</string>
+    <string name="increase_width">Increase widget width</string>
+    <string name="decrease_height">Decrease widget height</string>
+    <string name="increase_height">Increase widget height</string>
+    <plurals name="columns">
+        <item quantity="one">%1$d column</item>
+        <item quantity="other">%1$d columns</item>
+    </plurals>
+    <plurals name="rows">
+        <item quantity="one">%1$d row</item>
+        <item quantity="other">%1$d rows</item>
+    </plurals>
+    <string name="resize_overlap_note">Sizes that overlap another item are ignored.</string>
+    <string name="resize_invalid">That size overlaps another item or extends beyond the page.</string>
+    <string name="apply_size">Apply size</string>
+    <string name="widget_no_room">There isn’t room for this widget here.</string>
+    <string name="widget_home_changed">Home changed while the widget was being configured. Choose a space again.</string>
+    <string name="widget_unexpected_binding">The widget host returned an unexpected binding. Try again.</string>
+    <string name="widget_settings_open">Finish or cancel the open widget settings first.</string>
+    <string name="widget_add_failed">This widget could not be added. Try another widget.</string>
+    <string name="widget_configure_gone">This widget can no longer be configured.</string>
+    <string name="widget_configure_failed">This widget could not open its settings.</string>
+
+    <!-- Backup -->
+    <string name="backup_title">Layout backup</string>
+    <string name="backup_problem">Layout backup problem</string>
+    <string name="backup_saved">Layout backup saved.</string>
+    <string name="backup_restored">Layout restored. Widgets are ready to reconnect.</string>
+    <string name="backup_already_active">This layout is already active.</string>
+    <string name="backup_prepare_failed">Layout backup could not be prepared.</string>
+    <string name="backup_save_failed">Layout backup could not be saved.</string>
+    <string name="backup_read_failed">Layout backup could not be read.</string>
+    <string name="backup_invalid">This layout backup is invalid.</string>
+    <string name="backup_no_longer_valid">This layout backup is no longer valid.</string>
+    <string name="backup_too_large">Layout backup is larger than 2 MB.</string>
+    <string name="document_picker_unavailable">The document picker is unavailable.</string>
+    <string name="backup_picker_title">Layout document</string>
+    <string name="backup_picker_detail">The system document picker is still open. Return to it to finish, or cancel this operation.</string>
+    <string name="restore_review_title">Review restored layout</string>
+    <plurals name="restore_apps">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+    <plurals name="restore_folders">
+        <item quantity="one">%1$d folder</item>
+        <item quantity="other">%1$d folders</item>
+    </plurals>
+    <plurals name="restore_widgets">
+        <item quantity="one">%1$d widget</item>
+        <item quantity="other">%1$d widgets</item>
+    </plurals>
+    <string name="restore_includes_leading">Includes your unfolded-only page.</string>
+    <string name="restore_settings_note">This also restores icon layout, labels, search, and status settings.</string>
+    <string name="restore_unavailable_apps">Unavailable apps (%1$d)</string>
+    <string name="restore_unavailable_app">Unavailable app</string>
+    <string name="restore_missing_app">• %1$s — its saved position will stay empty</string>
+    <string name="restore_profile_attention">Profile attention</string>
+    <string name="restore_profile_issue">• %1$s (%2$s profile requires explicit mapping)</string>
+    <plurals name="restore_reconnect">
+        <item quantity="one">%1$d widget will keep its saved space and ask to reconnect after restore.</item>
+        <item quantity="other">%1$d widgets will keep their saved space and ask to reconnect after restore.</item>
+    </plurals>
+    <string name="restore_nothing_changes">Nothing changes until you choose Restore.</string>
+
+    <!-- Launcher background photo -->
+    <string name="photo_picker_title">Background photo</string>
+    <string name="photo_picker_detail">The photo picker was interrupted. Resume choosing a photo, or cancel and keep the current background.</string>
+    <string name="photo_picker_unavailable">The photo picker is unavailable.</string>
+    <string name="photo_selection_lost">The pending photo selection could not be restored.</string>
+    <string name="photo_preview_lost">The pending photo preview could not be restored.</string>
+    <string name="photo_save_failed">That photo could not be saved.</string>
+    <string name="photo_unusable">That photo could not be used.</string>
+    <string name="photo_preview_save_failed">That photo preview could not be saved.</string>
+    <string name="photo_no_pixels">The selected image has no usable pixels.</string>
+    <string name="photo_too_large">The selected image is too large.</string>
+
+    <!-- Discover -->
+    <string name="discover">Discover</string>
+    <string name="discover_connecting">Connecting to Discover…</string>
+    <string name="discover_unavailable">Discover is unavailable right now.</string>
+    <string name="discover_rejected">Google didn’t accept the feed connection. Restart Google, then retry.</string>
+    <string name="discover_disconnected">Discover disconnected. Tap Retry to reconnect.</string>
+    <string name="discover_no_feed">The Google app did not provide a feed.</string>
+    <string name="discover_install_google">Install or enable the Google app to use Discover.</string>
+    <string name="discover_connect_failed">The Google app couldn’t connect to Discover.</string>
+    <string name="discover_slow">Discover is taking a while. You can retry or open Google.</string>
+    <string name="discover_version">This Google app version couldn’t open Discover.</string>
+    <string name="discover_start_failed">Discover couldn’t start. Tap Retry to reconnect.</string>
+    <string name="discover_no_fit">Discover couldn’t fit beside the dock.</string>
+    <string name="discover_no_fit_return">Discover couldn’t fit beside the dock. Return Home and try again.</string>
+    <string name="discover_device_unsupported">This device can’t show Discover beside the dock.</string>
+    <string name="install_google_first">Install or enable the Google app first.</string>
+    <string name="discover_fallback_title">Discover isn’t available here</string>
+    <string name="discover_fallback_message">iDuo can’t place the Discover feed beside Home on this device. You can open the Google app or stay on Home.</string>
+
+    <!-- Shade gestures -->
+    <string name="shade_setup_title">Turn on shade gestures</string>
+    <string name="shade_setup_message">Android requires you to enable iDuo Launcher shade gestures in Accessibility settings. This service only opens Notifications or Quick Settings; it doesn’t read screen content or watch other apps.</string>
+    <string name="shade_starting">Shade gestures are starting. Swipe down again.</string>
+    <string name="shade_rejected">Android couldn’t open the system panel.</string>
+    <string name="accessibility_unavailable">Accessibility settings are unavailable.</string>
+
+    <!-- First run -->
+    <string name="setup_welcome">Welcome to iDuo</string>
+    <string name="setup_tagline">A quiet Home screen built for both sides of your foldable.</string>
+    <string name="setup_close">Close welcome</string>
+    <string name="setup_is_home">iDuo is your Home app</string>
+    <string name="setup_is_home_detail">The Home button returns here.</string>
+    <string name="setup_choose_home">Choose iDuo as your Home app</string>
+    <string name="setup_choose_home_detail">Android will show the Home app chooser. You can switch back anytime.</string>
+    <string name="setup_choose_home_button">Choose Home app</string>
+    <string name="setup_space_title">Make the space useful</string>
+    <string name="setup_space_detail">Add a widget now, or long-press empty space later to customize any page.</string>
+    <string name="setup_add_widget">Add a widget</string>
+    <string name="setup_explore">Explore Home</string>
+
+    <!-- Status rail (spoken) -->
+    <string name="status_location">Location in use</string>
+    <string name="status_battery">Battery %1$d%%</string>
+    <string name="status_battery_charging">Battery %1$d%%, charging</string>
+    <string name="status_battery_unavailable">Battery unavailable</string>
+    <string name="status_wifi">Wi-Fi connected</string>
+    <string name="status_wifi_level">Wi-Fi connected, signal %1$d of 4</string>
+    <string name="status_wifi_off">Wi-Fi disconnected</string>
+    <string name="status_airplane">Airplane mode</string>
+    <string name="status_airplane_short">Airplane</string>
+    <string name="status_cellular">Cellular signal %1$d of 4</string>
+    <string name="status_cellular_unavailable">Cellular signal unavailable</string>
+</resources>

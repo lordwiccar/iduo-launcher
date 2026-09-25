@@ -1,0 +1,15 @@
+<resources>
+    <string name="fixture_modern_widget_name">Forecast Canvas 4 by 2</string>
+    <string name="fixture_modern_description">Modern target-cell fixture with intentionally oversized legacy dimensions</string>
+    <string name="fixture_legacy_widget_name">Flexible Legacy Strip</string>
+    <string name="fixture_legacy_description">Legacy default is wide but its resize minimum fits the grid</string>
+    <string name="fixture_required_widget_name">Configured Snapshot</string>
+    <string name="fixture_required_description">Requires confirmation before it can appear</string>
+    <string name="fixture_optional_widget_name">Instant Conditions</string>
+    <string name="fixture_optional_description">Configuration is optional and reconfigurable</string>
+    <string name="fixture_live_text">Fixture widget is live</string>
+    <string name="fixture_required_preview">Required configuration preview</string>
+    <string name="fixture_optional_preview">Optional configuration preview</string>
+    <string name="fixture_modern_preview">Modern 4 × 2 preview</string>
+    <string name="fixture_legacy_preview">Legacy resizable preview</string>
+</resources>

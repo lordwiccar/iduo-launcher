@@ -1,0 +1,1 @@
+<TextView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#AD1457" android:gravity="center" android:padding="12dp" android:text="@string/fixture_required_preview" android:textColor="#FFFFFF" android:textSize="18sp" />
