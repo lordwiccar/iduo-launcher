@@ -24,6 +24,7 @@ docs/*
 docs/releases/*
 !docs/releases/0.15.0-beta01.md
 !docs/releases/1.0.0.md
+!docs/releases/1.1.0.md
 !docs/images/
 docs/images/*
 !docs/images/*.png
