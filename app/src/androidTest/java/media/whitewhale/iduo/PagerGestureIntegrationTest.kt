@@ -21,8 +21,7 @@ import org.junit.Rule
 import org.junit.Test
 
 class PagerGestureIntegrationTest {
-    val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private fun pager() = compose.onNodeWithTag("app-pager")
     private fun ready() {
         check(android.os.Build.HARDWARE in listOf("ranchu", "goldfish"))

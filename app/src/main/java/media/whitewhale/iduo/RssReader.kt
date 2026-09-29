@@ -23,10 +23,8 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-private const val RSS_PREFS = "rss"
 private const val RSS_SOURCES = "sources"
 private const val RSS_UPDATED = "updated"
-private const val RSS_CACHE_FILE = "rss-cache.json"
 private const val MAX_FEED_BYTES = 4 * 1024 * 1024
 private const val MAX_IMAGE_BYTES = 3 * 1024 * 1024
 /** A page shown again within this time keeps its articles instead of fetching. */
@@ -35,12 +33,18 @@ private const val RSS_FRESH_MS = 15 * 60 * 1000L
 /** Why adding a source failed, as a string resource. */
 class RssAddException(val messageRes: Int) : Exception()
 
+/** The left page's two readers: Google News, and the user's own RSS sources. */
+internal object NewsFeeds {
+    val custom = FeedReader(prefsName = "rss", cacheFile = "rss-cache.json")
+    val googleNews = FeedReader(prefsName = "google_news_feed", cacheFile = "google-news-cache.json")
+}
+
 /**
- * The RSS page's sources and articles. Sources live in preferences; the last fetched articles in a
+ * One reader's sources and articles. Sources live in preferences; the last fetched articles in a
  * private file so the page opens instantly. Every request goes straight from the phone to the
  * source over https; nothing passes through an iDuo server.
  */
-internal object RssReader {
+internal class FeedReader(private val prefsName: String, private val cacheFile: String) {
     var sources by mutableStateOf<List<RssSource>>(emptyList())
         private set
     var items by mutableStateOf<List<RssItem>>(emptyList())
@@ -60,11 +64,11 @@ internal object RssReader {
         if (loaded) return
         loaded = true
         val app = context.applicationContext
-        val prefs = app.getSharedPreferences(RSS_PREFS, Context.MODE_PRIVATE)
+        val prefs = app.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
         sources = runCatching { decodeSources(prefs.getString(RSS_SOURCES, "[]") ?: "[]") }.getOrDefault(emptyList())
         updatedAt = prefs.getLong(RSS_UPDATED, 0)
         items = withContext(Dispatchers.IO) {
-            runCatching { decodeItems(File(app.filesDir, RSS_CACHE_FILE).readText()) }.getOrDefault(emptyList())
+            runCatching { decodeItems(File(app.filesDir, cacheFile).readText()) }.getOrDefault(emptyList())
         }
     }
 
@@ -84,15 +88,15 @@ internal object RssReader {
             }
             val failed = results.filter { it.second.isFailure }.mapTo(mutableSetOf()) { it.first.url }
             val fresh = results.flatMap { (source, result) ->
-                result.getOrNull()?.items?.map { it.copy(sourceTitle = source.title) }
+                result.getOrNull()?.items?.map { it.copy(sourceTitle = it.sourceTitle.ifBlank { source.title }) }
                     ?: items.filter { it.sourceUrl == source.url }
             }
             items = mergeFeedItems(fresh)
             failedSources = failed
             updatedAt = System.currentTimeMillis()
-            app.getSharedPreferences(RSS_PREFS, Context.MODE_PRIVATE).edit().putLong(RSS_UPDATED, updatedAt).apply()
+            app.getSharedPreferences(prefsName, Context.MODE_PRIVATE).edit().putLong(RSS_UPDATED, updatedAt).apply()
             val snapshot = items
-            withContext(Dispatchers.IO) { runCatching { File(app.filesDir, RSS_CACHE_FILE).writeText(encodeItems(snapshot)) } }
+            withContext(Dispatchers.IO) { runCatching { File(app.filesDir, cacheFile).writeText(encodeItems(snapshot)) } }
         } finally {
             refreshing = false
             refreshLock.unlock()
@@ -130,14 +134,32 @@ internal object RssReader {
         saveSources(context)
     }
 
+    /**
+     * Sets sources chosen elsewhere (Google News editions and topics). Articles of sources that are
+     * no longer listed disappear, and the next visit fetches the new list.
+     */
+    fun replaceSources(context: Context, next: List<RssSource>) {
+        if (next == sources) return
+        val urls = next.mapTo(mutableSetOf(), RssSource::url)
+        sources = next
+        items = items.filter { it.sourceUrl in urls }
+        failedSources = failedSources intersect urls
+        updatedAt = 0
+        context.applicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE).edit()
+            .putString(RSS_SOURCES, encodeSources(sources)).putLong(RSS_UPDATED, 0).apply()
+    }
+
     private fun saveSources(context: Context) {
-        context.applicationContext.getSharedPreferences(RSS_PREFS, Context.MODE_PRIVATE).edit()
+        context.applicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE).edit()
             .putString(RSS_SOURCES, encodeSources(sources)).apply()
     }
 
     private fun fetchFeed(url: String): ParsedFeed =
         parseFeed(download(url, MAX_FEED_BYTES).inputStream(), url) ?: throw IOException("Not a feed: $url")
+}
 
+/** Article pictures for both readers. */
+internal object FeedImages {
     /** Downsampled article pictures, shared across recompositions and pages. */
     private val imageCache = object : LruCache<String, Bitmap>(12 * 1024 * 1024) {
         override fun sizeOf(key: String, value: Bitmap) = value.byteCount

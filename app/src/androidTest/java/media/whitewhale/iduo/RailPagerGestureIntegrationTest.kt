@@ -21,8 +21,7 @@ import kotlin.math.abs
 
 /** Coverage for fixed controls that live outside the pager's own layout bounds. */
 class RailPagerGestureIntegrationTest {
-    private val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     private fun readyOnLastHomePage(): String {
         check(android.os.Build.HARDWARE in listOf("ranchu", "goldfish"))
@@ -100,7 +99,7 @@ class RailPagerGestureIntegrationTest {
         compose.openHomeCustomization()
         compose.onNodeWithTag("customization-gestures").performClick()
         compose.onNodeWithTag("google-search-switch").assertExists()
-        compose.onNodeWithContentDescription("Close customization").performClick()
+        compose.closeSettingsPage()
         compose.waitForIdle()
         compose.onNodeWithTag("google-search-switch").assertDoesNotExist()
 

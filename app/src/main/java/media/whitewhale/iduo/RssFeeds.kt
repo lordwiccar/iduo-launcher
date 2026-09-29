@@ -50,7 +50,7 @@ fun parseFeed(input: InputStream, sourceUrl: String): ParsedFeed? {
     if (!handler.isFeed) return null
     if (parsed.isFailure && handler.items.isEmpty()) return null
     val title = handler.feedTitle.trim().ifEmpty { URI(sourceUrl).host ?: sourceUrl }
-    return ParsedFeed(title, handler.items.take(RSS_ITEMS_PER_SOURCE).map { it.copy(sourceTitle = title) })
+    return ParsedFeed(title, handler.items.take(RSS_ITEMS_PER_SOURCE).map { it.copy(sourceTitle = it.sourceTitle.ifBlank { title }) })
 }
 
 fun parseFeed(text: String, sourceUrl: String): ParsedFeed? =
@@ -110,19 +110,26 @@ private class FeedHandler(private val sourceUrl: String) : DefaultHandler() {
             "encoded" -> current.putIfAbsent("content", value)
             "content" -> if (value.isNotEmpty()) current.putIfAbsent("content", value)
             "pubdate", "published", "date", "updated", "issued" -> if (value.isNotEmpty()) current.putIfAbsent("date", value)
+            "source" -> if (value.isNotEmpty()) current.putIfAbsent("source", value)
         }
     }
 
     private fun finishEntry(fields: Map<String, String>) {
-        val title = plainText(fields["title"].orEmpty())
+        val publisher = plainText(fields["source"].orEmpty())
+        // Aggregators such as Google News append " - Publisher" to every headline.
+        val title = plainText(fields["title"].orEmpty()).let { headline ->
+            if (publisher.isNotEmpty() && headline.endsWith(" - $publisher")) headline.dropLast(publisher.length + 3) else headline
+        }
         val link = fields["link"]?.let { resolveUrl(sourceUrl, it) }.orEmpty()
         if (title.isEmpty() && link.isEmpty()) return
         val body = fields["summary"] ?: fields["content"] ?: ""
+        // A summary that only repeats the headline (and its publisher) adds nothing.
+        val summary = plainText(body).takeUnless { title.isNotEmpty() && it.startsWith(title) }.orEmpty()
         val image = entryImage ?: firstImage(fields["content"].orEmpty()) ?: firstImage(body)
         items += RssItem(
             id = (fields["id"]?.takeIf { it.isNotBlank() } ?: link.ifEmpty { title }),
-            sourceUrl = sourceUrl, sourceTitle = "", title = title.ifEmpty { link }, link = link,
-            summary = plainText(body).take(280), imageUrl = image?.let { resolveUrl(sourceUrl, it) },
+            sourceUrl = sourceUrl, sourceTitle = publisher, title = title.ifEmpty { link }, link = link,
+            summary = summary.take(280), imageUrl = image?.let { resolveUrl(sourceUrl, it) },
             published = parseFeedDate(fields["date"].orEmpty()),
         )
     }

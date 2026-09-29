@@ -225,7 +225,7 @@ internal fun VisualWidgetPicker(
                 Text(stringResource(R.string.widgets), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Medium)
             }
             OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().padding(vertical = 10.dp)
-                .testTag("widget-catalog-search").releasesDiscoverWhileTyping("widget-search"), singleLine = true, placeholder = { Text(stringResource(R.string.search_widgets)) },
+                .testTag("widget-catalog-search"), singleLine = true, placeholder = { Text(stringResource(R.string.search_widgets)) },
                 leadingIcon = { Icon(Icons.Rounded.Search, null) })
             if (profiles.any { it.isWork }) Row(Modifier.fillMaxWidth().padding(bottom = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {

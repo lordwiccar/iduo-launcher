@@ -1,6 +1,6 @@
 # Contributor code map
 
-iDuo is a Kotlin/Jetpack Compose Android Home application with one normal app module. It owns its Home content, dock, editing UI and widget hosts. Android owns the secure lock screen, recents, notification panels and system app transitions. Google owns the content and input inside its Discover feed.
+iDuo is a Kotlin/Jetpack Compose Android Home application with one normal app module. It owns its Home content, dock, editing UI and widget hosts. Android owns the secure lock screen, recents, notification panels and system app transitions. The news page shows headlines fetched from public RSS feeds.
 
 ## Where to start
 
@@ -13,8 +13,8 @@ All paths below are relative to `app/src/main/java/media/whitewhale/iduo/`.
 | Home and navigation | `LauncherScreen.kt`, `LauncherPager.kt`, `PageGestures.kt`, `WorkspacePageMotion.kt` | Page composition, shared gestures, unfolded pairs and page motion |
 | Editing and folders | `HomeEditing.kt`, `HomeDrag.kt`, `FolderEditing.kt`, `FolderPanel.kt` | Placement rules, drag previews, insertion, folders and cancellation |
 | Native widgets | `WidgetController.kt`, `WidgetPicker.kt`, `WidgetSizing.kt`, `ZeroPaddingWidgetHost.kt`, `WidgetVerticalGestures.kt` | Provider catalog, binding/configuration, geometry and native touch arbitration |
-| Google features | `GoogleSearch.kt`, `DiscoverClient.kt`, `LiveDiscoverActivity.kt`, `DiscoverBounds.kt` | Search intents, feed protocol, persistent host and embedding compatibility |
-| Customization | `CustomizationSheet.kt`, `LauncherActionSheet.kt` | Long-press actions, settings subpages and sheet navigation |
+| News page and search | `NewsPage.kt`, `RssReader.kt`, `RssFeeds.kt`, `GoogleNews.kt`, `GoogleSearch.kt` | Left page UI, feed fetching and caching, RSS/Atom parsing, Google News editions, search intentibility |
+| Settings and actions | `Settings.kt`, `AppearanceSettings.kt`, `About.kt`, `LauncherActionSheet.kt` | Full-screen settings (list and pages, two panes when wide, search), long-press actions |
 | Wallpaper, appearance and status | `SystemWallpaper.kt`, `LauncherBackground.kt`, `WallpaperStandIn.kt`, `AppearanceSettings.kt`, `SolarSchedule.kt`, `DeviceStatus.kt`, `StatusRail.kt` | Private photo staging, theme scheduling, live status and its presentation |
 | Backup and shade access | `LayoutBackup.kt`, `BackupController.kt`, `SystemShadeController.kt` | Portable layout import/export and optional system-panel actions |
 
@@ -36,11 +36,9 @@ The shared ancestor recognizes horizontal one-page gestures across the page, doc
 
 Widget size publication uses measured content with `updateAppWidgetOptions`, posted/coalesced after layout. Framework padding behavior is relevant when changing this. Nearby pages remain composed to avoid expensive RemoteViews reinflation during a swipe.
 
-## Discover ownership
+## News page
 
-The live path keeps a persistent Google window and live Home graphics layers. Healthy Discover backing remains transparent; a recovery surface appears while a status message is present, including a delayed connection or an error. Google reports feed progress but owns native feed gestures, so a timeout or progress reversal is not proof that a finger was released.
-
-`DiscoverBounds.kt` contains an unsupported alignment-hint workaround scoped to audited Window Extensions versions 8–10. Other versions retain normal alignment. This avoids an additional vendor task-fragment transition in the tested configuration; it is not a public SystemUI animation API or a compatibility guarantee. Keep the version guard, host-start recovery and fallback path when changing embedding behavior.
+Home's left page is logical page -1 and always exists. `NewsPage` shows one of two `FeedReader`s from `NewsFeeds`: Google News, whose sources `GoogleNewsSettings` derives from an edition and sections, or the user's own RSS sources. Each reader keeps its sources in preferences and its last articles in a private cache file, refreshes when shown after 15 minutes, and fetches all sources in parallel over HTTPS with size and redirect limits. `parseFeed` reads RSS 2.0, RSS 1.0 and Atom with external entities disabled, keeps a per-item publisher (`<source>`) and drops a summary that only repeats the headline.
 
 ## Localization
 

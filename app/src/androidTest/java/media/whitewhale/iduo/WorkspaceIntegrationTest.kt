@@ -10,8 +10,7 @@ import org.junit.Rule
 import org.junit.Test
 
 class WorkspaceIntegrationTest {
-    val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private fun model() = ViewModelProvider(compose.activity)[LauncherModel::class.java]
     private fun ready() { compose.waitUntil(15000) { !model().state.value.loading } }
     private fun root() = compose.onNodeWithTag("launcher-root")

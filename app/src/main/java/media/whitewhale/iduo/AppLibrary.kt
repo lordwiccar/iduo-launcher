@@ -85,8 +85,7 @@ internal fun AppLibrary(
                 FilterChip(selected = !showWork, onClick = { showWork = false }, label = { Text(stringResource(R.string.profile_personal)) })
                 FilterChip(selected = showWork, onClick = { showWork = true }, label = { Text(stringResource(R.string.profile_work)) })
             }
-            OutlinedTextField(query, onQuery, Modifier.fillMaxWidth().padding(vertical = 12.dp).testTag(if (editing) "pin-search" else "library-search")
-                .releasesDiscoverWhileTyping("library-search"),
+            OutlinedTextField(query, onQuery, Modifier.fillMaxWidth().padding(vertical = 12.dp).testTag(if (editing) "pin-search" else "library-search"),
                 placeholder = { Text(stringResource(R.string.search_apps)) }, singleLine = true, shape = RoundedCornerShape(16.dp),
                 leadingIcon = { Icon(Icons.Rounded.Search, null) },
                 trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { onQuery("") }) { Icon(Icons.Rounded.Close, stringResource(R.string.clear_search)) } },

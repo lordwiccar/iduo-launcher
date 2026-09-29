@@ -21,8 +21,7 @@ import org.junit.runner.RunWith
 /** Expanded-only coverage for the overlapping, uniquely composed Home panes. */
 @RunWith(AndroidJUnit4::class)
 class ExpandedWorkspaceIntegrationTest {
-    val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     private fun model() = ViewModelProvider(compose.activity)[LauncherModel::class.java]
     private fun root() = compose.onNodeWithTag("launcher-root")

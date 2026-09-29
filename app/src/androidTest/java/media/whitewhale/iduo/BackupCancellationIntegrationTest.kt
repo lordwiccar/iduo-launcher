@@ -14,8 +14,7 @@ import org.junit.Test
 
 /** Proves a destroyed Activity cannot clear the durable import owned by its replacement. */
 class BackupCancellationIntegrationTest {
-    val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private val uri = Uri.parse("content://media.whitewhale.iduo.test.blocking/payload")
 
     @Test fun canceledOldImportCannotClearReplacementTransaction() {

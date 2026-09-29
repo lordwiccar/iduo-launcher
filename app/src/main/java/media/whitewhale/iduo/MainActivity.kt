@@ -12,12 +12,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.SystemBarStyle
 import androidx.activity.viewModels
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.pm.PackageManager
@@ -27,6 +28,11 @@ import androidx.core.content.ContextCompat
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
+
+/** The current Home activity; Home is a single task, so at most one is live at a time. */
+internal object LauncherHost {
+    var activity = java.lang.ref.WeakReference<MainActivity>(null)
+}
 
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) { super.attachBaseContext(AppLanguage.wrap(newBase)) }
@@ -39,6 +45,9 @@ class MainActivity : ComponentActivity() {
         private set
     private val homeRequests = mutableIntStateOf(0)
     private val searchRequests = mutableIntStateOf(0)
+    /** Whether the optional Home gestures accessibility service is on, checked on each resume. */
+    internal var homeGesturesEnabled by androidx.compose.runtime.mutableStateOf(false)
+        private set
     private val defaultHome = mutableStateOf(false)
     private val showFirstRun = mutableStateOf(false)
     private lateinit var setupExperience: SetupExperience
@@ -58,14 +67,12 @@ class MainActivity : ComponentActivity() {
         if (granted) requestAppearanceLocation(keepPending = true)
         else finishAppearanceLocation(getString(R.string.location_denied))
     })
-    private var openingDiscover = false
     private var shadeSetupDialog: android.app.AlertDialog? = null
     private var returningFromShadeSettings = false
-    private var shadeSetupOwnsExternalUi = false
-    private var recreatingShadeSetup = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        LauncherHost.activity = java.lang.ref.WeakReference(this)
         setupExperience = SetupExperience(this)
         showFirstRun.value = setupExperience.entryDecision(SetupExperience.hadLauncherState(this)) ==
             SetupEntryDecision.SHOW
@@ -74,15 +81,9 @@ class MainActivity : ComponentActivity() {
         appearance = AppearanceStore(this)
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
-        widgets = WidgetController(this, model) { active ->
-            LiveDiscover.setExternalResultPending(this, "main", "widget-setup", active)
-        }.also { it.restore(savedInstanceState) }
-        backups = BackupController(this, model, widgets) { active ->
-            LiveDiscover.setExternalResultPending(this, "main", "layout-backup", active)
-        }.also { it.restore() }
-        backgrounds = LauncherBackgroundController(this) { active ->
-            LiveDiscover.setExternalResultPending(this, "main", "launcher-background", active)
-        }
+        widgets = WidgetController(this, model) { }.also { it.restore(savedInstanceState) }
+        backups = BackupController(this, model, widgets) { }.also { it.restore() }
+        backgrounds = LauncherBackgroundController(this) { }
         status = DeviceStatusMonitor(this).also { lifecycle.addObserver(it) }
         updateDefaultHome()
         if (savedInstanceState == null && intent.getStringExtra("duo_destination") == "search") searchRequests.intValue++
@@ -94,8 +95,8 @@ class MainActivity : ComponentActivity() {
                 LauncherScreen(state, model, widgets, homeRequests.intValue,
                     onLaunch = { launchApp(it) }, onMakeDefault = ::makeDefault, onAppInfo = ::appInfo,
                     isDefaultHome = defaultHome.value, deviceStatus = deviceStatus, onStatusMode = ::setStatusMode, onWallpaperSettings = ::openWallpaperSettings,
-                    onDiscover = ::openDiscover, searchRequests = searchRequests.intValue,
-                    onLaunchFrom = ::launchApp, onGoogleSearch = ::openGoogleSearch,
+                    searchRequests = searchRequests.intValue,
+                    onLaunchFrom = ::launchApp, onGoogleSearch = ::openGoogleSearch, onWebSearch = ::openWebSearch,
                     appearance = appearance.state,
                     onAppearanceMode = { cancelAppearanceLocation(); appearance.setMode(it, systemDark()) },
                     onAppearanceManual = { place, lat, lon -> cancelAppearanceLocation(); appearance.setManual(place, lat, lon, systemDark()) },
@@ -107,9 +108,6 @@ class MainActivity : ComponentActivity() {
             }
         }
         FoldRenderExperiment.attach(this)
-        // Reassert the token after recreation (and after process restoration, where the
-        // in-memory owner set is empty) before any external UI can uncover Discover.
-        if (returningFromShadeSettings || restoreShadeDialog) ownShadeSetupExternally()
         if (restoreShadeDialog) window.decorView.post { if (!isFinishing && !isDestroyed) showShadeSetup() }
     }
 
@@ -130,43 +128,35 @@ class MainActivity : ComponentActivity() {
         widgets.host.stopListening(); super.onStop()
     }
     override fun onDestroy() {
-        recreatingShadeSetup = isChangingConfigurations
         shadeSetupDialog?.dismiss()
-        if (!isChangingConfigurations) releaseShadeSetupOwnership()
         cancelAppearanceLocation()
         super.onDestroy()
     }
     override fun onResume() {
         super.onResume()
-        if (returningFromShadeSettings) {
-            returningFromShadeSettings = false
-            releaseShadeSetupOwnership()
-        }
-        val discover = DiscoverSession.host.get()
-        if (discover != null) window.decorView.doOnPreDraw {
-            it.postOnAnimation { if (DiscoverSession.host.get() === discover) DiscoverSession.dismiss() }
-        }
+        returningFromShadeSettings = false
         model.refresh(); appearance.refresh(systemDark()); updateDefaultHome()
-        window.decorView.post {
-            if (!isFinishing && !isDestroyed && !LiveDiscover.viewport.isEmpty)
-                LiveDiscover.prepare(this, LiveDiscover.viewport, LiveDiscover.pageWidth)
-        }
+        homeGesturesEnabled = SystemShadeAccessibilityService.isEnabled(this)
     }
 
-    internal fun openSystemShade(panel: ShadePanel) {
-        when (SystemShadeAccessibilityService.open(this, panel)) {
+    internal fun openSystemShade(panel: ShadePanel) =
+        handleGesture(SystemShadeAccessibilityService.open(this, panel), R.string.shade_rejected)
+
+    internal fun lockScreen() =
+        handleGesture(SystemShadeAccessibilityService.lockScreen(this), R.string.lock_rejected)
+
+    private fun handleGesture(result: ShadeOpenResult, rejected: Int) {
+        when (result) {
             ShadeOpenResult.OPENED -> Unit
             ShadeOpenResult.SERVICE_DISABLED -> showShadeSetup()
             ShadeOpenResult.SERVICE_STARTING -> Toast.makeText(this,
                 R.string.shade_starting, Toast.LENGTH_SHORT).show()
-            ShadeOpenResult.ACTION_REJECTED -> Toast.makeText(this,
-                R.string.shade_rejected, Toast.LENGTH_SHORT).show()
+            ShadeOpenResult.ACTION_REJECTED -> Toast.makeText(this, rejected, Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun showShadeSetup() {
         if (shadeSetupDialog?.isShowing == true) return
-        ownShadeSetupExternally()
         shadeSetupDialog = android.app.AlertDialog.Builder(this)
             .setTitle(R.string.shade_setup_title)
             .setMessage(R.string.shade_setup_message)
@@ -177,14 +167,10 @@ class MainActivity : ComponentActivity() {
                     startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                 } catch (_: android.content.ActivityNotFoundException) {
                     returningFromShadeSettings = false
-                    releaseShadeSetupOwnership()
                     Toast.makeText(this, R.string.accessibility_unavailable, Toast.LENGTH_LONG).show()
                 }
             }
-            .also { dialog -> dialog.setOnDismissListener {
-                shadeSetupDialog = null
-                if (!returningFromShadeSettings && !recreatingShadeSetup) releaseShadeSetupOwnership()
-            } }
+            .also { dialog -> dialog.setOnDismissListener { shadeSetupDialog = null } }
             .show()
     }
 
@@ -193,17 +179,6 @@ class MainActivity : ComponentActivity() {
         showFirstRun.value = false
     }
 
-    private fun ownShadeSetupExternally() {
-        if (shadeSetupOwnsExternalUi) return
-        shadeSetupOwnsExternalUi = true
-        LiveDiscover.setExternalResultPending(this, "main", "shade-service-setup", true)
-    }
-
-    private fun releaseShadeSetupOwnership() {
-        if (!shadeSetupOwnsExternalUi) return
-        shadeSetupOwnsExternalUi = false
-        LiveDiscover.setExternalResultPending(this, "main", "shade-service-setup", false)
-    }
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) setStatusMode(model.state.value.verticalStatus)
@@ -249,37 +224,15 @@ class MainActivity : ComponentActivity() {
     } catch (_: android.content.ActivityNotFoundException) { false }
       catch (_: SecurityException) { false }
 
-    private fun openDiscover() {
-        if (DiscoverEmbedding.supported(this)) {
-            if (openingDiscover) return
-            openingDiscover = true
-            // A very quick reopen can arrive before the previous return's deferred cleanup.
-            // Finish that session before taking a new image, so it cannot invalidate this copy.
-            DiscoverSession.dismiss()
-            DiscoverMotion.capture(this) {
-                openingDiscover = false
-                if (!lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) return@capture
-                DiscoverSession.apps = model.state.value.apps
-                startActivity(Intent(this, DiscoverActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or Intent.FLAG_ACTIVITY_NO_ANIMATION))
-            }
+    /** Google's results for [query]: in the Google app, else in the browser. */
+    private fun openWebSearch(query: String) {
+        for (intent in webSearchIntents(query)) {
+            try { startActivity(intent); return }
+            catch (_: android.content.ActivityNotFoundException) { }
+            catch (_: SecurityException) { }
         }
-        else showDiscoverFallback()
     }
 
-    private fun showDiscoverFallback() {
-        val google = packageManager.getLaunchIntentForPackage(DiscoverClient.GOOGLE_PACKAGE)
-        android.app.AlertDialog.Builder(this)
-            .setTitle(R.string.discover_fallback_title)
-            .setMessage(R.string.discover_fallback_message)
-            .setNegativeButton(R.string.stay_on_home, null)
-            .apply {
-                if (google != null) setPositiveButton(R.string.open_google) { _, _ ->
-                    runCatching { startActivity(google) }
-                }
-            }
-            .show()
-    }
 
     private fun makeDefault() {
         // Samsung may immediately cancel a role request; its Home settings is reliable.
@@ -301,7 +254,6 @@ class MainActivity : ComponentActivity() {
     private fun useAppearanceLocation() {
         cancelAppearanceLocation()
         appearance.locationStatus(getString(R.string.location_waiting))
-        LiveDiscover.setExternalResultPending(this, "main", "appearance-location", true)
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
             requestAppearanceLocation(keepPending = true)
         else {
@@ -312,7 +264,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestAppearanceLocation(keepPending: Boolean = false) {
-        if (!keepPending) LiveDiscover.setExternalResultPending(this, "main", "appearance-location", true)
         val generation = ++appearanceLocationGeneration
         val manager = getSystemService(LocationManager::class.java)
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -348,7 +299,6 @@ class MainActivity : ComponentActivity() {
         appearancePermissionGeneration = -1
         appearanceLocationCancellation?.cancel(); appearanceLocationCancellation = null
         if (::appearance.isInitialized) appearance.locationStatus(null)
-        LiveDiscover.setExternalResultPending(this, "main", "appearance-location", false)
     }
 
     private fun finishAppearanceLocation(message: String?) {
@@ -356,11 +306,9 @@ class MainActivity : ComponentActivity() {
         appearancePermissionGeneration = -1
         appearanceLocationCancellation = null
         appearance.locationStatus(message)
-        LiveDiscover.setExternalResultPending(this, "main", "appearance-location", false)
     }
 
     private fun setStatusMode(vertical: Boolean) {
-        LiveDiscover.host.get()?.statusMode(vertical)
         val controller = WindowCompat.getInsetsController(window, window.decorView)
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         if (vertical) controller.hide(WindowInsetsCompat.Type.statusBars()) else controller.show(WindowInsetsCompat.Type.statusBars())

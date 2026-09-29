@@ -30,6 +30,8 @@ internal class ChildPagerRegion(val bounds: () -> Rect, val canPage: (Float) -> 
 internal class HomeDragState {
     /** The paged child currently on screen, if any. */
     var childPager: ChildPagerRegion? = null
+    /** Home's double-tap action for an empty cell, which takes its own taps. */
+    var onEmptyCellDoubleTap: () -> Unit = {}
     val regions = mutableStateMapOf<DropTarget, DragRegion>()
     private val regionOwners = mutableMapOf<DropTarget, Any>()
     var source by mutableStateOf<DragRegion?>(null)

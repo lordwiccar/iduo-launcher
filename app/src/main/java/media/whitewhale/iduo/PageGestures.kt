@@ -82,6 +82,8 @@ internal fun Modifier.onePageGestures(
     enabled: Boolean = true,
     canStartDownwardSwipe: (Offset) -> Boolean = { true },
     onDownwardSwipe: ((ShadePanel) -> Unit)? = null,
+    canStartUpwardSwipe: (Offset) -> Boolean = { true },
+    onUpwardSwipe: (() -> Unit)? = null,
     onLeadingOverscroll: (() -> Unit)? = null,
     /** Whether a horizontal swipe from this point, with this travel, belongs to a paged child. */
     childPagesHorizontally: (Offset, Float) -> Boolean = { _, _ -> false },
@@ -90,6 +92,8 @@ internal fun Modifier.onePageGestures(
     val currentEnabled by rememberUpdatedState(enabled)
     val currentCanStartDownwardSwipe by rememberUpdatedState(canStartDownwardSwipe)
     val currentDownwardSwipe by rememberUpdatedState(onDownwardSwipe)
+    val currentCanStartUpwardSwipe by rememberUpdatedState(canStartUpwardSwipe)
+    val currentUpwardSwipe by rememberUpdatedState(onUpwardSwipe)
     val currentLeadingOverscroll by rememberUpdatedState(onLeadingOverscroll)
     return nestedScroll(limits).pointerInput(pager, limits, motion) {
         coroutineScope {
@@ -149,10 +153,19 @@ internal fun Modifier.onePageGestures(
                                     // but must not trigger a vertical system action on finger-up.
                                     val openDownward = change.pressed && distance.y > 0f && currentDownwardSwipe != null &&
                                         currentCanStartDownwardSwipe(down.position)
-                                    cancelReason = if (openDownward) "downward_action" else "vertical_axis"
+                                    val openUpward = change.pressed && distance.y < 0f && currentUpwardSwipe != null &&
+                                        currentCanStartUpwardSwipe(down.position)
+                                    cancelReason = when {
+                                        openDownward -> "downward_action"
+                                        openUpward -> "upward_action"
+                                        else -> "vertical_axis"
+                                    }
                                     if (openDownward) {
                                         change.consume()
                                         currentDownwardSwipe?.invoke(shadePanelForStart(down.position.x, size.width.toFloat()))
+                                    } else if (openUpward) {
+                                        change.consume()
+                                        currentUpwardSwipe?.invoke()
                                     }
                                     break
                                 }

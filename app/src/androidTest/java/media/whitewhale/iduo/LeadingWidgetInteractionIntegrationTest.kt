@@ -22,8 +22,7 @@ import org.junit.runner.RunWith
 /** Real provider and native-view acceptance for the unfolded-only Home grid. */
 @RunWith(AndroidJUnit4::class)
 class LeadingWidgetInteractionIntegrationTest {
-    private val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
 
     private fun model() = ViewModelProvider(compose.activity)[LauncherModel::class.java]

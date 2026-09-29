@@ -3,6 +3,7 @@ package media.whitewhale.iduo
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -23,4 +24,11 @@ internal fun ComposeTestRule.openHomeCustomization(page: Int? = null) {
     }
     waitForIdle()
     onNodeWithTag("empty-space-customize").performClick()
+}
+
+/** Leaves a settings page and closes settings: on a narrow screen a page has only its back arrow. */
+internal fun ComposeTestRule.closeSettingsPage() {
+    if (onAllNodesWithTag("settings-close").fetchSemanticsNodes().isEmpty()) onNodeWithTag("customization-back").performClick()
+    onNodeWithTag("settings-close").performClick()
+    waitForIdle()
 }

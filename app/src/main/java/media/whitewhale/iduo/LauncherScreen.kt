@@ -127,9 +127,10 @@ fun LauncherScreen(
     state: LauncherState, model: LauncherModel, widgets: WidgetController, homeRequests: Int,
     onLaunch: (AppEntry) -> Unit, onMakeDefault: () -> Unit, onAppInfo: (AppEntry) -> Unit,
     isDefaultHome: Boolean, deviceStatus: DeviceStatus, onStatusMode: (Boolean) -> Unit, onWallpaperSettings: () -> Unit,
-    onDiscover: () -> Unit = {}, searchRequests: Int = 0,
+    searchRequests: Int = 0,
     onLaunchFrom: (AppEntry, android.graphics.Rect?) -> Unit = { app, _ -> onLaunch(app) },
     onGoogleSearch: (android.graphics.Rect?) -> Boolean = { false },
+    onWebSearch: (String) -> Unit = {},
     appearance: AppearanceState = AppearanceState(),
     onAppearanceMode: (AppearanceMode) -> Unit = {},
     onAppearanceManual: (String, Double, Double) -> Unit = { _, _, _ -> },
@@ -159,10 +160,11 @@ fun LauncherScreen(
     var resizeAppPitch by remember { mutableFloatStateOf(1f) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var appMoveMenu by rememberSaveable { mutableStateOf(false) }
-    var customizationPage by rememberSaveable { mutableStateOf(CustomizationPage.OVERVIEW) }
+    var customizationPage by rememberSaveable { mutableStateOf(SettingsPage.OVERVIEW) }
     LaunchedEffect(selectedId) { if (selectedId == null) appMoveMenu = false }
-    LaunchedEffect(sheet) { if (sheet.isEmpty()) customizationPage = CustomizationPage.OVERVIEW }
+    LaunchedEffect(sheet) { if (sheet.isEmpty()) customizationPage = SettingsPage.OVERVIEW }
     var openFolderId by rememberSaveable { mutableStateOf<String?>(null) }
+    var spotlight by rememberSaveable { mutableStateOf(false) }
     var createFolderFirstId by rememberSaveable { mutableStateOf<String?>(null) }
     var savedPage by rememberSaveable { mutableIntStateOf(0) }
     var lastHomePage by rememberSaveable { mutableIntStateOf(0) }
@@ -170,43 +172,18 @@ fun LauncherScreen(
     var pinQuery by rememberSaveable { mutableStateOf("") }
     val launcherActivity = androidx.activity.compose.LocalActivity.current as MainActivity
     val launcherRootView = LocalView.current.rootView
-    DisposableEffect(sheet == "widgets") {
-        val active = sheet == "widgets"
-        if (active) LiveDiscover.setExternalResultPending(launcherActivity, "main", "widget-picker", true)
-        onDispose { if (active) LiveDiscover.setExternalResultPending(launcherActivity, "main", "widget-picker", false) }
-    }
     val appsById = remember(state.apps) { state.apps.associateBy { it.id } }
     val drag = remember { HomeDragState() }
-    val folderOwnsInput = openFolderId != null || drag.source?.folderId != null
-    DisposableEffect(folderOwnsInput) {
-        if (folderOwnsInput) LiveDiscover.setExternalResultPending(launcherActivity, "main", "folder-panel", true)
-        onDispose { if (folderOwnsInput) LiveDiscover.setExternalResultPending(launcherActivity, "main", "folder-panel", false) }
-    }
     val haptic = LocalHapticFeedback.current
     val homePages = state.homePages
     val pendingNewPage = widgets.pendingPlacement?.page == homePages
     val visibleHomePages = homePages + if (drag.active || widgetSession != null || pendingNewPage) 1 else 0
     var expandedWorkspace by remember { mutableStateOf(false) }
-    // The RSS reader is an ordinary page; Discover has a page only where Google's feed can be embedded.
-    val rssLeft = state.leftPage == LeftPage.RSS
-    val firstHome = if (rssLeft || DiscoverBounds.available) 1 else 0
+    // Home's left page (Google News or RSS) is physical page 0, so Home 1 is page 1.
+    val firstHome = 1
     val pageCount = visibleHomePages + 1
     val nativePager = rememberPagerState(initialPage = savedPage.coerceIn(-firstHome, pageCount - 1) + firstHome, pageCount = { pageCount + firstHome })
-    val pager = remember(nativePager, firstHome) { LauncherPager(nativePager, firstHome) }
-    // Adding or removing the left page shifts every physical page; keep showing the same one.
-    val shownFirstHome = remember { intArrayOf(firstHome) }
-    LaunchedEffect(firstHome) {
-        if (shownFirstHome[0] != firstHome) {
-            val logical = nativePager.currentPage - shownFirstHome[0]
-            shownFirstHome[0] = firstHome
-            nativePager.scrollToPage((logical + firstHome).coerceIn(0, pageCount + firstHome - 1))
-        }
-    }
-    // Google's feed host must not run, or hold input focus, while the RSS reader has the page.
-    DisposableEffect(rssLeft) {
-        if (rssLeft) LiveDiscover.setExternalResultPending(launcherActivity, "main", "left-page-rss", true)
-        onDispose { if (rssLeft) LiveDiscover.setExternalResultPending(launcherActivity, "main", "left-page-rss", false) }
-    }
+    val pager = remember(nativePager) { LauncherPager(nativePager, firstHome) }
     fun leaveTemporaryWidgetPage() {
         val persistedPages = model.state.value.homePages
         if (pager.currentPage >= persistedPages)
@@ -222,50 +199,9 @@ fun LauncherScreen(
         }
     }
     val pageGestures = remember(nativePager) { PageGestureLimits(nativePager) }
-    SideEffect { pageGestures.editing = drag.active || widgetSession != null || resizeSlot != null; LiveDiscover.allowNativeOpen = pager.currentPage == 0 && !drag.active && widgetSession == null && resizeSlot == null }
+    SideEffect { pageGestures.editing = drag.active || widgetSession != null || resizeSlot != null }
     val pageFling = androidx.compose.foundation.pager.PagerDefaults.flingBehavior(nativePager, pagerSnapDistance = pageGestures)
-    var nativeMotion by remember { mutableStateOf(false) }
-    DisposableEffect(nativePager) {
-        val callback: (Float) -> Unit = { progress ->
-            val scrolling = nativePager.isScrollInProgress
-            if (DuoMotionTrace.enabled) DuoMotionTrace.event("native_callback_received",
-                "progress=$progress scrolling=$scrolling nativeMotion=$nativeMotion current=${nativePager.currentPage} offset=${nativePager.currentPageOffsetFraction}")
-            if (!scrolling || nativeMotion) {
-                val priorNativeMotion = nativeMotion
-                nativeMotion = progress > 0f && progress < 1f
-                val position = 1f - progress
-                val page = position.roundToInt()
-                if (DuoMotionTrace.enabled) DuoMotionTrace.event("native_callback_accepted",
-                    "progress=$progress nativeMotion=$priorNativeMotion->$nativeMotion requestPage=$page requestOffset=${position - page}")
-                nativePager.requestScrollToPage(page, position - page)
-            } else if (DuoMotionTrace.enabled) DuoMotionTrace.event("native_callback_rejected",
-                "progress=$progress reason=compose_scrolling nativeMotion=$nativeMotion")
-        }
-        LiveDiscover.onNativeProgress = callback
-        onDispose { if (LiveDiscover.onNativeProgress === callback) LiveDiscover.onNativeProgress = null }
-    }
-    LaunchedEffect(nativePager) {
-        snapshotFlow { Triple((1f - nativePager.currentPage - nativePager.currentPageOffsetFraction).coerceIn(0f, 1f), nativePager.isScrollInProgress, nativeMotion) to (nativePager.targetPage < firstHome) }
-            .collect { (motion, towardFeed) ->
-                val (progress, scrolling, native) = motion
-                if (firstHome > 0) {
-                    if (DuoMotionTrace.enabled) DuoMotionTrace.event("pager_observer",
-                        "progress=$progress scrolling=$scrolling nativeMotion=$native towardFeed=$towardFeed")
-                    if (scrolling) {
-                        if (nativeMotion && DuoMotionTrace.enabled) DuoMotionTrace.event("native_owner_cleared",
-                            "reason=compose_scrolling progress=$progress")
-                        nativeMotion = false
-                        LiveDiscover.page(progress, true, towardFeed)
-                    } else if (!native) LiveDiscover.page(progress, false)
-                }
-            }
-    }
     val scope = rememberCoroutineScope()
-    DisposableEffect(pager) {
-        val callback = { scope.launch { pager.animateScrollToPage(0) }; Unit }
-        LiveDiscover.onHomeRequest = callback
-        onDispose { if (LiveDiscover.onHomeRequest === callback) LiveDiscover.onHomeRequest = null }
-    }
     var previousHomePages by remember { mutableIntStateOf(homePages) }
     var previousEditRevision by remember { mutableIntStateOf(state.editRevision) }
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
@@ -294,12 +230,12 @@ fun LauncherScreen(
             ?: lastHomePage.coerceIn(0, homePages - 1)
         drag.clear(); widgetSession = null; resizeSlot = null; sheet = ""; widgetPackage = null
         widgetExactTarget = false; widgetPlacementMessage = null; selectedId = null; appMoveMenu = false
-        openFolderId = null; createFolderFirstId = null; emptyCellIndex = null
+        openFolderId = null; createFolderFirstId = null; emptyCellIndex = null; spotlight = false
         focus.clearFocus(); keyboard?.hide()
         pager.animateScrollToPage(page)
     } }
     LaunchedEffect(searchRequests) { if (searchRequests > 0) { drag.clear(); widgetSession = null; resizeSlot = null; sheet = ""; widgetPackage = null; widgetExactTarget = false; selectedId = null
-        if (!state.googleSearch || !onGoogleSearch(null)) pager.animateScrollToPage(homePages)
+        if (!state.googleSearch || !onGoogleSearch(null)) spotlight = true
     } }
     val widgetPickerBack = {
         if (widgetSession != null) {
@@ -313,7 +249,7 @@ fun LauncherScreen(
         val destination = if (drag.source?.target is DropTarget.Library) homePages else drag.originPage.coerceAtMost(homePages - 1)
         drag.clear(); scope.launch { pager.scrollToPage(destination) }
     } else if (selectedId != null) selectedId = null else { focus.clearFocus(); scope.launch { pager.animateScrollToPage(0) } } }
-    val openDiscover = { if (firstHome > 0) scope.launch { pager.animateScrollToPage(-1) } else onDiscover(); Unit }
+    val openLeftPage = { scope.launch { pager.animateScrollToPage(-1) }; Unit }
     val openLibrary = { scope.launch { pager.animateScrollToPage(homePages) }; Unit }
 
     val dragWindowPage = if (expandedWorkspace && (drag.active || widgetSession != null)) pager.settledPage else pager.currentPage
@@ -432,13 +368,14 @@ fun LauncherScreen(
     }
 
     // Soften Home behind an open folder so the folder reads as the one surface in focus. No
-    // layer is added while closed, keeping the retained Home layer that Discover draws untouched.
-    val folderBlur by animateDpAsState(if (openFolderId != null) FOLDER_BACKDROP_BLUR else 0.dp, label = "folder blur")
+    // layer is added while closed.
+    val backdropBlurred = openFolderId != null || spotlight
+    val folderBlur by animateDpAsState(if (backdropBlurred) FOLDER_BACKDROP_BLUR else 0.dp, label = "folder blur")
     val behindFolder = if (folderBlur > 0.dp) Modifier.blur(folderBlur) else Modifier
     // Android's wallpaper lies behind this window, so the window blurs it rather than Compose.
     val wallpaperBlur = with(LocalDensity.current) { FOLDER_BACKDROP_BLUR.roundToPx() }
-    DisposableEffect(openFolderId != null) {
-        launcherActivity.window.setWallpaperBlur(if (openFolderId != null) wallpaperBlur else 0)
+    DisposableEffect(backdropBlurred) {
+        launcherActivity.window.setWallpaperBlur(if (backdropBlurred) wallpaperBlur else 0)
         onDispose { launcherActivity.window.setWallpaperBlur(0) }
     }
     // Let a wallpaper wider than the screen scroll with the Home pages.
@@ -451,18 +388,8 @@ fun LauncherScreen(
             wallpapers.setWallpaperOffsets(token, if (homePages > 1) (position / span).coerceIn(0f, 1f) else .5f, .5f)
         }
     }
-    val homeLayer = rememberGraphicsLayer()
-    DisposableEffect(homeLayer) {
-        homeLayer.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
-        LiveDiscover.homeLayer = homeLayer
-        onDispose { if (LiveDiscover.homeLayer === homeLayer) LiveDiscover.homeLayer = null }
-    }
-    Box(Modifier.fillMaxSize().graphicsLayer {
-        // The feed frame reuses the pager's render nodes in another window. Give Main
-        // a complete render target so cross-window damage cannot erase stationary controls.
-        compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
-    }.onSizeChanged { LiveDiscover.fullSize = androidx.compose.ui.geometry.Size(it.width.toFloat(), it.height.toFloat()) }.testTag("launcher-root").homeDragInput(drag,
-        enabled = sheet.isEmpty() && !showFirstRun && selectedId == null && resizeSlot == null && pager.currentPage >= 0,
+    Box(Modifier.fillMaxSize().testTag("launcher-root").homeDragInput(drag,
+        enabled = sheet.isEmpty() && !showFirstRun && selectedId == null && resizeSlot == null && !spotlight && pager.currentPage >= 0,
         page = pager.currentPage, eligiblePages = eligibleDragPages, onStart = {
             focus.clearFocus(); keyboard?.hide(); haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             if (drag.source?.folderId != null) openFolderId = null
@@ -532,10 +459,22 @@ fun LauncherScreen(
             var gestureOriginInWindow by remember { mutableStateOf(Offset.Zero) }
             val pagerInputEnabled = pager.currentPage in -firstHome..visibleHomePages && !drag.active &&
                 widgetSession == null && resizeSlot == null && sheet.isEmpty() && !showFirstRun && selectedId == null &&
-                openFolderId == null && emptyCellIndex == null && createFolderFirstId == null &&
+                openFolderId == null && emptyCellIndex == null && createFolderFirstId == null && !spotlight &&
                 launcherActivity.backups.preview == null && !launcherActivity.backups.pickerPending &&
                 !launcherActivity.backgrounds.pickerPending && widgets.setupStatus == null &&
                 widgets.reconfigureWidgetId == null
+            // Only bare wallpaper on a Home page locks; icons, widgets and the dock keep their taps.
+            val lockAt by rememberUpdatedState { point: Offset ->
+                val page = pager.currentPage
+                val region = drag.hit(point + gestureOriginInRoot, setOf(page - 1, page))
+                if (state.doubleTapLock && pagerInputEnabled && page in 0 until visibleHomePages &&
+                    (region == null || region.target is DropTarget.Home && !region.movable)) launcherActivity.lockScreen()
+            }
+            SideEffect {
+                drag.onEmptyCellDoubleTap = {
+                    if (state.doubleTapLock && pagerInputEnabled && pager.currentPage in 0 until visibleHomePages) launcherActivity.lockScreen()
+                }
+            }
             val openHomeOptionsAt by rememberUpdatedState { point: Offset, width: Int ->
                 val page = pager.currentPage
                 val targetPage = if (geometry.expanded && point.x < width / 2f) page - 1 else page
@@ -543,6 +482,20 @@ fun LauncherScreen(
                 if (pagerInputEnabled && page in 0 until visibleHomePages && !overItem) {
                     emptyCellIndex = firstEmptyHomeCell(state, targetPage)
                 }
+            }
+            // Positive IDs are provider-owned Android views. Leave their vertical stream untouched
+            // so scrollable widgets retain native gesture handling. A dock that can scroll in the
+            // swipe's direction also keeps it.
+            fun homeOwnsVerticalSwipe(point: Offset, upward: Boolean): Boolean {
+                val page = pager.currentPage
+                if (page !in 0 until visibleHomePages) return false
+                val region = drag.hit(point + gestureOriginInRoot, eligibleDragPages)
+                val rootOnScreen = IntArray(2).also(launcherRootView::getLocationOnScreen)
+                val screenPoint = point + gestureOriginInWindow +
+                    Offset(rootOnScreen[0].toFloat(), rootOnScreen[1].toFloat())
+                val dockScrolls = if (upward) dockScroll.canScrollForward else dockScroll.value > 0
+                return !(region?.target is DropTarget.Dock && dockScrolls) &&
+                    !nativeWidgetConsumesVerticalGesture(launcherRootView, screenPoint)
             }
             Box(Modifier.fillMaxSize().then(behindFolder).onGloballyPositioned {
                 gestureOriginInRoot = it.boundsInRoot().topLeft
@@ -555,53 +508,29 @@ fun LauncherScreen(
                 // Positive IDs are provider-owned Android views. Leave their vertical
                 // stream untouched so scrollable widgets retain native gesture handling.
                 // A dock that is already scrolled also gets first use of a downward drag.
-                canStartDownwardSwipe = { point ->
-                    if (pager.currentPage !in 0 until visibleHomePages) false else {
-                        val region = drag.hit(point + gestureOriginInRoot, eligibleDragPages)
-                        val rootOnScreen = IntArray(2).also(launcherRootView::getLocationOnScreen)
-                        val screenPoint = point + gestureOriginInWindow +
-                            Offset(rootOnScreen[0].toFloat(), rootOnScreen[1].toFloat())
-                        !(region?.target is DropTarget.Dock && dockScroll.value > 0) &&
-                            !nativeWidgetConsumesVerticalGesture(launcherRootView, screenPoint)
-                    }
-                },
-                onDownwardSwipe = launcherActivity::openSystemShade,
-                onLeadingOverscroll = if (firstHome == 0) onDiscover else null,
+                canStartDownwardSwipe = { point -> homeOwnsVerticalSwipe(point, upward = false) },
+                onDownwardSwipe = if (state.swipeDownShade) launcherActivity::openSystemShade else null,
+                canStartUpwardSwipe = { point -> homeOwnsVerticalSwipe(point, upward = true) },
+                onUpwardSwipe = if (state.swipeUpSearch) ({ spotlight = true }) else null,
                 childPagesHorizontally = { point, travel ->
                     drag.childPager?.let { child -> child.bounds().contains(point + gestureOriginInRoot) && child.canPage(travel) } == true
                 },
             ).pointerInput(Unit) {
                 // Bare wallpaper anywhere on Home opens Home options. Icons, cells, the dock and
                 // controls consume their own presses first, and a page swipe cancels this one.
-                detectTapGestures(onLongPress = { openHomeOptionsAt(it, size.width) })
+                detectTapGestures(onLongPress = { openHomeOptionsAt(it, size.width) }, onDoubleTap = { lockAt(it) })
             }) {
-            val pagerModifier = Modifier.fillMaxHeight().width(pagerWidth)
-                .drawWithContent {
-                    homeLayer.record { this@drawWithContent.drawContent() }
-                    drawLayer(homeLayer)
-                    LiveDiscover.host.get()?.invalidateFrame()
-                }.testTag("app-pager")
-                .discoverSwipe(firstHome == 0 && pager.currentPage == 0 && !drag.active && sheet.isEmpty() &&
-                    !showFirstRun && selectedId == null, onDiscover)
-                .onGloballyPositioned {
-                    if (firstHome > 0 && !rssLeft) {
-                        val bounds = it.boundsInWindow()
-                        LiveDiscover.pagerOrigin = bounds.topLeft
-                        val padding = 32 * density.density
-                        LiveDiscover.prepare(launcherActivity,
-                            android.graphics.Rect((bounds.left + padding).toInt(), (bounds.top + padding).toInt(),
-                                (bounds.right - 16 * density.density).toInt(), (bounds.bottom - padding).toInt()), bounds.width)
-                    }
-                }
-                .semantics { stateDescription = if (pager.currentPage == -1) launcherActivity.getString(if (rssLeft) R.string.rss_title else R.string.discover)
+            val leftPageTitle = stringResource(leftPageTitle(state.leftPage))
+            val pagerModifier = Modifier.fillMaxHeight().width(pagerWidth).testTag("app-pager")
+                .semantics { stateDescription = if (pager.currentPage == -1) leftPageTitle
                     else if (pager.currentPage == visibleHomePages) launcherActivity.getString(R.string.all_apps)
                     else launcherActivity.getString(R.string.home_page_of, pager.currentPage + 1, visibleHomePages) }
             if (geometry.expanded) {
                 Box(pagerModifier) {
-                    // PagerState remains the source of truth for native Discover progress,
-                    // snapping, accessibility state, and programmatic page requests.
+                    // PagerState remains the source of truth for snapping, accessibility state,
+                    // and programmatic page requests.
                     HorizontalPager(nativePager, Modifier.fillMaxSize(), userScrollEnabled = false,
-                        key = { if (it < firstHome) "discover" else if (it - firstHome == visibleHomePages) "library" else "home-${it - firstHome}" }) { }
+                        key = { if (it < firstHome) "left" else if (it - firstHome == visibleHomePages) "library" else "home-${it - firstHome}" }) { }
                     ExpandedWorkspace(
                         nativePager = nativePager, motion = workspaceMotion!!, firstHome = firstHome,
                         visibleHomePages = visibleHomePages, panelWidth = panelWidth,
@@ -622,16 +551,13 @@ fun LauncherScreen(
                 HorizontalPager(nativePager, pagerModifier,
                     // Keep adjacent Home panes attached so ordinary back-and-forth paging does
                     // not synchronously inflate provider RemoteViews inside the gesture frame.
-                    // Discover is two physical positions before Home 2. Retain both Home
-                    // neighbors to avoid reinflating Home 2's RemoteViews during native exit.
-                    beyondViewportPageCount = if (firstHome > 0) 2 else 1,
+                    beyondViewportPageCount = 1,
                     userScrollEnabled = !drag.active && resizeSlot == null, flingBehavior = pageFling,
-                    key = { if (it < firstHome) "discover" else if (it - firstHome == visibleHomePages) "library" else "home-${it - firstHome}" }) { physicalPage ->
+                    key = { if (it < firstHome) "left" else if (it - firstHome == visibleHomePages) "library" else "home-${it - firstHome}" }) { physicalPage ->
                     val page = physicalPage - firstHome
                     if (page == -1) {
-                        if (rssLeft) RssPage(Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = bottomSpace),
-                            active = pager.currentPage == -1)
-                        else DiscoverContent(Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = 16.dp))
+                        NewsPage(Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = bottomSpace),
+                            active = pager.currentPage == -1, mode = state.leftPage)
                     } else if (page == visibleHomePages) {
                         AppLibrary(state, libraryQuery, { libraryQuery = it }, onLaunch, model::setPinned,
                             onActions = { selectedId = it.id }, modifier = Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = bottomSpace).testTag("library-page"),
@@ -675,9 +601,9 @@ fun LauncherScreen(
                     Icon(Icons.Rounded.Home, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.set_as_home_app))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                    if (!drag.active) IconButton(onClick = openDiscover, Modifier.size(32.dp).testTag("discover-page-link")) {
-                        Icon(if (rssLeft) Icons.Rounded.RssFeed else Icons.Rounded.Explore,
-                            stringResource(if (rssLeft) R.string.rss_title else R.string.discover),
+                    if (!drag.active) IconButton(onClick = openLeftPage, Modifier.size(32.dp).testTag("left-page-link")) {
+                        Icon(if (state.leftPage == LeftPage.RSS) Icons.Rounded.RssFeed else Icons.Rounded.Newspaper,
+                            leftPageTitle,
                             tint = Color.White.copy(alpha = .65f), modifier = Modifier.size(17.dp))
                     }
                     if (visibleHomePages <= 6) repeat(visibleHomePages) { index ->
@@ -697,32 +623,38 @@ fun LauncherScreen(
                 .width(preset.dockWidth.dp), horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val controlSize = dockIconSize(geometry.iconSize).dp
-                if (pager.currentPage == -1) CircleControl(Icons.Rounded.ArrowForward, stringResource(R.string.back_to_home), "discover-home", controlSize) { scope.launch { pager.animateScrollToPage(0) } }
+                if (pager.currentPage == -1) CircleControl(Icons.Rounded.ArrowForward, stringResource(R.string.back_to_home), "left-page-home", controlSize) { scope.launch { pager.animateScrollToPage(0) } }
                 val searchBounds = remember { android.graphics.Rect() }
                 Box(Modifier.onGloballyPositioned { searchBounds.set(it.boundsInWindow().toAndroidBounds()) }) {
                     CircleControl(Icons.Rounded.Search, stringResource(if (state.googleSearch) R.string.search_google else R.string.search_apps), "search", controlSize) {
-                        if (!state.googleSearch || !onGoogleSearch(searchBounds)) openLibrary()
+                        if (!state.googleSearch || !onGoogleSearch(searchBounds)) spotlight = true
                     }
                 }
             }
-            if (sheet.isNotEmpty() && sheet != "widgets") {
-                val activeCustomizationPage = if (sheet == "settings:wallpaper") CustomizationPage.WALLPAPER else customizationPage
+            if (sheet == "settings" || sheet == "settings:wallpaper") SettingsScreen(state, wide, model, isDefaultHome, maxRowsFit,
+                page = if (sheet == "settings:wallpaper") SettingsPage.APPEARANCE else customizationPage,
+                onPage = { customizationPage = it; sheet = "settings" },
+                onMakeDefault = { sheet = ""; onMakeDefault() },
+                onClose = { customizationPage = SettingsPage.OVERVIEW; sheet = "" }, onEditPins = { sheet = "pins" },
+                onWidget = { widgetSlot = it; widgetPackage = null; widgetProfileSerial = null; widgetExactTarget = false; sheet = "widgets" },
+                onAddWidget = { page -> widgetSlot = model.nextWidgetSlot(); widgetTargetIndex = page * HOME_CELLS; widgetPackage = null; widgetProfileSerial = null; widgetExactTarget = false; sheet = "widgets" },
+                onRemoveWidget = widgets::remove,
+                onExportLayout = { sheet = ""; launcherActivity.backups.startExport() },
+                onImportLayout = { sheet = ""; launcherActivity.backups.startImport() },
+                appearance = appearance, onAppearanceMode = onAppearanceMode,
+                onAppearanceManual = onAppearanceManual, onAppearanceDeviceLocation = onAppearanceDeviceLocation,
+                onAppearanceClear = onAppearanceClear,
+                onShadeSetup = { sheet = ""; onShadeSetup() },
+                homeGesturesOn = launcherActivity.homeGesturesEnabled,
+                backgrounds = launcherActivity.backgrounds,
+                onWallpaperSettings = { sheet = ""; onWallpaperSettings() }, homePage = pager.currentPage.coerceIn(0, homePages - 1))
+            if (sheet.isNotEmpty() && sheet != "widgets" && !sheet.startsWith("settings")) {
                 ModalBottomSheet(onDismissRequest = {
-                    customizationPage = CustomizationPage.OVERVIEW
                     sheet = ""; widgetPackage = null; widgetExactTarget = false
                 }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     properties = ModalBottomSheetProperties(shouldDismissOnBackPress = false),
                     containerColor = MaterialTheme.colorScheme.surface) {
-                    ModalDialogBackHandler {
-                        if ((sheet == "settings" || sheet == "settings:wallpaper") &&
-                            activeCustomizationPage != CustomizationPage.OVERVIEW) {
-                            customizationPage = CustomizationPage.OVERVIEW
-                            sheet = "settings"
-                        } else {
-                            customizationPage = CustomizationPage.OVERVIEW
-                            sheet = ""; widgetPackage = null; widgetExactTarget = false
-                        }
-                    }
+                    ModalDialogBackHandler { sheet = ""; widgetPackage = null; widgetExactTarget = false }
                     when (sheet) {
                         "dock" -> AppPicker(state.apps, dockSlot,
                             onSelect = {
@@ -742,21 +674,6 @@ fun LauncherScreen(
                                 onActions = { selectedId = it.id; sheet = "" }, editing = true, modifier = Modifier.weight(1f).fillMaxWidth(),
                                 onTurnOnWork = { model.turnOnWork(it) })
                         }
-                        "settings", "settings:wallpaper" -> CustomizationSheet(state, wide, model, isDefaultHome, maxRowsFit,
-                            page = activeCustomizationPage, onPage = { customizationPage = it; sheet = "settings" },
-                            onMakeDefault = { sheet = ""; onMakeDefault() },
-                            onClose = { customizationPage = CustomizationPage.OVERVIEW; sheet = "" }, onEditPins = { sheet = "pins" },
-                            onWidget = { widgetSlot = it; widgetPackage = null; widgetProfileSerial = null; widgetExactTarget = false; sheet = "widgets" },
-                            onAddWidget = { page -> widgetSlot = model.nextWidgetSlot(); widgetTargetIndex = page * HOME_CELLS; widgetPackage = null; widgetProfileSerial = null; widgetExactTarget = false; sheet = "widgets" },
-                            onRemoveWidget = widgets::remove,
-                            onExportLayout = { sheet = ""; launcherActivity.backups.startExport() },
-                            onImportLayout = { sheet = ""; launcherActivity.backups.startImport() },
-                            appearance = appearance, onAppearanceMode = onAppearanceMode,
-                            onAppearanceManual = onAppearanceManual, onAppearanceDeviceLocation = onAppearanceDeviceLocation,
-                            onAppearanceClear = onAppearanceClear,
-                            onShadeSetup = { sheet = ""; onShadeSetup() },
-                            backgrounds = launcherActivity.backgrounds,
-                            onWallpaperSettings = { sheet = ""; onWallpaperSettings() }, homePage = pager.currentPage.coerceIn(0, homePages - 1))
                         "widgetActions" -> model.placement(widgetSlot)?.let { placement ->
                             val topPitch = (geometry.widgetHeight + 18f) / 2f
                             val gridSizing = WidgetGridSizing(GRID_COLUMNS, state.homeRows, geometry.gridWidth / GRID_COLUMNS,
@@ -1213,6 +1130,9 @@ fun LauncherScreen(
                     }
                 } }, confirmButton = { TextButton(onClick = { createFolderFirstId = null }) { Text(stringResource(R.string.cancel)) } })
         }
+        if (spotlight) SpotlightPanel(state.apps, onDismiss = { spotlight = false; keyboard?.hide() },
+            onLaunch = { app, bounds -> spotlight = false; onLaunchFrom(app, bounds) },
+            onWebSearch = { query -> spotlight = false; onWebSearch(query) })
         openFolderId?.let { id ->
             state.folders.firstOrNull { it.id == id }?.let { folder ->
                 val blocked = state.layout.unavailableCells()
@@ -1333,9 +1253,8 @@ private fun ExpandedWorkspace(
                 start + homePaneWidth > scroll && start < scroll + viewportWidth
             }
             val nearestLogicalPage = nativePager.currentPage - firstHome
-            // While Discover is current, keep the initial Home pair cached. Otherwise Home 2
-            // is recreated midway through the first native exit and provider inflation can
-            // block the gesture frame even though that pane began offscreen.
+            // While the left page is current, keep the initial Home pair cached, so returning
+            // does not inflate provider RemoteViews for Home 2 inside the gesture frame.
             val retentionAnchor = nearestLogicalPage.coerceAtLeast(0)
             (intersectingHomes + (retentionAnchor - 1..retentionAnchor + 1))
                 .filter { it in 0 until visibleHomePages }.distinct().sorted()
@@ -1347,7 +1266,7 @@ private fun ExpandedWorkspace(
             IntOffset((x - motion.offset(physicalPosition)).roundToInt(), 0)
         }
     }
-    val showDiscover by remember(nativePager, firstHome) {
+    val showLeftPage by remember(nativePager, firstHome) {
         derivedStateOf(structuralEqualityPolicy()) {
             firstHome > 0 && nativePager.currentPage + nativePager.currentPageOffsetFraction <= firstHome + .25f
         }
@@ -1369,12 +1288,11 @@ private fun ExpandedWorkspace(
     }
 
     Box(Modifier.fillMaxSize().clipToBounds().testTag("expanded-workspace")) {
-        if (showDiscover) {
-            key("discover-pane") {
+        if (showLeftPage) {
+            key("left-page-pane") {
                 Box(Modifier.place(-viewportWidth).fillMaxSize()) {
-                    if (state.leftPage == LeftPage.RSS) RssPage(Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = bottomSpace),
-                        active = nativePager.currentPage < firstHome)
-                    else DiscoverContent(Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = 16.dp))
+                    NewsPage(Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = bottomSpace),
+                        active = nativePager.currentPage < firstHome, mode = state.leftPage)
                 }
             }
         }
@@ -1589,7 +1507,9 @@ private fun SharedHomeGrid(
                 .width(cellWidth).height(cellHeight.dp).testTag("home-cell-$globalIndex")
                 .dropRegion(drag, cell, savedApp?.id ?: savedFolder?.id, page)
                 .combinedClickable(onClick = { savedFolder?.let { onFolder(it.id) } },
-                    onLongClick = { if (savedId == null && !drag.active) onEmptyWidget(globalIndex) })
+                    onLongClick = { if (savedId == null && !drag.active) onEmptyWidget(globalIndex) },
+                    // Only an empty cell listens for a double tap, so a folder still opens at once.
+                    onDoubleClick = if (savedId == null) ({ if (!drag.active) drag.onEmptyCellDoubleTap() }) else null)
                 .background(if (highlighted) Glass.copy(alpha = .25f) else Color.Transparent, RoundedCornerShape(16.dp))
                 .border(if (highlighted) 2.dp else 0.dp,
                     if (highlighted) Color.White.copy(alpha = .8f) else Color.Transparent, RoundedCornerShape(16.dp)),
@@ -1941,8 +1861,7 @@ private fun AppPicker(apps: List<AppEntry>, dockSlot: Int?, onSelect: (AppEntry)
     val filtered = remember(apps, query) { apps.filter { it.label.contains(query.trim(), ignoreCase = true) } }
     Column(Modifier.fillMaxWidth().fillMaxHeight(.88f).padding(horizontal = 20.dp).imePadding()) {
         Text(if (dockSlot == null) stringResource(R.string.your_apps) else stringResource(R.string.dock_position_label, dockSlot + 1), style = MaterialTheme.typography.headlineSmall)
-        OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().padding(vertical = 16.dp).testTag("search-field")
-            .releasesDiscoverWhileTyping("app-picker-search"),
+        OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().padding(vertical = 16.dp).testTag("search-field"),
             placeholder = { Text(stringResource(R.string.search_apps)) }, leadingIcon = { Icon(Icons.Rounded.Search, null) }, singleLine = true,
             trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Rounded.Close, stringResource(R.string.clear_search)) } }, shape = RoundedCornerShape(20.dp))
         if (dockSlot != null) TextButton(onClick = onClear) { Text(stringResource(R.string.dock_leave_empty)) }
@@ -2042,4 +1961,10 @@ private fun WidgetActions(
         ActionRow(Icons.Rounded.DeleteOutline, stringResource(R.string.remove), onRemove, tint = MaterialTheme.colorScheme.error)
         Spacer(Modifier.height(12.dp))
     }
+}
+
+/** The name of Home's left page, for its page control and accessibility state. */
+private fun leftPageTitle(page: LeftPage) = when (page) {
+    LeftPage.GOOGLE_NEWS -> R.string.left_page_google_news
+    LeftPage.RSS -> R.string.rss_title
 }

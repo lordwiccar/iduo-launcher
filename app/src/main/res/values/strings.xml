@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- System integration -->
-    <string name="shade_service_label">iDuo Launcher shade gestures</string>
-    <string name="shade_service_description">Allows iDuo Launcher’s Home screen gestures to open the system notifications and Quick Settings panels. It does not read screen content or observe activity in other apps.</string>
+    <string name="shade_service_label">iDuo Launcher Home gestures</string>
+    <string name="shade_service_description">Allows iDuo Launcher’s Home screen gestures to open the system notifications and Quick Settings panels and to lock the screen. It does not read screen content or observe activity in other apps.</string>
 
     <!-- Common actions -->
     <string name="back">Back</string>
@@ -14,46 +14,34 @@
     <string name="replace">Replace</string>
     <string name="remove">Remove</string>
     <string name="resume">Resume</string>
-    <string name="retry">Retry</string>
     <string name="place">Place</string>
     <string name="reconnect">Reconnect</string>
     <string name="not_now">Not now</string>
     <string name="turn_on">Turn on</string>
     <string name="open_settings">Open settings</string>
-    <string name="open_google">Open Google</string>
     <string name="back_to_home">Back to Home</string>
-    <string name="stay_on_home">Stay on Home</string>
     <string name="value_dp">%1$d dp</string>
     <string name="value_percent">%1$d%%</string>
 
     <!-- Customization -->
-    <string name="customize_title">Make it yours</string>
     <string name="customize_close">Close customization</string>
     <string name="customize_launcher">Customize launcher</string>
     <string name="customize_wallpaper">Wallpaper &amp; appearance</string>
-    <string name="customize_wallpaper_detail">Background, colors, and light</string>
-    <string name="customize_wallpaper_pending">Photo ready to review</string>
-    <string name="customize_home">Home layout</string>
-    <string name="customize_home_detail">Icons, spacing, dock, and widgets</string>
+    <string name="customize_home">Home</string>
     <string name="customize_gestures">Gestures &amp; search</string>
-    <string name="customize_gestures_detail">Labels, status, and search behavior</string>
     <string name="customize_language">Language</string>
     <string name="language_system">System language</string>
-    <string name="customize_backup">Backup</string>
-    <string name="customize_backup_detail">Save or restore this layout</string>
     <string name="customize_help">Help &amp; setup</string>
-    <string name="customize_help_detail">Home app, widgets, gestures, and Discover</string>
+    <string name="customize_help_detail">Home app, widgets, gestures, and news</string>
     <string name="set_as_home_app">Set as home app</string>
     <string name="change_home_app">Change home app</string>
     <string name="set_duo_as_home">Set iDuo as Home</string>
     <string name="undo_layout_change">Undo last layout change</string>
 
     <string name="choose_photo">Choose a photo</string>
-    <string name="choose_different_photo">Choose a different photo</string>
     <string name="android_wallpaper">Android wallpaper</string>
     <string name="wallpaper_detail">iDuo shows your Android wallpaper. A photo or the iDuo dunes chosen here become the Android wallpaper.</string>
     <string name="use_iduo_dunes">Use iDuo dunes</string>
-    <string name="android_wallpaper_detail">Choose any wallpaper in Android’s settings, including live wallpapers. iDuo shows it right away.</string>
     <string name="open_wallpaper_settings">Open wallpaper settings</string>
     <string name="wallpaper_settings_unavailable">Android’s wallpaper settings are unavailable.</string>
     <string name="wallpaper_target_title">Set wallpaper on</string>
@@ -64,10 +52,8 @@
     <string name="wallpaper_updated">Wallpaper updated.</string>
     <string name="restore_photo_note">Your wallpaper is not included in layout backups.</string>
 
-    <string name="appearance">Appearance</string>
     <string name="appearance_light">Light</string>
     <string name="appearance_dark">Dark</string>
-    <string name="appearance_system">Follow system</string>
     <string name="appearance_sun">Sunrise / sunset</string>
     <string name="place_name">Place name</string>
     <string name="latitude_label">Latitude (−90 to 90)</string>
@@ -88,11 +74,8 @@
     <string name="location_timeout">Location timed out. Using the system theme until you try again or enter a place.</string>
     <string name="location_unavailable">Location is unavailable. Using the system theme.</string>
 
-    <string name="display_cover">Cover</string>
-    <string name="display_inner">Inner</string>
     <string name="choose_home_apps">Choose Home apps</string>
     <string name="pin_home_apps_title">Choose home apps</string>
-    <string name="dock_apps_setting">Apps in dock · cover and inner</string>
     <string name="home_rows_setting">Home rows · cover and inner</string>
     <string name="grid_layout">Grid layout</string>
     <string name="home_rows_option" tools:ignore="PluralsCandidate">%1$d × %2$d apps</string>
@@ -112,9 +95,6 @@
 
     <string name="show_app_names">Show app names</string>
     <string name="show_status">Show status at upper right</string>
-    <string name="search_opens_google">Search button opens Google</string>
-    <string name="search_local_note">All apps always keeps local app search.</string>
-    <string name="gestures_note">Swipe sideways anywhere on Home to change pages. Swipe down for notifications or quick settings.</string>
 
     <string name="backup_detail">Save the current Home layout, folders, widgets, and layout settings.</string>
     <string name="backup_restore_note">Restore shows a review before changing Home.</string>
@@ -125,10 +105,14 @@
     <string name="help_customize_title">Customize any page</string>
     <string name="help_customize">Long-press empty space, then choose Customize launcher. If a page is full, long-press the slim area at its left edge.</string>
     <string name="help_widgets">Add Android widgets to empty Home cells. Hold a widget to move or remove it.</string>
-    <string name="help_shade_title">Notifications and quick settings</string>
-    <string name="help_shade">Swipe down on Home. The first time, iDuo explains Android’s optional Accessibility setting. The service only opens the system panels.</string>
-    <string name="help_shade_setup">Set up shade gestures</string>
-    <string name="help_discover">Swipe right from the first Home page. If Google can’t provide the feed, iDuo keeps a Home return and recovery actions available.</string>
+    <string name="help_shade_title">Notifications, quick settings and locking</string>
+    <string name="help_shade">Swipe down on Home for the system panels; double-tap empty space to lock the screen. The first time, iDuo explains Android’s optional Accessibility setting. The service only opens the system panels and locks the screen.</string>
+    <string name="help_shade_setup">Set up Home gestures</string>
+    <string name="help_search_title">Search</string>
+    <string name="help_search">Swipe up on Home to search. Matching apps appear as you type; the search key or the magnifier searches Google.</string>
+    <string name="spotlight_hint">Search apps and Google</string>
+    <string name="help_news_title">News page</string>
+    <string name="help_news">Swipe right from the first Home page for the news. Choose Google News or your own RSS feeds under Gestures &amp; search → Left page; the settings icon on the page picks the edition, sections or sources.</string>
 
     <!-- Apps and profiles -->
     <string name="all_apps">All apps</string>
@@ -194,8 +178,22 @@
     <string name="all_apps_view_list">List</string>
     <string name="all_apps_view_grid">Grid in pages</string>
     <string name="left_page">Left page</string>
-    <string name="left_page_discover" translatable="false">Google Discover</string>
-    <string name="left_page_rss">RSS reader</string>
+    <string name="left_page_rss">My RSS feeds</string>
+    <string name="left_page_google_news" translatable="false">Google News</string>
+    <string name="news_settings">News settings</string>
+    <string name="news_edition">Edition</string>
+    <string name="news_edition_search">Search countries</string>
+    <string name="news_topics">Sections</string>
+    <string name="news_source_note">Headlines come from Google News. Articles open in your browser.</string>
+    <string name="news_topic_top">Top stories</string>
+    <string name="news_topic_world">World</string>
+    <string name="news_topic_nation">Home country</string>
+    <string name="news_topic_business">Business</string>
+    <string name="news_topic_technology">Technology</string>
+    <string name="news_topic_science">Science</string>
+    <string name="news_topic_health">Health</string>
+    <string name="news_topic_sports">Sports</string>
+    <string name="news_topic_entertainment">Entertainment</string>
     <string name="rss_title">News</string>
     <string name="rss_manage">Manage sources</string>
     <string name="rss_sources">Sources</string>
@@ -349,29 +347,12 @@
     <string name="photo_no_pixels">The selected image has no usable pixels.</string>
     <string name="photo_too_large">The selected image is too large.</string>
 
-    <!-- Discover -->
-    <string name="discover">Discover</string>
-    <string name="discover_connecting">Connecting to Discover…</string>
-    <string name="discover_unavailable">Discover is unavailable right now.</string>
-    <string name="discover_rejected">Google didn’t accept the feed connection. Restart Google, then retry.</string>
-    <string name="discover_disconnected">Discover disconnected. Tap Retry to reconnect.</string>
-    <string name="discover_no_feed">The Google app did not provide a feed.</string>
-    <string name="discover_install_google">Install or enable the Google app to use Discover.</string>
-    <string name="discover_connect_failed">The Google app couldn’t connect to Discover.</string>
-    <string name="discover_slow">Discover is taking a while. You can retry or open Google.</string>
-    <string name="discover_version">This Google app version couldn’t open Discover.</string>
-    <string name="discover_start_failed">Discover couldn’t start. Tap Retry to reconnect.</string>
-    <string name="discover_no_fit">Discover couldn’t fit beside the dock.</string>
-    <string name="discover_no_fit_return">Discover couldn’t fit beside the dock. Return Home and try again.</string>
-    <string name="discover_device_unsupported">This device can’t show Discover beside the dock.</string>
-    <string name="install_google_first">Install or enable the Google app first.</string>
-    <string name="discover_fallback_title">Discover isn’t available here</string>
-    <string name="discover_fallback_message">iDuo can’t place the Discover feed beside Home on this device. You can open the Google app or stay on Home.</string>
 
     <!-- Shade gestures -->
-    <string name="shade_setup_title">Turn on shade gestures</string>
-    <string name="shade_setup_message">Android requires you to enable iDuo Launcher shade gestures in Accessibility settings. This service only opens Notifications or Quick Settings; it doesn’t read screen content or watch other apps.</string>
-    <string name="shade_starting">Shade gestures are starting. Swipe down again.</string>
+    <string name="shade_setup_title">Turn on Home gestures</string>
+    <string name="shade_setup_message">Android requires you to enable iDuo Launcher Home gestures in Accessibility settings. This service only opens Notifications or Quick Settings and locks the screen; it doesn’t read screen content or watch other apps.</string>
+    <string name="shade_starting">Home gestures are starting. Try again.</string>
+    <string name="lock_rejected">Android couldn’t lock the screen.</string>
     <string name="shade_rejected">Android couldn’t open the system panel.</string>
     <string name="accessibility_unavailable">Accessibility settings are unavailable.</string>
 
@@ -401,4 +382,79 @@
     <string name="status_airplane_short">Airplane</string>
     <string name="status_cellular">Cellular signal %1$d of 4</string>
     <string name="status_cellular_unavailable">Cellular signal unavailable</string>
+    <string name="customize_about">About</string>
+    <string name="customize_about_detail">Version, developer and licences</string>
+    <string name="customize_changelog">Changelog</string>
+    <string name="customize_changelog_detail">What changed in each version</string>
+    <string name="about_version">Version %1$s (%2$d)</string>
+    <string name="about_developer_title">Developer</string>
+    <string name="about_developer">iDuo Launcher is developed by Danny, whitewhale.media, who designs and builds its features beyond the original project.</string>
+    <string name="about_source">Source code</string>
+    <string name="about_privacy">Privacy policy</string>
+    <string name="about_upstream_title">Original project</string>
+    <string name="about_upstream">iDuo Launcher builds on the open-source Duo Launcher by Jake’s Good Apps (jakesgoodapps), released under the MIT License below.</string>
+    <string name="about_license">MIT License</string>
+    <string name="about_third_party">Third-party notices</string>
+    <string name="changelog_unreleased">Next version</string>
+    <string name="changelog_note">The changelog is kept in English.</string>
+    <string name="customize_feedback">Send feedback</string>
+    <string name="customize_feedback_detail">Report a problem or suggest an idea in a short form</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_search">Search settings</string>
+    <string name="settings_no_results">No settings found</string>
+    <string name="settings_group_customize">Customization</string>
+    <string name="settings_group_control">Controls</string>
+    <string name="settings_group_system">System &amp; support</string>
+    <string name="customize_dock">Dock</string>
+    <string name="customize_system">Language, backup &amp; Home app</string>
+    <string name="customize_support">Help &amp; information</string>
+    <string name="settings_not_default_title">iDuo isn’t your Home app</string>
+    <string name="settings_gestures_off_title">Home gestures are off</string>
+    <string name="settings_gestures_off_detail">Without them, swiping down and double-tap locking don’t work.</string>
+    <string name="settings_turn_on">Turn on</string>
+    <string name="settings_color_mode_value">Color mode: %1$s</string>
+    <string name="settings_home_summary">Grid %1$d × %2$d · icons %3$d dp · widgets: %4$d</string>
+    <string name="settings_dock_summary">Apps in dock: %1$d</string>
+    <string name="settings_gestures_none">No Home gestures</string>
+    <string name="settings_rss_summary">My RSS feeds · sources: %1$d</string>
+    <string name="settings_support_summary">Guide, about, changelog, feedback</string>
+    <string name="appearance_system_short">System</string>
+    <string name="appearance_sun_short">Sun</string>
+    <string name="settings_color_mode">Color mode</string>
+    <string name="settings_dock_count">Apps in dock</string>
+    <string name="settings_dock_count_detail">The same on the cover and inner screens.</string>
+    <string name="gesture_down">Swipe down</string>
+    <string name="gesture_down_detail">Left: notifications, right: Quick Settings</string>
+    <string name="gesture_double">Double tap</string>
+    <string name="gesture_double_detail">Locks the screen; fingerprint unlock keeps working</string>
+    <string name="gesture_up">Swipe up</string>
+    <string name="gesture_up_detail">Opens search for apps and Google</string>
+    <string name="gesture_side">Swipe sideways</string>
+    <string name="gesture_side_detail">Changes Home pages · always on</string>
+    <string name="settings_search_button">Search button</string>
+    <string name="settings_search_button_detail">What the magnifier at the lower right opens</string>
+    <string name="settings_search_google">Google</string>
+    <string name="settings_search_apps">App search</string>
+    <string name="settings_service_title">Home gestures service</string>
+    <string name="settings_service_on">On</string>
+    <string name="settings_service_off">Off · needed for the gestures marked below</string>
+    <string name="settings_needs_service">Needs the service</string>
+    <string name="settings_section_gestures">Gestures on Home</string>
+    <string name="settings_tile_dunes">iDuo dunes</string>
+    <string name="settings_tile_photo">Your photo</string>
+    <string name="settings_tile_android">Android wallpapers</string>
+    <string name="settings_sun_detail">Sun switches at sunrise and sunset where you are.</string>
+    <string name="settings_applies_to">Changes apply to</string>
+    <string name="settings_display_cover">Cover screen</string>
+    <string name="settings_display_inner">Inner screen</string>
+    <string name="settings_section_grid">Grid &amp; icons</string>
+    <string name="settings_grid_detail">Number of app rows</string>
+    <string name="settings_grid_value">%1$d × %2$d</string>
+    <string name="settings_names_detail">Under icons on Home and in the dock</string>
+    <string name="settings_section_content">Home content</string>
+    <string name="settings_pinned_count">Pinned apps: %1$d</string>
+    <string name="settings_status_detail">Time, date, battery and signal</string>
+    <string name="settings_reset_cover">Reset the cover screen layout</string>
+    <string name="settings_reset_inner">Reset the inner screen layout</string>
+    <string name="settings_news_detail">Swipe right from the first Home page to see it.</string>
 </resources>

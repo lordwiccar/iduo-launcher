@@ -17,8 +17,7 @@ import org.junit.Test
 
 /** Destructive only inside the explicitly named disposable DuoTest managed profile. */
 class ManagedProfileIntegrationTest {
-    val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     private fun model() = ViewModelProvider(compose.activity)[LauncherModel::class.java]
     private fun ready() = compose.waitUntil(20_000) { !model().state.value.loading }
@@ -149,7 +148,7 @@ class ManagedProfileIntegrationTest {
                     .takeScreenshot(java.io.File(directory, "managed-profile-paused-timeout.png"))
                 java.io.File(directory, "managed-profile-paused-semantics.txt").writeText(
                     compose.onRoot(useUnmergedTree = true).printToString() +
-                        "\nowner=${LiveDiscover.owner.get()} host=${LiveDiscover.host.get()}" +
+                        "\nowner=${LauncherHost.activity.get()}" +
                         "\nprofiles=${model().state.value.profiles}")
                 throw failure
             }

@@ -11,7 +11,6 @@ import org.junit.Test
 
 /** Uses the installed Google app; never submits a query or changes account data. */
 class GoogleSearchIntegrationTest {
-    @get:Rule val withoutFeed = WithoutNativeFeed()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val automation get() = instrumentation.uiAutomation
     private fun shell(command: String) = ParcelFileDescriptor.AutoCloseInputStream(
@@ -36,12 +35,12 @@ class GoogleSearchIntegrationTest {
             val search = find(automation.rootInActiveWindow) { it.contentDescription == "Search Google" }!!
             val bounds = android.graphics.Rect().also(search::getBoundsInScreen)
             shell("input tap ${bounds.centerX()} ${bounds.centerY()}")
-            await { find(automation.rootInActiveWindow) { it.packageName == DiscoverClient.GOOGLE_PACKAGE && it.isEditable } != null }
-            val field = find(automation.rootInActiveWindow) { it.packageName == DiscoverClient.GOOGLE_PACKAGE && it.isEditable }!!
+            await { find(automation.rootInActiveWindow) { it.packageName == GOOGLE_PACKAGE && it.isEditable } != null }
+            val field = find(automation.rootInActiveWindow) { it.packageName == GOOGLE_PACKAGE && it.isEditable }!!
             assertTrue("Google must open without a submitted query", field.text.isNullOrBlank() || field.isShowingHintText)
             shell("input keyevent KEYCODE_BACK")
             SystemClock.sleep(400)
-            if (automation.rootInActiveWindow?.packageName == DiscoverClient.GOOGLE_PACKAGE) shell("input keyevent KEYCODE_BACK")
+            if (automation.rootInActiveWindow?.packageName == GOOGLE_PACKAGE) shell("input keyevent KEYCODE_BACK")
             await { find(automation.rootInActiveWindow) { it.contentDescription == "Search Google" } != null }
             scenario.onActivity { assertEquals(preferences, it.getSharedPreferences("launcher", 0).getString("state", null)) }
         }

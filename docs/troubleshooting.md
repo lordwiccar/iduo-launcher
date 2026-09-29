@@ -4,9 +4,9 @@ iDuo Launcher is an experimental Fold beta. Device vendors, Android releases, th
 
 ## iDuo is not the Home app
 
-Long press empty Home space, choose **Customize launcher**, then **Set as home app**. You can also use **Help & setup → Set iDuo as Home**. Complete the choice in Android's Home app settings.
+Long press empty Home space, choose **Customize launcher**, then **Set as home app** at the top of Settings. You can also use **Language, backup & Home app**. Complete the choice in Android's Home app settings.
 
-To switch back, choose **Change home app** in customization or use Android **Settings → Apps → Default apps → Home app**. Installing iDuo never changes the Home app automatically.
+To switch back, choose **Change home app** under **Settings → Language, backup & Home app** or use Android **Settings → Apps → Default apps → Home app**. Installing iDuo never changes the Home app automatically.
 
 ## An update will not install
 
@@ -16,20 +16,16 @@ Android's [app-signing documentation](https://source.android.com/docs/security/f
 
 Do not uninstall or clear storage from a configured installation just to test a differently signed APK: that removes its layout, selected launcher photo, and Android widget bindings. Keep the configured install and test the other signer on a separate device or disposable emulator. If you deliberately replace the install, save a layout backup first, but expect provider widgets to require **Reconnect** and the launcher photo to be absent from the backup.
 
-## Discover is missing or has no feed
+## The news page shows no articles
 
-Discover requires the installed Google app plus device support for iDuo's embedding path. Google account, network, app settings, Android, and vendor updates can affect it.
+The news page needs an internet connection. Pull down on the list or use the refresh button to try again. If some sources fail, the page says so and keeps their earlier articles.
 
-- If a recovery card appears, choose **Retry**.
-- Choose **Open Google** to check whether the Google app itself can show content.
-- Choose **Back to Home**, press Back, or use the return arrow to leave Discover.
-- If **Open Google** is absent, the Google app has no launchable activity available to iDuo.
-
-A recovery screen proves that iDuo can return safely; it does not prove that the device supports the live embedded feed. A short swipe that begins inside Google's feed can also rebound because Google owns that gesture. Try a deliberate swipe, the iDuo-owned dock or rail, or the return arrow.
+- **Google News:** open the settings icon on the page and check the edition and sections. At least one section always stays selected.
+- **My RSS feeds:** a source marked with a warning could not be loaded. Remove it and add it again, or check that the website still publishes an RSS or Atom feed. Only HTTPS sources can be added.
 
 ## The search button does not open Google
 
-In **Customize launcher → Gestures & search**, check **Search button opens Google**. iDuo asks the Google app to open Android's global search screen. If that activity is missing or blocked, iDuo falls back to **All apps** with its local **Search apps** field. You can turn the setting off to use local app search every time.
+In **Settings → Gestures & search**, check that **Search button** is set to **Google**. iDuo asks the Google app to open Android's global search screen. If that activity is missing or blocked, iDuo falls back to **All apps** with its local **Search apps** field. You can turn the setting off to use local app search every time.
 
 ## A widget will not add or finish setup
 
@@ -54,14 +50,14 @@ Hold still on the widget until pickup begins, then drag. On a scrollable provide
 
 Long press and release to open **Widget options**. Use **Resize on Home** or the width/height controls, then **Apply** or **Apply size**. A red or disabled preview means the proposed rectangle overlaps another item, extends beyond the page, or violates the provider's resize limits. Move the widget into the six-row grid first if iDuo says that is required.
 
-## Paging, widget scrolling, or shade gestures do the wrong thing
+## Paging, widget scrolling, or Home gestures do the wrong thing
 
 - Start a mostly horizontal swipe to change exactly one page. This works over Home, the dock, and the right rail, including over a widget.
 - Start a vertical swipe on a scrollable part of a native widget to scroll the provider. Static widget areas still allow Home's own vertical action.
-- Shade gestures work only on Home: left 70% opens Notifications, right 30% opens Quick Settings. A dock that is already vertically scrolled keeps its downward gesture.
+- Home gestures work only on Home: a swipe down on the left 70% opens Notifications, on the right 30% Quick Settings. A double tap locks the screen only on empty space; icons, folders, widgets and the dock keep their own taps. A dock that is already vertically scrolled keeps its downward gesture.
 - To drag an item between pages, keep holding at the full left or right window edge until the page turns. Ordinary swipes and held edge paging use different timing.
 
-If shade gestures are off, choose **Help & setup → Set up shade gestures**, then **Open settings** and enable iDuo Launcher yourself. If the service has just started, follow the on-screen request to swipe again. iDuo does not enable Accessibility access automatically.
+If Home gestures are off, choose **Turn on** in **Settings → Gestures & search**, then **Open settings** and enable iDuo Launcher yourself. If the service has just started, follow the on-screen request to swipe again. iDuo does not enable Accessibility access automatically.
 
 ## An app or work profile is unavailable
 

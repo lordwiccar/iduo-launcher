@@ -57,8 +57,6 @@ internal object DefaultWallpaper {
                 val width = info.size.width; val height = info.size.height
                 val scale = minOf(1f, DEFAULT_WALLPAPER_SHORT_EDGE.toFloat() / minOf(width, height).coerceAtLeast(1))
                 decoder.setTargetSize(maxOf(1, (width * scale).toInt()), maxOf(1, (height * scale).toInt()))
-                // Discover's frame draws on a software canvas, which cannot take hardware bitmaps.
-                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
             }.asImageBitmap()
         }.getOrNull()
         if (decoded == null) failed = true else bitmap = decoded

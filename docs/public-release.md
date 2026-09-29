@@ -8,8 +8,7 @@ build the debug APK, run local unit tests and lint, and assemble an unsigned opt
 ./gradlew :app:assembleRelease
 ```
 
-The release build enables R8 and resource shrinking. Its keep rules retain the Window Extensions
-interfaces that the optional Discover host resolves by name. Launcher persistence uses explicit
+The release build enables R8 and resource shrinking. Launcher persistence uses explicit
 `org.json` fields, and Android widget hosts are directly constructed, so they do not need broad
 serialization or reflection rules.
 
@@ -55,11 +54,10 @@ that exported copy.
 The public tree includes the Android application, Gradle wrapper, unit and instrumentation tests,
 release helpers, CI workflow, public root documents, this guide, and optional PNG/WebP screenshots
 under `docs/images`. Internal working notes, research, device captures, artifacts, local Android SDK
-configuration, and the isolated Discover probe are excluded. The probe remains optional in the
-working tree and does not participate in normal launcher builds.
+configuration and other working-tree tools are excluded.
 
 The [user guide](user-guide.md), [troubleshooting](troubleshooting.md), [contributor code map](architecture.md),
-[privacy policy](privacy-policy.md), [1.0.0 notes](releases/1.0.0.md) and [beta notes](releases/0.15.0-beta01.md) are part of the explicit public allowlist.
+[privacy policy](privacy-policy.md), [1.1.0 notes](releases/1.1.0.md), [1.0.0 notes](releases/1.0.0.md) and [beta notes](releases/0.15.0-beta01.md) are part of the explicit public allowlist.
 
 ## GitHub publication
 

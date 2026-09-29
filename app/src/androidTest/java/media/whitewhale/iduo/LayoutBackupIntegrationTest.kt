@@ -10,8 +10,7 @@ import org.junit.Test
 
 /** Runtime coverage for preservation guarantees that depend on Android JSON and model state. */
 class LayoutBackupIntegrationTest {
-    val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     private fun model() = ViewModelProvider(compose.activity)[LauncherModel::class.java]
     private fun ready() = compose.waitUntil(15_000) { !model().state.value.loading }

@@ -4,14 +4,14 @@ title: iDuo Launcher – Privacy Policy
 
 # iDuo Launcher – Privacy Policy
 
-**Effective date:** 24 September 2026 · **App:** iDuo Launcher (`media.whitewhale.iduo`) for Android
+**Effective date:** 29 September 2026 · **App:** iDuo Launcher (`media.whitewhale.iduo`) for Android
 **Developer:** Danny, whitewhale.media · **Contact:** [studio@whitewhale.media](mailto:studio@whitewhale.media)
 
 [Česká verze níže](#zásady-ochrany-soukromí--česky)
 
 ## Summary
 
-iDuo Launcher is a Home screen app. **It does not collect, sell or share personal data.** There is no account, no developer server, no advertising, no analytics and no automatic crash reporting. Everything the app stores stays on your device. The app only connects to the internet when you use the optional RSS reader, and then only to the news sources you add yourself.
+iDuo Launcher is a Home screen app. **It does not collect, sell or share personal data.** There is no account, no developer server, no advertising, no analytics and no automatic crash reporting. Everything the app stores stays on your device. The app only connects to the internet for its news page: to Google News, or to the news sources you add yourself.
 
 ## Information processed on your device
 
@@ -22,26 +22,36 @@ The following information is used only on your device and is never sent to the d
 - **Device status** (battery, Wi-Fi and mobile signal strength, airplane mode), shown in the Home status rail while Home is visible. Signal display does not use location.
 - **Wallpaper photo.** When you choose a photo, Android's photo picker gives the app access only to that image. The app sets it as your Android wallpaper on the screens you choose and keeps a private copy on the device to draw transitions.
 - **Approximate location (optional).** Only if you tap "Use device location" for the sunrise/sunset appearance, the app requests approximate location once to calculate sunrise and sunset times on the device. Coordinates you enter or obtain are stored on the device until you clear them. There is no background location access.
-- **RSS sources and articles (optional).** The addresses you add and the most recently downloaded articles are stored on the device.
+- **News settings and articles.** Your Google News edition and sections, the RSS addresses you add, and the most recently downloaded headlines are stored on the device.
+- **Searches.** What you type in Home search or in Settings search is matched against your apps and settings on the device and is not stored.
 
-## Internet use (RSS reader only)
+## Internet use (news page)
 
-If you choose the **RSS reader** for Home's left page, the app downloads the feeds you add, and the article pictures they link to, **directly from those websites over HTTPS**. Like any website visit, those sites receive your IP address and a request identifying "iDuo Launcher". Their own privacy policies apply. Nothing passes through a server of the developer. With Google Discover selected, or with no RSS sources, the app makes no network requests of its own. Opening an article hands its link to your browser.
+When you open Home's left news page, the app downloads headlines **directly over HTTPS**:
 
-## Google Discover and other apps
+- With **Google News**, from Google's public news feeds at news.google.com for the edition and sections you chose. Google receives your IP address and a request identifying "iDuo Launcher", without any account or identifier from the app. [Google's privacy policy](https://policies.google.com/privacy) applies.
+- With **My RSS feeds**, from the websites you added, and the article pictures they link to. Their own privacy policies apply.
 
-If you choose **Google Discover** for the left page, the feed is provided and displayed by the installed **Google app**, under your Google account and Google's privacy policy. iDuo Launcher does not receive, store or process the feed's content. The same applies to Google search, to apps you open, and to **widgets**, whose content, accounts and network use are controlled by their providers.
+Nothing passes through a server of the developer, and no personal data from the app is sent. Opening an article hands its link to your browser.
+
+## Other apps and widgets
+
+**Home search** looks for apps on the device. Only when you press the search key or the magnifier does it hand the phrase to the Google app, or to your browser if the Google app is missing, which then shows Google's results under Google's privacy policy.
+
+Google search, the apps you open, and **widgets** are provided by their own apps, which control their content, accounts and network use.
+
+**Send feedback** opens a Google form in your browser. The app sends nothing itself; only what you choose to enter in the form reaches the developer, through Google Forms, and is used only to answer and improve the app. [Google's privacy policy](https://policies.google.com/privacy) applies to the form.
 
 ## Accessibility service (optional)
 
-The optional "shade gestures" accessibility service lets a downward swipe on Home open the notification panel or Quick Settings. It uses only the system actions that open those panels. It **cannot read screen content**, does not observe other apps, does not perform gestures on your behalf and collects no data. The app explains this before you turn the service on, and you can turn it off at any time in Android's Accessibility settings.
+The optional "Home gestures" accessibility service lets a downward swipe on Home open the notification panel or Quick Settings, and a double tap on empty Home space lock the screen. It uses only the system actions that open those panels and lock the screen. It **cannot read screen content**, does not observe other apps, does not perform gestures on your behalf and collects no data. The app explains this before you turn the service on, and you can turn it off at any time in Android's Accessibility settings.
 
 ## Permissions
 
 | Permission | Why |
 | --- | --- |
 | Bind app widgets | Host Android widgets on Home (Android asks you to allow each one). |
-| Internet | Download the RSS sources you add. Used only by the optional RSS reader. |
+| Internet | Download news for the news page: Google News, or the RSS sources you add. |
 | Network and Wi-Fi state | Show connection and signal strength in the status rail. |
 | Approximate location | Optional, on request, to calculate sunrise and sunset times on the device. |
 | Set wallpaper | Set a photo or the bundled dunes as your Android wallpaper when you ask. |
@@ -71,12 +81,12 @@ Changes to this policy will be published on this page with a new effective date.
 
 # Zásady ochrany soukromí – česky
 
-**Účinnost od:** 24. září 2026 · **Aplikace:** iDuo Launcher (`media.whitewhale.iduo`) pro Android
+**Účinnost od:** 29. září 2026 · **Aplikace:** iDuo Launcher (`media.whitewhale.iduo`) pro Android
 **Vývojář:** Danny, whitewhale.media · **Kontakt:** [studio@whitewhale.media](mailto:studio@whitewhale.media)
 
 ## Shrnutí
 
-iDuo Launcher je aplikace domovské obrazovky. **Neshromažďuje, neprodává ani nesdílí osobní údaje.** Nemá účet, server vývojáře, reklamy, analytiku ani automatické hlášení pádů. Vše, co aplikace ukládá, zůstává ve vašem zařízení. K internetu se připojuje jen při použití volitelné čtečky RSS, a to pouze ke zdrojům zpráv, které si sami přidáte.
+iDuo Launcher je aplikace domovské obrazovky. **Neshromažďuje, neprodává ani nesdílí osobní údaje.** Nemá účet, server vývojáře, reklamy, analytiku ani automatické hlášení pádů. Vše, co aplikace ukládá, zůstává ve vašem zařízení. K internetu se připojuje jen kvůli stránce se zprávami: ke Google News, nebo ke zdrojům zpráv, které si sami přidáte.
 
 ## Informace zpracovávané ve vašem zařízení
 
@@ -87,26 +97,36 @@ Následující informace se používají jen ve vašem zařízení a nikdy se ne
 - **Stav zařízení** (baterie, síla signálu Wi-Fi a mobilní sítě, režim letadla), zobrazený ve stavovém pruhu plochy. Zobrazení signálu nepoužívá polohu.
 - **Fotka tapety.** Při výběru fotky dá systémový výběr fotek aplikaci přístup jen k této fotce. Aplikace ji nastaví jako tapetu Androidu na zvolené obrazovky a ponechá si její kopii v zařízení pro vykreslení přechodů.
 - **Přibližná poloha (volitelná).** Jen pokud klepnete na „Použít polohu zařízení“ u vzhledu podle východu a západu slunce, aplikace jednorázově požádá o přibližnou polohu a časy vypočítá v zařízení. Souřadnice zůstanou v zařízení, dokud je nesmažete. Poloha na pozadí se nepoužívá.
-- **Zdroje RSS a články (volitelné).** Přidané adresy a naposledy stažené články jsou uložené v zařízení.
+- **Nastavení zpráv a články.** Zvolená edice a rubriky Google News, přidané adresy RSS a naposledy stažené titulky jsou uložené v zařízení.
+- **Hledání.** Co napíšete do hledání na ploše nebo v Nastavení, se porovnává s aplikacemi a nastaveními v zařízení a neukládá se.
 
-## Použití internetu (jen čtečka RSS)
+## Použití internetu (stránka se zprávami)
 
-Pokud pro levou stránku plochy zvolíte **čtečku RSS**, aplikace stahuje přidané kanály a obrázky článků **přímo z těchto webů přes HTTPS**. Stejně jako při každé návštěvě webu tyto weby vidí vaši IP adresu a požadavek označený „iDuo Launcher“. Platí jejich zásady ochrany soukromí. Nic neprochází serverem vývojáře. Při zvoleném Google Discover nebo bez zdrojů RSS aplikace sama žádné síťové požadavky nevytváří. Otevření článku předá odkaz vašemu prohlížeči.
+Když otevřete levou stránku plochy se zprávami, aplikace stáhne titulky **přímo přes HTTPS**:
 
-## Google Discover a další aplikace
+- U **Google News** z veřejných kanálů Googlu na news.google.com pro zvolenou edici a rubriky. Google vidí vaši IP adresu a požadavek označený „iDuo Launcher“, bez jakéhokoli účtu nebo identifikátoru z aplikace. Platí [zásady ochrany soukromí Googlu](https://policies.google.com/privacy).
+- U **Vlastního RSS** z webů, které jste přidali, a z obrázků článků, na které odkazují. Platí jejich zásady ochrany soukromí.
 
-Pokud pro levou stránku zvolíte **Google Discover**, kanál poskytuje a zobrazuje nainstalovaná **aplikace Google** pod vaším účtem Google a podle zásad ochrany soukromí Googlu. iDuo Launcher obsah kanálu nepřijímá, neukládá ani nezpracovává. Totéž platí pro vyhledávání Google, pro spouštěné aplikace a pro **widgety**, jejichž obsah, účty a síťový provoz řídí jejich poskytovatelé.
+Nic neprochází serverem vývojáře a z aplikace se neodesílají žádné osobní údaje. Otevření článku předá odkaz vašemu prohlížeči.
+
+## Ostatní aplikace a widgety
+
+**Hledání na ploše** hledá aplikace v zařízení. Teprve když stisknete klávesu hledání nebo lupu, předá výraz aplikaci Google, případně prohlížeči, pokud aplikace Google chybí; výsledky Googlu se pak řídí zásadami ochrany soukromí Googlu.
+
+Vyhledávání Google, spouštěné aplikace a **widgety** poskytují jejich vlastní aplikace, které řídí svůj obsah, účty a síťový provoz.
+
+**Poslat zpětnou vazbu** otevře formulář Google v prohlížeči. Aplikace sama nic neodesílá; vývojáři přes Formuláře Google dorazí jen to, co do formuláře sami napíšete, a použije se jen k odpovědi a zlepšení aplikace. Pro formulář platí [zásady ochrany soukromí Googlu](https://policies.google.com/privacy).
 
 ## Služba usnadnění přístupu (volitelná)
 
-Volitelná služba „gesta panelu“ umožňuje přejetím dolů na ploše otevřít oznámení nebo Rychlé nastavení. Používá jen systémové akce, které tyto panely otevírají. **Nemůže číst obsah obrazovky**, nesleduje jiné aplikace, neprovádí gesta za vás a nesbírá žádná data. Aplikace to vysvětlí před zapnutím služby a službu můžete kdykoli vypnout v nastavení Usnadnění přístupu.
+Volitelná služba „gesta plochy“ umožňuje přejetím dolů na ploše otevřít oznámení nebo Rychlé nastavení a dvojím klepnutím na volné místo plochy zamknout obrazovku. Používá jen systémové akce, které tyto panely otevírají a zamykají obrazovku. **Nemůže číst obsah obrazovky**, nesleduje jiné aplikace, neprovádí gesta za vás a nesbírá žádná data. Aplikace to vysvětlí před zapnutím služby a službu můžete kdykoli vypnout v nastavení Usnadnění přístupu.
 
 ## Oprávnění
 
 | Oprávnění | Účel |
 | --- | --- |
 | Vázání widgetů | Zobrazení widgetů Androidu na ploše (Android se na každý widget zeptá). |
-| Internet | Stahování přidaných zdrojů RSS. Používá jen volitelná čtečka RSS. |
+| Internet | Stahování zpráv pro stránku se zprávami: Google News nebo přidané zdroje RSS. |
 | Stav sítě a Wi-Fi | Zobrazení připojení a síly signálu ve stavovém pruhu. |
 | Přibližná poloha | Volitelně, na vyžádání, pro výpočet východu a západu slunce v zařízení. |
 | Nastavení tapety | Nastavení fotky nebo dun jako tapety Androidu, když o to požádáte. |

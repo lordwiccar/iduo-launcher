@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
-    <!-- Only the optional RSS reader uses the network, fetching the sources the user added. -->
+    <!-- Only the left page's news reader uses the network: Google News, or the user's RSS sources. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <queries>
         <package android:name="com.google.android.googlequicksearchbox" />
@@ -14,19 +14,10 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent>
     </queries>
-    <application android:label="iDuo Launcher" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher"
+    <application android:enableOnBackInvokedCallback="true" android:label="iDuo Launcher" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher"
         android:name=".DuoApplication"
         android:theme="@style/Theme.Duo" android:allowBackup="false" android:supportsRtl="true"
         android:localeConfig="@xml/locales_config">
-        <property android:name="android.window.PROPERTY_ACTIVITY_EMBEDDING_SPLITS_ENABLED" android:value="true" />
-        <property android:name="android.window.PROPERTY_ACTIVITY_EMBEDDING_ALLOW_SYSTEM_OVERRIDE" android:value="false" />
-        <activity android:name=".DiscoverActivity" android:exported="false"
-            android:theme="@style/Theme.Duo.Discover"
-            android:taskAffinity="media.whitewhale.iduo.discover" android:excludeFromRecents="true"
-            android:resizeableActivity="true" />
-        <activity android:name=".DiscoverFeedActivity" android:theme="@style/Theme.Duo.Discover" android:exported="false" android:resizeableActivity="true" />
-        <activity android:name=".LiveDiscoverActivity" android:theme="@style/Theme.Duo.LiveDiscover"
-            android:exported="false" android:resizeableActivity="true" />
         <service android:name=".SystemShadeAccessibilityService"
             android:label="@string/shade_service_label"
             android:description="@string/shade_service_description"

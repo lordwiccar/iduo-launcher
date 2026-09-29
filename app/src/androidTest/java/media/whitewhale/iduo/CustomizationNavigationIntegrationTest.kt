@@ -11,8 +11,7 @@ import org.junit.Rule
 import org.junit.Test
 
 class CustomizationNavigationIntegrationTest {
-    private val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     private fun model() = ViewModelProvider(compose.activity)[LauncherModel::class.java]
     private fun ready() {
@@ -27,13 +26,17 @@ class CustomizationNavigationIntegrationTest {
         compose.onNodeWithTag("settings").assertDoesNotExist()
         compose.openHomeCustomization()
         compose.onNodeWithTag("customization-home").performClick()
-        compose.onNodeWithTag("customization-back").assertExists()
+        // A narrow screen shows the page alone, with a back arrow; a wide one keeps the list
+        // beside it, so Back from there closes Settings at once.
+        val onePage = compose.onAllNodesWithTag("customization-back").fetchSemanticsNodes().isNotEmpty()
 
-        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressBack()
-        compose.waitUntil(5_000) {
-            compose.onAllNodesWithTag("customization-wallpaper").fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty()
+        if (onePage) {
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressBack()
+            compose.waitUntil(5_000) {
+                compose.onAllNodesWithTag("customization-wallpaper").fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty()
+            }
+            compose.onNodeWithTag("customization-wallpaper").assertIsDisplayed()
         }
-        compose.onNodeWithTag("customization-wallpaper").assertIsDisplayed()
         UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressBack()
         compose.waitUntil(5_000) {
             compose.onAllNodesWithTag("search").fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty()
@@ -78,7 +81,8 @@ class CustomizationNavigationIntegrationTest {
         ready()
         val before = model().state.value.layout
         compose.openHomeCustomization()
-        compose.onNodeWithTag("customization-help").performScrollTo().performClick()
+        compose.onNodeWithTag("customization-support").performScrollTo().performClick()
+        compose.onNodeWithTag("customization-help").performClick()
         compose.onNodeWithText("Customize any page").assertIsDisplayed()
         compose.onNodeWithTag("help-home-settings").assertExists()
         compose.onNodeWithTag("help-add-widget").performScrollTo().assertIsDisplayed()

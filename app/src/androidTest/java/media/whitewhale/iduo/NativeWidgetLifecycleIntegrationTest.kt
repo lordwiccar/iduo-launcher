@@ -102,7 +102,7 @@ class NativeWidgetLifecycleIntegrationTest {
                 if (listOf(node.text, node.contentDescription).any { it?.toString() == text }) return true
                 return (0 until node.childCount).any { contains(node.getChild(it), text) }
             }
-            val window = automation.windows.firstOrNull { contains(it.root, "Make it yours") || contains(it.root, "Home layout") }
+            val window = automation.windows.firstOrNull { contains(it.root, "Settings") }
             fun scrollable(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
                 if (node == null) return null
                 if (node.isVisibleToUser && node.isScrollable) return node
@@ -145,7 +145,6 @@ class NativeWidgetLifecycleIntegrationTest {
 
     @Test fun mandatoryConfigurationReturnsToMainPersistsAndDiscoverStillWorks() {
         check(android.os.Build.HARDWARE in listOf("ranchu", "goldfish"))
-        LiveDiscover.attachNativeFeed = true
         val previousHome = shell("cmd role get-role-holders android.app.role.HOME").lineSequence().firstOrNull().orEmpty()
         val hadBindGrant = shell("dumpsys appwidget").lineSequence().any {
             it.contains("user=0 package=media.whitewhale.iduo")
@@ -158,8 +157,8 @@ class NativeWidgetLifecycleIntegrationTest {
         var slot = -1
         var lastMain: MainActivity? = null
         try {
-            await { LiveDiscover.owner.get() != null }
-            var main = requireNotNull(LiveDiscover.owner.get())
+            await { LauncherHost.activity.get() != null }
+            var main = requireNotNull(LauncherHost.activity.get())
             lastMain = main
             var model = launcherModel(main)
             val widgetsField = MainActivity::class.java.getDeclaredField("widgets").apply { isAccessible = true }
@@ -228,7 +227,7 @@ class NativeWidgetLifecycleIntegrationTest {
 
             click("Cancel fixture configuration")
             await { automation.rootInActiveWindow?.packageName == "media.whitewhale.iduo" }
-            main = requireNotNull(LiveDiscover.owner.get())
+            main = requireNotNull(LauncherHost.activity.get())
             lastMain = main
             model = launcherModel(main)
             widgets = widgetsField.get(main) as WidgetController
@@ -257,16 +256,12 @@ class NativeWidgetLifecycleIntegrationTest {
             assertFalse("Successful bind/configure results must not remain queued above MainActivity",
                 activityDump.contains("ResultInfo{who=null, request=701") || activityDump.contains("ResultInfo{who=null, request=700"))
 
-            click("Discover")
-            await(20_000) { LiveDiscover.progress >= .99f && LiveDiscover.message.value == null }
-            click("Back to home")
-            await { LiveDiscover.progress == 0f }
             assertEquals(committedId, model.placement(slot)?.id)
         } finally {
             val cleanupHome = previousHome.takeIf { it.isNotEmpty() && it != "media.whitewhale.iduo" }
                 ?: "com.google.android.apps.nexuslauncher"
             try {
-                val cleanupMain = lastMain ?: LiveDiscover.owner.get()
+                val cleanupMain = lastMain ?: LauncherHost.activity.get()
                 if (cleanupMain != null && before != null) instrumentation.runOnMainSync {
                     val model = ViewModelProvider(cleanupMain)[LauncherModel::class.java]
                     val widgets = MainActivity::class.java.getDeclaredField("widgets").apply { isAccessible = true }
@@ -279,8 +274,7 @@ class NativeWidgetLifecycleIntegrationTest {
                 shell("cmd role add-role-holder android.app.role.HOME $cleanupHome 0")
                 try {
                     instrumentation.runOnMainSync {
-                        LiveDiscover.owner.get()?.finish()
-                        LiveDiscover.host.get()?.finish()
+                        LauncherHost.activity.get()?.finish()
                     }
                 } finally {
                     shell("appwidget ${if (hadBindGrant) "grantbind" else "revokebind"} --package media.whitewhale.iduo --user 0")

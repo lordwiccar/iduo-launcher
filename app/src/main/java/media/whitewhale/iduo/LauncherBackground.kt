@@ -82,7 +82,7 @@ internal fun mirrorIsBundled(context: Context) = launcherBackgroundPreferences(c
 internal fun forgetWallpaperMirror(context: Context) {
     launcherBackgroundPreferences(context).edit().putBoolean(BACKGROUND_ENABLED, false).remove(BACKGROUND_ID)
         .remove(MIRROR_ID).remove(MIRROR_BUNDLED).apply()
-    // A Compose or Discover canvas may still be drawing the old bitmap.
+    // A Compose canvas may still be drawing the old bitmap.
     LauncherBackgroundCache.changed(null)
     launcherBackgroundFile(context).delete()
 }

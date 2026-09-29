@@ -10,8 +10,7 @@ import org.junit.Test
 import kotlin.math.abs
 
 class LeadingWorkspaceIntegrationTest {
-    private val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     private fun ready() {
         check(android.os.Build.HARDWARE in listOf("ranchu", "goldfish"))

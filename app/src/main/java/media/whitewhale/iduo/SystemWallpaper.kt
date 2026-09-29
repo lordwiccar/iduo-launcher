@@ -25,8 +25,8 @@ enum class WallpaperTarget(val flags: Int) {
  * Android's Home wallpaper is iDuo's background: launcher windows show it directly, so a change
  * made in Android appears at once and a wallpaper chosen in iDuo is set in Android.
  *
- * Apps cannot read the wallpaper's pixels. Surfaces that must paint a stand-in (Discover's frame,
- * the customization preview) use a mirror of a wallpaper iDuo set itself, trusted only while
+ * Apps cannot read the wallpaper's pixels. The customization preview, which must paint a
+ * stand-in, uses a mirror of a wallpaper iDuo set itself, trusted only while
  * Android still reports that wallpaper's id, and otherwise the wallpaper's colours.
  */
 internal object SystemWallpaper {

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- System integration -->
-    <string name="shade_service_label">Gestá panela iDuo Launcher</string>
-    <string name="shade_service_description">Umožňuje gestám na ploche iDuo Launcher otvárať systémové upozornenia a panel Rýchle nastavenia. Nečíta obsah obrazovky ani nesleduje činnosť v iných aplikáciách.</string>
+    <string name="shade_service_label">Gestá plochy iDuo Launcher</string>
+    <string name="shade_service_description">Umožňuje gestám na ploche iDuo Launcher otvárať systémové upozornenia a panel Rýchle nastavenia a zamykať obrazovku. Nečíta obsah obrazovky ani nesleduje činnosť v iných aplikáciách.</string>
 
     <!-- Common actions -->
     <string name="back">Späť</string>
@@ -14,46 +14,34 @@
     <string name="replace">Nahradiť</string>
     <string name="remove">Odobrať</string>
     <string name="resume">Pokračovať</string>
-    <string name="retry">Skúsiť znova</string>
     <string name="place">Umiestniť</string>
     <string name="reconnect">Znova pripojiť</string>
     <string name="not_now">Teraz nie</string>
     <string name="turn_on">Zapnúť</string>
     <string name="open_settings">Otvoriť nastavenia</string>
-    <string name="open_google">Otvoriť Google</string>
     <string name="back_to_home">Späť na plochu</string>
-    <string name="stay_on_home">Zostať na ploche</string>
     <string name="value_dp">%1$d dp</string>
     <string name="value_percent">%1$d %%</string>
 
     <!-- Customization -->
-    <string name="customize_title">Prispôsobenie</string>
     <string name="customize_close">Zavrieť prispôsobenie</string>
     <string name="customize_launcher">Prispôsobiť spúšťač</string>
     <string name="customize_wallpaper">Tapeta a vzhľad</string>
-    <string name="customize_wallpaper_detail">Pozadie, farby a svetlo</string>
-    <string name="customize_wallpaper_pending">Fotka čaká na kontrolu</string>
-    <string name="customize_home">Rozloženie plochy</string>
-    <string name="customize_home_detail">Ikony, rozostupy, dok a miniaplikácie</string>
+    <string name="customize_home">Plocha</string>
     <string name="customize_gestures">Gestá a vyhľadávanie</string>
-    <string name="customize_gestures_detail">Popisky, stav a správanie vyhľadávania</string>
     <string name="customize_language">Jazyk</string>
     <string name="language_system">Jazyk systému</string>
-    <string name="customize_backup">Záloha</string>
-    <string name="customize_backup_detail">Uložiť alebo obnoviť toto rozloženie</string>
     <string name="customize_help">Pomocník a nastavenie</string>
-    <string name="customize_help_detail">Domovská aplikácia, miniaplikácie, gestá a Discover</string>
+    <string name="customize_help_detail">Domovská aplikácia, miniaplikácie, gestá a správy</string>
     <string name="set_as_home_app">Nastaviť ako domovskú aplikáciu</string>
     <string name="change_home_app">Zmeniť domovskú aplikáciu</string>
     <string name="set_duo_as_home">Nastaviť iDuo ako plochu</string>
     <string name="undo_layout_change">Vrátiť poslednú zmenu rozloženia</string>
 
     <string name="choose_photo">Vybrať fotku</string>
-    <string name="choose_different_photo">Vybrať inú fotku</string>
     <string name="android_wallpaper">Tapeta Androidu</string>
     <string name="wallpaper_detail">iDuo zobrazuje tapetu Androidu. Fotka alebo duny iDuo vybrané tu sa nastavia ako tapeta Androidu.</string>
     <string name="use_iduo_dunes">Použiť duny iDuo</string>
-    <string name="android_wallpaper_detail">V nastaveniach Androidu môžete vybrať ľubovoľnú tapetu, aj živú. iDuo ju hneď zobrazí.</string>
     <string name="open_wallpaper_settings">Otvoriť nastavenia tapety</string>
     <string name="wallpaper_settings_unavailable">Nastavenia tapety v Androide nie sú dostupné.</string>
     <string name="wallpaper_target_title">Nastaviť tapetu na</string>
@@ -64,10 +52,8 @@
     <string name="wallpaper_updated">Tapeta bola zmenená.</string>
     <string name="restore_photo_note">Tapeta nie je súčasťou zálohy rozloženia.</string>
 
-    <string name="appearance">Vzhľad</string>
     <string name="appearance_light">Svetlý</string>
     <string name="appearance_dark">Tmavý</string>
-    <string name="appearance_system">Podľa systému</string>
     <string name="appearance_sun">Východ / západ slnka</string>
     <string name="place_name">Názov miesta</string>
     <string name="latitude_label">Zemepisná šírka (−90 až 90)</string>
@@ -88,11 +74,8 @@
     <string name="location_timeout">Zisťovanie polohy vypršalo. Používa sa motív systému, kým to neskúsite znova alebo nezadáte miesto.</string>
     <string name="location_unavailable">Poloha nie je dostupná. Používa sa motív systému.</string>
 
-    <string name="display_cover">Vonkajší displej</string>
-    <string name="display_inner">Vnútorný displej</string>
     <string name="choose_home_apps">Vybrať aplikácie na plochu</string>
     <string name="pin_home_apps_title">Aplikácie na plochu</string>
-    <string name="dock_apps_setting">Aplikácie v doku · vonkajší aj vnútorný displej</string>
     <string name="home_rows_setting">Riadky plochy · vonkajší aj vnútorný displej</string>
     <string name="grid_layout">Rozloženie mriežky</string>
     <string name="home_rows_option">%1$d × %2$d aplikácií</string>
@@ -112,9 +95,6 @@
 
     <string name="show_app_names">Zobraziť názvy aplikácií</string>
     <string name="show_status">Zobraziť stav vpravo hore</string>
-    <string name="search_opens_google">Tlačidlo vyhľadávania otvorí Google</string>
-    <string name="search_local_note">Zoznam všetkých aplikácií má vždy vlastné vyhľadávanie.</string>
-    <string name="gestures_note">Strany prepnete potiahnutím do strany kdekoľvek na ploche. Potiahnutím nadol otvoríte upozornenia alebo rýchle nastavenia.</string>
 
     <string name="backup_detail">Uloží aktuálne rozloženie plochy, priečinky, miniaplikácie a nastavenia rozloženia.</string>
     <string name="backup_restore_note">Pred zmenou plochy obnovenie vždy zobrazí prehľad.</string>
@@ -125,10 +105,14 @@
     <string name="help_customize_title">Prispôsobenie ľubovoľnej strany</string>
     <string name="help_customize">Podržte prst na voľnom mieste a zvoľte Prispôsobiť spúšťač. Ak je strana plná, podržte prst na úzkom páse pri jej ľavom okraji.</string>
     <string name="help_widgets">Pridávajte miniaplikácie Androidu do prázdnych buniek plochy. Podržaním miniaplikáciu presuniete alebo odoberiete.</string>
-    <string name="help_shade_title">Upozornenia a rýchle nastavenia</string>
-    <string name="help_shade">Potiahnite na ploche nadol. Prvýkrát iDuo vysvetlí voliteľné nastavenie Dostupnosti v Androide. Služba iba otvára systémové panely.</string>
-    <string name="help_shade_setup">Nastaviť gestá panela</string>
-    <string name="help_discover">Potiahnite doprava z prvej strany plochy. Ak Google kanál neposkytne, iDuo ponúkne návrat na plochu a možnosti obnovenia.</string>
+    <string name="help_shade_title">Upozornenia, rýchle nastavenia a zamknutie</string>
+    <string name="help_shade">Potiahnutím na ploche nadol otvoríte systémové panely, dvojitým klepnutím na voľné miesto zamknete obrazovku. Prvýkrát iDuo vysvetlí voliteľné nastavenie Dostupnosti v Androide. Služba iba otvára systémové panely a zamyká obrazovku.</string>
+    <string name="help_shade_setup">Nastaviť gestá plochy</string>
+    <string name="help_search_title">Vyhľadávanie</string>
+    <string name="help_search">Potiahnite na ploche nahor a môžete hľadať. Počas písania sa zobrazia zodpovedajúce aplikácie; kláves hľadania alebo lupa vyhľadá výraz na Googli.</string>
+    <string name="spotlight_hint">Hľadať aplikácie a na Googli</string>
+    <string name="help_news_title">Stránka so správami</string>
+    <string name="help_news">Potiahnite doprava z prvej strany plochy a zobrazia sa správy. V Gestá a vyhľadávanie → Ľavá stránka zvolíte Google News alebo vlastné RSS; ikona nastavení na stránke vyberá edíciu, rubriky alebo zdroje.</string>
 
     <!-- Apps and profiles -->
     <string name="all_apps">Všetky aplikácie</string>
@@ -196,7 +180,21 @@
     <string name="all_apps_view_list">Zoznam</string>
     <string name="all_apps_view_grid">Mriežka po stránkach</string>
     <string name="left_page">Ľavá stránka</string>
-    <string name="left_page_rss">Čítačka RSS</string>
+    <string name="left_page_rss">Vlastné RSS</string>
+    <string name="news_settings">Nastavenia správ</string>
+    <string name="news_edition">Edícia</string>
+    <string name="news_edition_search">Hľadať krajinu</string>
+    <string name="news_topics">Rubriky</string>
+    <string name="news_source_note">Titulky pochádzajú z Google News. Články sa otvárajú v prehliadači.</string>
+    <string name="news_topic_top">Hlavné správy</string>
+    <string name="news_topic_world">Svet</string>
+    <string name="news_topic_nation">Domáce</string>
+    <string name="news_topic_business">Biznis</string>
+    <string name="news_topic_technology">Technológie</string>
+    <string name="news_topic_science">Veda</string>
+    <string name="news_topic_health">Zdravie</string>
+    <string name="news_topic_sports">Šport</string>
+    <string name="news_topic_entertainment">Zábava</string>
     <string name="rss_title">Správy</string>
     <string name="rss_manage">Spravovať zdroje</string>
     <string name="rss_sources">Zdroje</string>
@@ -364,29 +362,12 @@
     <string name="photo_no_pixels">Vybraný obrázok neobsahuje použiteľné pixely.</string>
     <string name="photo_too_large">Vybraný obrázok je príliš veľký.</string>
 
-    <!-- Discover -->
-    <string name="discover">Discover</string>
-    <string name="discover_connecting">Pripája sa k Discover…</string>
-    <string name="discover_unavailable">Discover teraz nie je dostupný.</string>
-    <string name="discover_rejected">Google neprijal pripojenie ku kanálu. Reštartujte Google a skúste to znova.</string>
-    <string name="discover_disconnected">Discover sa odpojil. Klepnutím na Skúsiť znova sa znova pripojíte.</string>
-    <string name="discover_no_feed">Aplikácia Google neposkytla kanál.</string>
-    <string name="discover_install_google">Ak chcete používať Discover, nainštalujte alebo povoľte aplikáciu Google.</string>
-    <string name="discover_connect_failed">Aplikácia Google sa nemohla pripojiť k Discover.</string>
-    <string name="discover_slow">Discover sa načítava dlhšie. Môžete to skúsiť znova alebo otvoriť Google.</string>
-    <string name="discover_version">Táto verzia aplikácie Google nedokázala otvoriť Discover.</string>
-    <string name="discover_start_failed">Discover sa nepodarilo spustiť. Klepnutím na Skúsiť znova sa znova pripojíte.</string>
-    <string name="discover_no_fit">Discover sa nezmestil vedľa doku.</string>
-    <string name="discover_no_fit_return">Discover sa nezmestil vedľa doku. Vráťte sa na plochu a skúste to znova.</string>
-    <string name="discover_device_unsupported">Toto zariadenie nedokáže zobraziť Discover vedľa doku.</string>
-    <string name="install_google_first">Najprv nainštalujte alebo povoľte aplikáciu Google.</string>
-    <string name="discover_fallback_title">Discover tu nie je k dispozícii</string>
-    <string name="discover_fallback_message">iDuo na tomto zariadení nedokáže umiestniť kanál Discover vedľa plochy. Môžete otvoriť aplikáciu Google alebo zostať na ploche.</string>
 
     <!-- Shade gestures -->
-    <string name="shade_setup_title">Zapnúť gestá panela</string>
-    <string name="shade_setup_message">Android vyžaduje, aby ste gestá panela iDuo Launcher zapli v nastaveniach Dostupnosti. Služba iba otvára upozornenia alebo rýchle nastavenia; nečíta obsah obrazovky ani nesleduje iné aplikácie.</string>
-    <string name="shade_starting">Gestá panela sa spúšťajú. Potiahnite znova nadol.</string>
+    <string name="shade_setup_title">Zapnúť gestá plochy</string>
+    <string name="shade_setup_message">Android vyžaduje, aby ste gestá plochy iDuo Launcher zapli v nastaveniach Dostupnosti. Služba iba otvára upozornenia alebo rýchle nastavenia a zamyká obrazovku; nečíta obsah obrazovky ani nesleduje iné aplikácie.</string>
+    <string name="shade_starting">Gestá plochy sa spúšťajú. Skúste to znova.</string>
+    <string name="lock_rejected">Android nedokázal zamknúť obrazovku.</string>
     <string name="shade_rejected">Android nedokázal otvoriť systémový panel.</string>
     <string name="accessibility_unavailable">Nastavenia Dostupnosti nie sú dostupné.</string>
 
@@ -416,4 +397,79 @@
     <string name="status_airplane_short">Lietadlo</string>
     <string name="status_cellular">Mobilný signál %1$d zo 4</string>
     <string name="status_cellular_unavailable">Mobilný signál nie je dostupný</string>
+    <string name="customize_about">O aplikácii</string>
+    <string name="customize_about_detail">Verzia, vývojár a licencie</string>
+    <string name="customize_changelog">Changelog</string>
+    <string name="customize_changelog_detail">Čo sa zmenilo v jednotlivých verziách</string>
+    <string name="about_version">Verzia %1$s (%2$d)</string>
+    <string name="about_developer_title">Vývojár</string>
+    <string name="about_developer">iDuo Launcher vyvíja Danny, whitewhale.media, ktorý navrhuje a tvorí jeho funkcie nad rámec pôvodného projektu.</string>
+    <string name="about_source">Zdrojový kód</string>
+    <string name="about_privacy">Zásady ochrany súkromia</string>
+    <string name="about_upstream_title">Pôvodný projekt</string>
+    <string name="about_upstream">iDuo Launcher vychádza z open-source projektu Duo Launcher od Jake’s Good Apps (jakesgoodapps), vydaného pod licenciou MIT uvedenou nižšie.</string>
+    <string name="about_license">Licencia MIT</string>
+    <string name="about_third_party">Licencie tretích strán</string>
+    <string name="changelog_unreleased">Ďalšia verzia</string>
+    <string name="changelog_note">Changelog je vedený v angličtine.</string>
+    <string name="customize_feedback">Poslať spätnú väzbu</string>
+    <string name="customize_feedback_detail">Nahláste problém alebo navrhnite nápad v krátkom formulári</string>
+    <string name="settings_title">Nastavenia</string>
+    <string name="settings_search">Hľadať v nastaveniach</string>
+    <string name="settings_no_results">Nič sa nenašlo</string>
+    <string name="settings_group_customize">Prispôsobenie</string>
+    <string name="settings_group_control">Ovládanie</string>
+    <string name="settings_group_system">Systém a podpora</string>
+    <string name="customize_dock">Dok</string>
+    <string name="customize_system">Jazyk, záloha a domovská aplikácia</string>
+    <string name="customize_support">Pomocník a informácie</string>
+    <string name="settings_not_default_title">iDuo nie je domovská aplikácia</string>
+    <string name="settings_gestures_off_title">Gestá plochy sú vypnuté</string>
+    <string name="settings_gestures_off_detail">Bez nich nefunguje potiahnutie nadol ani zamknutie dvojitým klepnutím.</string>
+    <string name="settings_turn_on">Zapnúť</string>
+    <string name="settings_color_mode_value">Farebný režim: %1$s</string>
+    <string name="settings_home_summary">Mriežka %1$d × %2$d · ikony %3$d dp · widgety: %4$d</string>
+    <string name="settings_dock_summary">Aplikácií v doku: %1$d</string>
+    <string name="settings_gestures_none">Žiadne gestá plochy</string>
+    <string name="settings_rss_summary">Vlastné RSS · zdrojov: %1$d</string>
+    <string name="settings_support_summary">Sprievodca, O aplikácii, changelog, spätná väzba</string>
+    <string name="appearance_system_short">Systém</string>
+    <string name="appearance_sun_short">Slnko</string>
+    <string name="settings_color_mode">Farebný režim</string>
+    <string name="settings_dock_count">Aplikácie v doku</string>
+    <string name="settings_dock_count_detail">Rovnaké na vonkajšom aj vnútornom displeji.</string>
+    <string name="gesture_down">Potiahnutie nadol</string>
+    <string name="gesture_down_detail">Vľavo upozornenia, vpravo rýchle nastavenia</string>
+    <string name="gesture_double">Dvojité klepnutie</string>
+    <string name="gesture_double_detail">Zamkne obrazovku, odtlačok prsta ďalej funguje</string>
+    <string name="gesture_up">Potiahnutie nahor</string>
+    <string name="gesture_up_detail">Otvorí vyhľadávanie aplikácií a Googlu</string>
+    <string name="gesture_side">Potiahnutie do strany</string>
+    <string name="gesture_side_detail">Prepína strany plochy · vždy zapnuté</string>
+    <string name="settings_search_button">Tlačidlo hľadania</string>
+    <string name="settings_search_button_detail">Čo otvorí lupa vpravo dole</string>
+    <string name="settings_search_google">Google</string>
+    <string name="settings_search_apps">Hľadanie aplikácií</string>
+    <string name="settings_service_title">Služba Gestá plochy</string>
+    <string name="settings_service_on">Zapnuté</string>
+    <string name="settings_service_off">Vypnuté · potrebná pre gestá označené nižšie</string>
+    <string name="settings_needs_service">Vyžaduje službu</string>
+    <string name="settings_section_gestures">Gestá na ploche</string>
+    <string name="settings_tile_dunes">Duny iDuo</string>
+    <string name="settings_tile_photo">Vlastná fotka</string>
+    <string name="settings_tile_android">Tapety Androidu</string>
+    <string name="settings_sun_detail">„Slnko“ prepína podľa východu a západu slnka vo vašom mieste.</string>
+    <string name="settings_applies_to">Úpravy platia pre</string>
+    <string name="settings_display_cover">Vonkajší displej</string>
+    <string name="settings_display_inner">Vnútorný displej</string>
+    <string name="settings_section_grid">Mriežka a ikony</string>
+    <string name="settings_grid_detail">Počet riadkov aplikácií</string>
+    <string name="settings_grid_value">%1$d × %2$d</string>
+    <string name="settings_names_detail">Pod ikonami na ploche a v doku</string>
+    <string name="settings_section_content">Obsah plochy</string>
+    <string name="settings_pinned_count">Pripnutých aplikácií: %1$d</string>
+    <string name="settings_status_detail">Čas, dátum, batéria a signál</string>
+    <string name="settings_reset_cover">Obnoviť predvolené rozloženie vonkajšieho displeja</string>
+    <string name="settings_reset_inner">Obnoviť predvolené rozloženie vnútorného displeja</string>
+    <string name="settings_news_detail">Zobrazí sa potiahnutím doprava z prvej strany plochy.</string>
 </resources>

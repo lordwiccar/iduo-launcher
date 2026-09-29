@@ -32,8 +32,7 @@ class SystemShadeIntegrationTest {
     private val automation = instrumentation.getUiAutomation(
         UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES
     )
-    private val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private val component = "media.whitewhale.iduo/media.whitewhale.iduo.SystemShadeAccessibilityService"
 
     private fun shell(command: String) = ParcelFileDescriptor.AutoCloseInputStream(
@@ -144,21 +143,16 @@ class SystemShadeIntegrationTest {
             }
             await { findText("Turn on shade gestures") != null }
             assertEquals("Opening setup must not edit Home", layout, model.state.value.layout)
-            assertTrue("The native setup dialog must own Discover before Settings is opened",
-                LiveDiscover.hasExternalResultPending("main", "shade-service-setup"))
 
             compose.activityRule.scenario.recreate()
             await { findText("Turn on shade gestures") != null }
-            assertTrue("Recreated setup must retain Discover ownership",
-                LiveDiscover.hasExternalResultPending("main", "shade-service-setup"))
 
             clickSystemText("Not now")
             await { findText("Turn on shade gestures") == null }
-            await { !LiveDiscover.hasExternalResultPending("main", "shade-service-setup") }
             val recreatedModel = ViewModelProvider(compose.activity)[LauncherModel::class.java]
             compose.waitUntil(5_000) { !recreatedModel.state.value.loading }
             assertEquals("Cancel must preserve every placement", layout, recreatedModel.state.value.layout)
-            compose.onNodeWithTag("discover-page-link").assertIsDisplayed().assertHasClickAction()
+            compose.onNodeWithTag("left-page-link").assertIsDisplayed().assertHasClickAction()
         } finally {
             restore(saved)
         }

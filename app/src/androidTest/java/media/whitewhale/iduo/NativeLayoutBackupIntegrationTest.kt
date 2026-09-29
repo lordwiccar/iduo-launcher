@@ -135,7 +135,6 @@ class NativeLayoutBackupIntegrationTest {
 
     @Test fun realSafSaveRestoreCancelApplyAndUndoPreserveLayoutAndBindings() {
         check(android.os.Build.HARDWARE in listOf("ranchu", "goldfish"))
-        val previousAttach = LiveDiscover.attachNativeFeed
         val previousHome = shell("cmd role get-role-holders android.app.role.HOME").lineSequence().firstOrNull().orEmpty()
         var before: LauncherState? = null
         var mutated: LauncherState? = null
@@ -144,18 +143,16 @@ class NativeLayoutBackupIntegrationTest {
         var lastBackups: BackupController? = null
         var primaryFailure: Throwable? = null
         try {
-            LiveDiscover.attachNativeFeed = true
             shell("cmd role add-role-holder android.app.role.HOME media.whitewhale.iduo 0")
             clearFixtureDocument()
             shell("input keyevent KEYCODE_HOME")
-            await { LiveDiscover.owner.get() != null }
-            var main = requireNotNull(LiveDiscover.owner.get())
+            await { LauncherHost.activity.get() != null }
+            var main = requireNotNull(LauncherHost.activity.get())
             lastMain = main
             // A previously interrupted fixture run can leave the durable picker recovery
             // visible and intentionally keep Discover suspended. Normalize that test-owned
             // transaction through the public controller before requiring the native host.
             instrumentation.runOnMainSync { main.backups.cancelImport() }
-            await { LiveDiscover.host.get() != null }
             var model = ViewModelProvider(main)[LauncherModel::class.java]
             await { !model.state.value.loading }
             val widgets = MainActivity::class.java.getDeclaredField("widgets").apply { isAccessible = true }.get(main) as WidgetController
@@ -167,10 +164,9 @@ class NativeLayoutBackupIntegrationTest {
                 backups.startExport("duo-launcher-layout.json")
             }
             await { automation.rootInActiveWindow?.packageName == "com.google.android.documentsui" }
-            assertNull("Discover host must yield to DocumentsUI", LiveDiscover.host.get())
             openFixtureRoot()
             clickDocumentSave()
-            await { backups.successMessage != null && LiveDiscover.host.get() != null }
+            await { backups.successMessage != null }
             assertEquals("Layout backup saved.", backups.successMessage)
             await { find("Layout backup")?.isVisibleToUser == true && find("Layout backup saved.")?.isVisibleToUser == true }
             click("OK")
@@ -191,9 +187,7 @@ class NativeLayoutBackupIntegrationTest {
             await { backups.preview != null || find("Open")?.isVisibleToUser == true }
             if (backups.preview == null) click("Open")
             await { backups.preview != null }
-            assertNull("Discover remains yielded while import preview owns the transaction", LiveDiscover.host.get())
             click("Cancel")
-            await { LiveDiscover.host.get() != null }
             assertEquals(requireNotNull(mutated).layout, model.state.value.layout)
             assertEquals(requireNotNull(mutated).labels, model.state.value.labels)
 
@@ -203,9 +197,8 @@ class NativeLayoutBackupIntegrationTest {
             await { backups.preview != null || find("Open")?.isVisibleToUser == true }
             if (backups.preview == null) click("Open")
             await { backups.preview != null }
-            assertNull("Discover remains yielded until Restore is applied", LiveDiscover.host.get())
             click("Restore")
-            await { backups.successMessage != null && LiveDiscover.host.get() != null }
+            await { backups.successMessage != null }
             assertEquals("Layout restored. Widgets are ready to reconnect.", backups.successMessage)
             await { find("Layout backup")?.isVisibleToUser == true &&
                 find("Layout restored. Widgets are ready to reconnect.")?.isVisibleToUser == true }
@@ -231,7 +224,7 @@ class NativeLayoutBackupIntegrationTest {
             fun cleanup(block: () -> Unit) = try { block() } catch (failure: Throwable) {
                 if (cleanupFailure == null) cleanupFailure = failure else cleanupFailure?.addSuppressed(failure)
             }
-            val main = LiveDiscover.owner.get() ?: lastMain
+            val main = LauncherHost.activity.get() ?: lastMain
             cleanup { instrumentation.runOnMainSync {
                 lastBackups?.cancelImport()
                 lastBackups?.clearMessage()
@@ -251,12 +244,11 @@ class NativeLayoutBackupIntegrationTest {
             val cleanupHome = previousHome.takeIf { it.isNotEmpty() && it != "media.whitewhale.iduo" }
                 ?: "com.google.android.apps.nexuslauncher"
             cleanup { shell("cmd role add-role-holder android.app.role.HOME $cleanupHome 0") }
-            cleanup { instrumentation.runOnMainSync { LiveDiscover.owner.get()?.finish(); LiveDiscover.host.get()?.finish() } }
+            cleanup { instrumentation.runOnMainSync { LauncherHost.activity.get()?.finish() } }
             cleanup {
                 if (previousHome.isNotEmpty()) shell("cmd role add-role-holder android.app.role.HOME $previousHome 0")
                 else shell("cmd role remove-role-holder android.app.role.HOME $cleanupHome 0")
             }
-            LiveDiscover.attachNativeFeed = previousAttach
             cleanupFailure?.let { failure -> if (primaryFailure != null) primaryFailure?.addSuppressed(failure) else throw failure }
         }
     }

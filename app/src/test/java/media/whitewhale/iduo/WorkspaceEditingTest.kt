@@ -81,20 +81,4 @@ class WorkspaceEditingTest {
         assertEquals(2, releasePage(2.3f, 2, 8, 300f, 250f))
         assertEquals(2, releasePage(1.7f, 2, 8, -300f, 250f))
     }
-    @Test fun `home and library movement never starts a hidden Discover scroll`() {
-        val driver = DiscoverPageDriver()
-        repeat(3) { assertNull(driver.request(0f, true)); assertEquals(DiscoverScrollRequest(0f, false), driver.request(0f, false)) }
-        assertEquals(DiscoverScrollRequest(0f, true), driver.request(0f, true, towardFeed = true))
-        assertEquals(DiscoverScrollRequest(.3f, true), driver.request(.3f, true))
-        assertEquals(DiscoverScrollRequest(1f, false), driver.request(1f, false))
-        assertEquals(DiscoverScrollRequest(0f, false), driver.request(0f, false))
-        assertNull(driver.request(0f, true))
-    }
-    @Test fun `Discover reversal ends the current scroll before ordinary paging`() {
-        val driver = DiscoverPageDriver()
-        driver.request(.4f, true)
-        assertEquals(DiscoverScrollRequest(0f, true), driver.request(0f, true))
-        assertEquals(DiscoverScrollRequest(0f, false), driver.request(0f, false))
-        assertNull(driver.request(0f, true))
-    }
 }

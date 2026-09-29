@@ -18,8 +18,7 @@ import org.junit.runner.RunWith
 /** Terminal widget-drop coverage: keep the pointer held while the preview recomposes. */
 @RunWith(AndroidJUnit4::class)
 class WidgetMoveIntegrationTest {
-    private val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     private fun model() = ViewModelProvider(compose.activity)[LauncherModel::class.java]
     private fun controller() = MainActivity::class.java.getDeclaredField("widgets").apply { isAccessible = true }

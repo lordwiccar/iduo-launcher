@@ -4,7 +4,7 @@ title: iDuo Launcher
 
 # iDuo Launcher
 
-A foldable-first Android Home screen with a right-side dock, folders, widgets, a paged All apps grid and an optional RSS reader.
+A foldable-first Android Home screen with a right-side dock, folders, widgets, Home search, a paged All apps grid and a news page with Google News or your own RSS feeds.
 
 - [Privacy policy](privacy-policy.html)
 - [User guide](user-guide.html)

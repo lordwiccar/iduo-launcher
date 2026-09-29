@@ -18,8 +18,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class LauncherIntegrationTest {
-    val compose = createAndroidComposeRule<MainActivity>()
-    @get:Rule val rules = org.junit.rules.RuleChain.outerRule(WithoutNativeFeed()).around(compose)
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private fun model() = ViewModelProvider(compose.activity)[LauncherModel::class.java]
     private fun ready() { compose.waitUntil(15000) { !model().state.value.loading } }
     private fun restoreLayout(before: HomeLayout) {
@@ -208,12 +207,14 @@ class LauncherIntegrationTest {
 
     @Test fun defaultHomeActionRemainsAvailableAfterVisitingHomeLayout() {
         compose.openHomeCustomization()
-        compose.onNodeWithTag("default-home-settings").assertIsDisplayed()
         compose.onNodeWithTag("customization-home").performClick()
         compose.onNodeWithText("Choose Home apps").assertIsDisplayed()
         compose.onNodeWithText("Add widget to this page").performScrollTo()
-        compose.onNodeWithTag("customization-back").performClick()
-        compose.onNodeWithTag("default-home-settings").assertIsDisplayed()
+        // A narrow screen shows one page at a time; a wide one keeps the list beside the page.
+        if (compose.onAllNodesWithTag("settings-close").fetchSemanticsNodes().isEmpty())
+            compose.onNodeWithTag("customization-back").performClick()
+        compose.onNodeWithTag("customization-system").performScrollTo().performClick()
+        compose.onNodeWithTag("system-home-settings").performScrollTo().assertIsDisplayed()
     }
 
     @Test fun dockAssignmentSurvivesActivityRecreation() {
@@ -295,9 +296,9 @@ class LauncherIntegrationTest {
         ready()
         compose.onNodeWithTag("status-rail").assertIsDisplayed()
         compose.openHomeCustomization()
-        compose.onNodeWithTag("customization-gestures").performClick()
+        compose.onNodeWithTag("customization-home").performClick()
         compose.onNodeWithTag("status-switch").performScrollTo().performClick()
-        compose.onNodeWithContentDescription("Close customization").performClick()
+        compose.closeSettingsPage()
         compose.onNodeWithTag("status-rail").assertDoesNotExist()
         compose.activityRule.scenario.recreate()
         ready()
