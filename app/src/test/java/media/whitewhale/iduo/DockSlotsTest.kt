@@ -28,7 +28,7 @@ class DockSlotsTest {
         val before = HomeLayout(listOf(null, null, "a"), listOf("d", "e", "f", "g", "h", "i"), listOf(widget))
         val next = resizeDock(before, 4)
         assertEquals(listOf("d", "e", "f", "g"), next.dock)
-        assertEquals(listOf(null, null, "a", "h", "i"), next.slots)
+        assertEquals(fourColumns(null, null, "a", "h", "i"), next.slots)
     }
 
     @Test fun `resizing never loses or duplicates a shortcut`() {

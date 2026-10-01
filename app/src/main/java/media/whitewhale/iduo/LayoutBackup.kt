@@ -5,7 +5,7 @@ import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
 
-const val LAYOUT_BACKUP_VERSION = 3
+const val LAYOUT_BACKUP_VERSION = 4
 const val MAX_LAYOUT_BACKUP_BYTES = 2 * 1024 * 1024
 private const val MAX_BACKUP_HOME_CELLS = HOME_CELLS * 100
 
@@ -34,6 +34,9 @@ data class LayoutImportPreview(
     val labels: Boolean,
     val googleSearch: Boolean,
     val verticalStatus: Boolean,
+    /** The cover screen's own layout, when the backup has one. */
+    val cover: HomeLayout? = null,
+    val separateCover: Boolean = false,
 )
 
 fun layoutBackupScope(context: Context): String {
@@ -41,17 +44,42 @@ fun layoutBackupScope(context: Context): String {
     return prefs.getString("scope", null) ?: java.util.UUID.randomUUID().toString().also { prefs.edit().putString("scope", it).apply() }
 }
 
-fun encodeLayoutBackup(state: LauncherState, widgetDescriptors: List<BackupWidgetDescriptor>, sourceScope: String): String {
+/**
+ * The inner screen's layout with the shared dock and settings, plus the cover's own layout when
+ * it has one. [widgetDescriptors] and [coverWidgetDescriptors] describe each layout's bound widgets.
+ */
+fun encodeLayoutBackup(state: LauncherState, widgetDescriptors: List<BackupWidgetDescriptor>, sourceScope: String,
+    coverWidgetDescriptors: List<BackupWidgetDescriptor> = emptyList()): String {
     require(sourceScope.isNotBlank())
-    require(state.leadingSlots.size == HOME_CELLS) { "Unfolded-only page must contain exactly $HOME_CELLS cells" }
-    val descriptorBySlot = widgetDescriptors.associateBy(BackupWidgetDescriptor::slot)
+    val inner = state.innerLayout
+    require(inner.leadingSlots.size == HOME_CELLS) { "Unfolded-only page must contain exactly $HOME_CELLS cells" }
     val apps = JSONArray().also { array -> state.apps.forEach { app -> array.put(JSONObject()
         .put("id", app.id).put("label", app.label).put("component", app.component.flattenToString())
         .put("userSerial", app.userSerial).put("profileLabel", app.profileLabel).put("work", app.isWork)) } }
-    val folders = JSONArray().also { array -> state.folders.forEach { folder -> array.put(JSONObject()
-        .put("id", folder.id).put("title", folder.title).put("apps", JSONArray(folder.appIds))) } }
-    val widgets = JSONArray().also { array -> state.widgetPlacements.forEach { placement ->
-        val saved = state.widgetRestores.firstOrNull { it.slot == placement.slot }
+    fun preset(value: LayoutPreset) = JSONObject().put("iconSize", value.iconSize).put("rowGap", value.rowGap)
+        .put("dockWidth", value.dockWidth).put("dockPosition", value.dockPosition).put("dockAlignToGrid", value.dockAlignToGrid)
+    val root = JSONObject().put("version", LAYOUT_BACKUP_VERSION).put("sourceScope", sourceScope).put("apps", apps)
+        .put("homeSlots", JSONArray(inner.slots)).put("leadingSlots", JSONArray(inner.leadingSlots))
+        .put("dock", JSONArray(inner.dock)).put("folders", encodeBackupFolders(inner))
+        .put("widgets", encodeBackupWidgets(inner, widgetDescriptors, sourceScope))
+        .put("labels", state.labels).put("googleSearch", state.googleSearch).put("verticalStatus", state.verticalStatus).put("homeRows", inner.rows)
+        .put("compact", preset(state.compact)).put("expanded", preset(state.expanded))
+    state.coverLayout?.let { cover ->
+        root.put("separateCover", state.separateCover).put("cover", JSONObject()
+            .put("homeSlots", JSONArray(cover.slots)).put("folders", encodeBackupFolders(cover))
+            .put("widgets", encodeBackupWidgets(cover, coverWidgetDescriptors, sourceScope))
+            .put("homeRows", cover.rows).put("homeColumns", cover.columns))
+    }
+    return root.toString(2)
+}
+
+private fun encodeBackupFolders(layout: HomeLayout) = JSONArray().also { array -> layout.folders.forEach { folder ->
+    array.put(JSONObject().put("id", folder.id).put("title", folder.title).put("apps", JSONArray(folder.appIds))) } }
+
+private fun encodeBackupWidgets(layout: HomeLayout, widgetDescriptors: List<BackupWidgetDescriptor>, sourceScope: String): JSONArray {
+    val descriptorBySlot = widgetDescriptors.associateBy(BackupWidgetDescriptor::slot)
+    return JSONArray().also { array -> layout.widgetPlacements.forEach { placement ->
+        val saved = layout.widgetRestores.firstOrNull { it.slot == placement.slot }
         val descriptor = descriptorBySlot[placement.slot]
         val item = JSONObject().put("slot", placement.slot).put("page", placement.page)
             .put("column", placement.column).put("row", placement.row).put("spanX", placement.spanX).put("spanY", placement.spanY)
@@ -67,13 +95,6 @@ fun encodeLayoutBackup(state: LauncherState, widgetDescriptors: List<BackupWidge
         }
         array.put(item)
     } }
-    fun preset(value: LayoutPreset) = JSONObject().put("iconSize", value.iconSize).put("rowGap", value.rowGap)
-        .put("dockWidth", value.dockWidth).put("dockPosition", value.dockPosition).put("dockAlignToGrid", value.dockAlignToGrid)
-    return JSONObject().put("version", LAYOUT_BACKUP_VERSION).put("sourceScope", sourceScope).put("apps", apps)
-        .put("homeSlots", JSONArray(state.homeSlots)).put("leadingSlots", JSONArray(state.leadingSlots))
-        .put("dock", JSONArray(state.dock)).put("folders", folders).put("widgets", widgets)
-        .put("labels", state.labels).put("googleSearch", state.googleSearch).put("verticalStatus", state.verticalStatus).put("homeRows", state.homeRows)
-        .put("compact", preset(state.compact)).put("expanded", preset(state.expanded)).toString(2)
 }
 
 internal fun exportedWidgetScope(restore: WidgetRestore, currentScope: String) = restore.sourceScope ?: currentScope
@@ -103,87 +124,99 @@ fun decodeLayoutBackup(raw: String, currentApps: List<AppEntry>, currentProfiles
         require(id in appMetadata) { "Layout references an app without metadata" }
         return id.takeIf { it in available } ?: run { missing += "$id (${appMetadata.getValue(id)})"; null }
     }
+    fun readSlots(array: JSONArray) = List(array.length()) { index -> if (array.isNull(index)) null else array.getString(index) }
+    /** A layout's folders, each referenced exactly once by [cells]. */
+    fun readFolders(array: JSONArray, cells: List<String?>): List<FolderEntry> {
+        val folders = List(array.length()) { index ->
+            val item = array.getJSONObject(index)
+            val children = item.getJSONArray("apps")
+            FolderEntry(item.getString("id"), item.getString("title"), List(children.length()) { children.getString(it) })
+        }
+        require(folders.map(FolderEntry::id).distinct().size == folders.size)
+        require(folders.flatMap(FolderEntry::appIds).distinct().size == folders.sumOf { it.appIds.size })
+        folders.forEach { folder ->
+            require(isFolderId(folder.id) && folder.title.isNotBlank() && folder.appIds.size >= 2)
+            require(folder.appIds.none(::isReservedFolderId))
+            require(cells.count(folder.id::equals) == 1)
+        }
+        return folders
+    }
+    /** Imported cells: missing apps become gaps, and a folder left with one app becomes that app. */
+    fun importCells(cells: List<String?>, folderResults: Map<String, FolderEntry>) = cells.map { value -> when {
+        value == null -> null
+        isReservedFolderId(value) -> folderResults[value]?.let { folder -> when (folder.appIds.size) { 0 -> null; 1 -> folder.appIds.single(); else -> folder.id } }
+            ?: error("Orphan folder reference")
+        else -> importedApp(value)
+    } }
     val slotsArray = root.getJSONArray("homeSlots")
     require(slotsArray.length() <= MAX_BACKUP_HOME_CELLS)
-    // Versions 1 and 2 stored six rows per page; version 3 stores the current eight-row pages.
+    // Versions 1 and 2 stored four columns of six rows per page, version 3 four columns of
+    // eight rows, and version 4 the current five columns of eight rows.
     val legacyCells = version < 3
-    val storedSlots = List(slotsArray.length()) { index -> if (slotsArray.isNull(index)) null else slotsArray.getString(index) }
-    val rawSlots = if (legacyCells) upgradeLegacySlots(storedSlots) else storedSlots
+    val storedRows = if (legacyCells) LEGACY_GRID_ROWS else GRID_ROWS
+    val storedSlots = readSlots(slotsArray)
+    val rawSlots = if (version < 4) upgradeLegacySlots(storedSlots, storedRows) else storedSlots
     val rawLeadingSlots = if (version == 1) List(HOME_CELLS) { null } else {
         val array = root.getJSONArray("leadingSlots")
-        val cells = if (legacyCells) LEGACY_HOME_CELLS else HOME_CELLS
+        val cells = when { version >= 4 -> HOME_CELLS; legacyCells -> LEGACY_HOME_CELLS; else -> SCHEMA9_HOME_CELLS }
         require(array.length() == cells) { "Unfolded-only page must contain exactly $cells cells" }
-        upgradeLegacyLeadingSlots(List(cells) { index -> if (array.isNull(index)) null else array.getString(index) })
-    }
-    val folderArray = root.getJSONArray("folders")
-    val importedFolders = List(folderArray.length()) { index ->
-        val item = folderArray.getJSONObject(index)
-        val children = item.getJSONArray("apps")
-        FolderEntry(item.getString("id"), item.getString("title"), List(children.length()) { children.getString(it) })
-    }
-    require(importedFolders.map(FolderEntry::id).distinct().size == importedFolders.size)
-    require(importedFolders.flatMap(FolderEntry::appIds).distinct().size == importedFolders.sumOf { it.appIds.size })
-    importedFolders.forEach { folder ->
-        require(isFolderId(folder.id) && folder.title.isNotBlank() && folder.appIds.size >= 2)
-        require(folder.appIds.none(::isReservedFolderId))
-        require((rawSlots + rawLeadingSlots).count(folder.id::equals) == 1)
+        val stored = readSlots(array)
+        if (version >= 4) stored else upgradeLegacyLeadingSlots(stored, storedRows)
     }
     val dockArray = root.getJSONArray("dock")
     require(dockArray.length() in MIN_DOCK_SLOTS..MAX_DOCK_SLOTS)
-    val rawDock = List(dockArray.length()) { index -> if (dockArray.isNull(index)) null else dockArray.getString(index) }
-    val surfaceApps = (rawSlots + rawLeadingSlots).filterNotNull().filterNot(::isReservedFolderId) + rawDock.filterNotNull() +
+    val rawDock = readSlots(dockArray)
+    // Folders may stand on Home or in the dock.
+    val importedFolders = readFolders(root.getJSONArray("folders"), rawSlots + rawLeadingSlots + rawDock)
+    val surfaceApps = (rawSlots + rawLeadingSlots + rawDock).filterNotNull().filterNot(::isReservedFolderId) +
         importedFolders.flatMap(FolderEntry::appIds)
     require(surfaceApps.distinct().size == surfaceApps.size) { "An app shortcut appears more than once" }
     val folderResults = importedFolders.associate { folder -> folder.id to folder.copy(appIds = folder.appIds.mapNotNull(::importedApp)) }
     val folders = folderResults.values.filter { it.appIds.size >= 2 }
-    val slots = rawSlots.map { value -> when {
-        value == null -> null
-        isReservedFolderId(value) -> folderResults[value]?.let { folder -> when (folder.appIds.size) { 0 -> null; 1 -> folder.appIds.single(); else -> folder.id } }
-            ?: error("Orphan folder reference")
-        else -> importedApp(value)
-    } }
-    val leadingSlots = rawLeadingSlots.map { value -> when {
-        value == null -> null
-        isReservedFolderId(value) -> folderResults[value]?.let { folder -> when (folder.appIds.size) { 0 -> null; 1 -> folder.appIds.single(); else -> folder.id } }
-            ?: error("Orphan folder reference")
-        else -> importedApp(value)
-    } }
-    val dock = rawDock.map { value -> value?.also { require(!isReservedFolderId(it)) }?.let(::importedApp) }
-    var layout = HomeLayout(slots.dropLastWhile { it == null }, dock, folders = folders, leadingSlots = leadingSlots, rows = GRID_ROWS)
+    val slots = importCells(rawSlots, folderResults)
+    val leadingSlots = importCells(rawLeadingSlots, folderResults)
+    val dock = importCells(rawDock, folderResults)
     val profileSerials = currentProfiles.mapTo(mutableSetOf(), AppProfile::userSerial)
     val profileIssues = linkedSetOf<ProfileIssue>()
-    val widgetArray = root.getJSONArray("widgets")
-    require(widgetArray.length() <= 500)
-    val widgetSlots = mutableSetOf<Int>()
-    repeat(widgetArray.length()) { index ->
-        val item = widgetArray.getJSONObject(index)
-        val slot = item.strictInt("slot")
-        require(widgetSlots.add(slot)) { "Widget slots must be unique" }
-        val builtin = if (item.has("builtinId")) item.strictInt("builtinId") else null
-        val provider = item.optString("provider").takeIf(String::isNotBlank)
-        val id = if (builtin != null) {
-            require(builtin in setOf(CLOCK_WIDGET, DATE_WIDGET, INFO_WIDGET)); builtin
-        } else NEEDS_BINDING_WIDGET
-        val stored = WidgetPlacement(slot, id, item.strictInt("page"), item.strictInt("column"), item.strictInt("row"),
-            item.strictInt("spanX"), item.strictInt("spanY"))
-        require(validBackupPlacement(stored, if (legacyCells) LEGACY_GRID_ROWS else GRID_ROWS))
-        val placement = if (legacyCells) upgradeLegacyPlacement(stored) else stored
-        require(layout.widgetPlacements.none { backupOverlaps(it, placement) })
-        require(placement.coveredIndices().none { layout.slotAt(it) != null })
-        val restore = if (id == NEEDS_BINDING_WIDGET) {
-            require(provider != null && ComponentName.unflattenFromString(provider) != null)
-            val savedSerial = item.strictLong("userSerial"); require(savedSerial >= 0)
-            val title = item.getString("title"); val profileLabel = item.getString("profileLabel")
-            require(title.isNotBlank() && profileLabel.isNotBlank())
-            val work = item.strictBoolean("work")
-            val widgetScope = item.optString("sourceScope").takeIf { it.isNotBlank() } ?: sourceScope
-            val serial = if (work) savedSerial else currentProfiles.firstOrNull { it.isPersonal }?.userSerial ?: savedSerial
-            if ((work && widgetScope != currentScope) || serial !in profileSerials) profileIssues += ProfileIssue(title, profileLabel)
-            WidgetRestore(slot, provider, serial, title, profileLabel, work, widgetScope)
-        } else null
-        layout = layout.copy(widgetPlacements = (layout.widgetPlacements + placement).sortedBy { it.slot },
-            widgetRestores = layout.widgetRestores + listOfNotNull(restore))
+    /** Places [widgetArray]'s widgets on [start]; Android widgets become placeholders to reconnect. */
+    fun readWidgets(widgetArray: JSONArray, start: HomeLayout, columns: Int): HomeLayout {
+        require(widgetArray.length() <= 500)
+        var layout = start
+        val widgetSlots = mutableSetOf<Int>()
+        repeat(widgetArray.length()) { index ->
+            val item = widgetArray.getJSONObject(index)
+            val slot = item.strictInt("slot")
+            require(widgetSlots.add(slot)) { "Widget slots must be unique" }
+            val builtin = if (item.has("builtinId")) item.strictInt("builtinId") else null
+            val provider = item.optString("provider").takeIf(String::isNotBlank)
+            val id = if (builtin != null) {
+                require(builtin in setOf(CLOCK_WIDGET, DATE_WIDGET, INFO_WIDGET)); builtin
+            } else NEEDS_BINDING_WIDGET
+            val stored = WidgetPlacement(slot, id, item.strictInt("page"), item.strictInt("column"), item.strictInt("row"),
+                item.strictInt("spanX"), item.strictInt("spanY"))
+            require(validBackupPlacement(stored, if (legacyCells) LEGACY_GRID_ROWS else GRID_ROWS, columns))
+            val placement = if (legacyCells) upgradeLegacyPlacement(stored) else stored
+            require(layout.widgetPlacements.none { backupOverlaps(it, placement) })
+            require(placement.coveredIndices().none { layout.slotAt(it) != null })
+            val restore = if (id == NEEDS_BINDING_WIDGET) {
+                require(provider != null && ComponentName.unflattenFromString(provider) != null)
+                val savedSerial = item.strictLong("userSerial"); require(savedSerial >= 0)
+                val title = item.getString("title"); val profileLabel = item.getString("profileLabel")
+                require(title.isNotBlank() && profileLabel.isNotBlank())
+                val work = item.strictBoolean("work")
+                val widgetScope = item.optString("sourceScope").takeIf { it.isNotBlank() } ?: sourceScope
+                val serial = if (work) savedSerial else currentProfiles.firstOrNull { it.isPersonal }?.userSerial ?: savedSerial
+                if ((work && widgetScope != currentScope) || serial !in profileSerials) profileIssues += ProfileIssue(title, profileLabel)
+                WidgetRestore(slot, provider, serial, title, profileLabel, work, widgetScope)
+            } else null
+            layout = layout.copy(widgetPlacements = (layout.widgetPlacements + placement).sortedBy { it.slot },
+                widgetRestores = layout.widgetRestores + listOfNotNull(restore))
+        }
+        return layout
     }
+    var layout = readWidgets(root.getJSONArray("widgets"),
+        HomeLayout(slots.dropLastWhile { it == null }, dock, folders = folders, leadingSlots = leadingSlots, rows = GRID_ROWS),
+        DEFAULT_HOME_COLUMNS)
     fun preset(key: String): LayoutPreset {
         val item = root.getJSONObject(key)
         val loaded = LayoutPreset(item.strictFloat("iconSize"), item.strictFloat("rowGap"),
@@ -197,19 +230,39 @@ fun decodeLayoutBackup(raw: String, currentApps: List<AppEntry>, currentProfiles
     val verticalStatus = root.strictBoolean("verticalStatus")
     val homeRows = if (legacyCells) DEFAULT_HOME_ROWS else root.strictInt("homeRows").also { require(it in DEFAULT_HOME_ROWS..GRID_ROWS) }
     layout = layout.copy(rows = maxOf(homeRows, layout.requiredRows()))
+    // Version 4 may carry the cover's own layout. It shares the dock, so its apps must not repeat the dock's.
+    val cover = if (version >= 4) root.optJSONObject("cover")?.let { item ->
+        val cells = item.getJSONArray("homeSlots")
+        require(cells.length() <= MAX_BACKUP_HOME_CELLS)
+        val coverCells = readSlots(cells)
+        val columns = item.strictInt("homeColumns").also { require(it in DEFAULT_HOME_COLUMNS..GRID_COLUMNS) }
+        val coverRows = item.strictInt("homeRows").also { require(it in DEFAULT_HOME_ROWS..GRID_ROWS) }
+        val coverFolders = readFolders(item.getJSONArray("folders"), coverCells)
+        val coverApps = coverCells.filterNotNull().filterNot(::isReservedFolderId) + rawDock.filterNotNull().filterNot(::isReservedFolderId) +
+            coverFolders.flatMap(FolderEntry::appIds)
+        require(coverApps.distinct().size == coverApps.size) { "An app shortcut appears more than once" }
+        val coverResults = coverFolders.associate { folder -> folder.id to folder.copy(appIds = folder.appIds.mapNotNull(::importedApp)) }
+        val start = HomeLayout(importCells(coverCells, coverResults).dropLastWhile { it == null }, dock,
+            folders = coverResults.values.filter { it.appIds.size >= 2 }, rows = GRID_ROWS, columns = columns)
+        require(coverCells.indices.filter { coverCells[it] != null }.all { index -> homeCellLocal(index) % GRID_COLUMNS < columns })
+        readWidgets(item.getJSONArray("widgets"), start, columns).also { read -> require(read.widgetPlacements.none { it.page < 0 }) }
+            .let { it.copy(rows = maxOf(coverRows, it.requiredRows())) }
+    } else null
+    val separateCover = cover != null && root.optBoolean("separateCover", false)
     return LayoutImportPreview(layout, missing.toList(), profileIssues.toList(),
         appCount = (slots + leadingSlots).count { it != null && !isReservedFolderId(it) } +
             dock.count { it != null } + folders.sumOf { it.appIds.size },
         folderCount = folders.size, widgetCount = layout.widgetPlacements.size,
-        compact = compact, expanded = expanded, labels = labels, googleSearch = googleSearch, verticalStatus = verticalStatus)
+        compact = compact, expanded = expanded, labels = labels, googleSearch = googleSearch, verticalStatus = verticalStatus,
+        cover = cover, separateCover = separateCover)
 }
 
-internal fun validBackupPlacement(value: WidgetPlacement, rows: Int = GRID_ROWS): Boolean {
+internal fun validBackupPlacement(value: WidgetPlacement, rows: Int = GRID_ROWS, columns: Int = DEFAULT_HOME_COLUMNS): Boolean {
     val base = value.slot in 0..10_000 && value.page in -1..99 && value.column >= 0 && value.row >= 0 &&
-        value.spanX in 1..GRID_COLUMNS && value.spanY in 1..rows && value.column + value.spanX <= GRID_COLUMNS
+        value.spanX in 1..columns && value.spanY in 1..rows && value.column + value.spanX <= columns
     val inside = value.row + value.spanY <= rows
     val overflow = value.page > 0 && value.slot / 3 == value.page && value.slot % 3 == 2 && value.column == 0 &&
-        value.row == rows && value.spanX == GRID_COLUMNS && value.spanY == 4
+        value.row == rows && value.spanX == LEGACY_GRID_COLUMNS && value.spanY == 4
     return base && (inside || overflow)
 }
 

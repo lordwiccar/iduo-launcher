@@ -45,6 +45,10 @@ class MainActivity : ComponentActivity() {
         private set
     private val homeRequests = mutableIntStateOf(0)
     private val searchRequests = mutableIntStateOf(0)
+    private val changelogRequests = mutableIntStateOf(0)
+    // Asked once, right after an update, so the next update can be announced.
+    private val notificationPermission = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { }
     /** Whether the optional Home gestures accessibility service is on, checked on each resume. */
     internal var homeGesturesEnabled by androidx.compose.runtime.mutableStateOf(false)
         private set
@@ -81,21 +85,32 @@ class MainActivity : ComponentActivity() {
         appearance = AppearanceStore(this)
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
+        // Pick the cover's or the inner screen's Home before the first frame, so folding never shows the other one.
+        model.showDisplay(resources.configuration.screenWidthDp < 650)
         widgets = WidgetController(this, model) { }.also { it.restore(savedInstanceState) }
         backups = BackupController(this, model, widgets) { }.also { it.restore() }
         backgrounds = LauncherBackgroundController(this) { }
         status = DeviceStatusMonitor(this).also { lifecycle.addObserver(it) }
         updateDefaultHome()
         if (savedInstanceState == null && intent.getStringExtra("duo_destination") == "search") searchRequests.intValue++
+        if (savedInstanceState == null && intent.getStringExtra("duo_destination") == UpdateNotice.DESTINATION) changelogRequests.intValue++
         intent.removeExtra("duo_destination")
+        if (savedInstanceState == null && UpdateNotice.shouldAskAfterUpdate(this))
+            notificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        applyCoverRotation(model.state.value.coverRotation, resources.configuration.smallestScreenWidthDp)
         setContent {
             val state = model.state.collectAsStateWithLifecycle().value
+            val smallestWidth = androidx.compose.ui.platform.LocalConfiguration.current.smallestScreenWidthDp
+            androidx.compose.runtime.LaunchedEffect(state.coverRotation, smallestWidth) {
+                applyCoverRotation(state.coverRotation, smallestWidth)
+            }
             val deviceStatus = status.state.collectAsStateWithLifecycle().value
             DuoTheme(appearance.state.dark) {
                 LauncherScreen(state, model, widgets, homeRequests.intValue,
                     onLaunch = { launchApp(it) }, onMakeDefault = ::makeDefault, onAppInfo = ::appInfo,
                     isDefaultHome = defaultHome.value, deviceStatus = deviceStatus, onStatusMode = ::setStatusMode, onWallpaperSettings = ::openWallpaperSettings,
                     searchRequests = searchRequests.intValue,
+                    changelogRequests = changelogRequests.intValue,
                     onLaunchFrom = ::launchApp, onGoogleSearch = ::openGoogleSearch, onWebSearch = ::openWebSearch,
                     appearance = appearance.state,
                     onAppearanceMode = { cancelAppearanceLocation(); appearance.setMode(it, systemDark()) },
@@ -137,6 +152,16 @@ class MainActivity : ComponentActivity() {
         returningFromShadeSettings = false
         model.refresh(); appearance.refresh(systemDark()); updateDefaultHome()
         homeGesturesEnabled = SystemShadeAccessibilityService.isEnabled(this)
+    }
+
+    /**
+     * The cover screen stays upright unless the user allows rotation; the inner screen, 600dp and
+     * wider in every orientation, always follows the device.
+     */
+    private fun applyCoverRotation(allowed: Boolean, smallestWidthDp: Int) {
+        val wanted = if (smallestWidthDp < 600 && !allowed) android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            else android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        if (requestedOrientation != wanted) requestedOrientation = wanted
     }
 
     internal fun openSystemShade(panel: ShadePanel) =
@@ -194,6 +219,7 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         FoldRenderExperiment.onNewIntent(this, intent)
         if (intent.getStringExtra("duo_destination") == "search") searchRequests.intValue++
+        else if (intent.getStringExtra("duo_destination") == UpdateNotice.DESTINATION) changelogRequests.intValue++
         else if (intent.hasCategory(Intent.CATEGORY_HOME) || intent.getStringExtra("duo_destination") == "home") homeRequests.intValue++
         intent.removeExtra("duo_destination")
     }
@@ -208,6 +234,7 @@ class MainActivity : ComponentActivity() {
             val user = getSystemService(UserManager::class.java).getUserForSerialNumber(app.userSerial)
                 ?: throw IllegalStateException("Profile is unavailable")
             getSystemService(LauncherApps::class.java).startMainActivity(app.component, user, screenBounds(bounds), launchOptions(bounds))
+            model.noteLaunch(app.id)
         } catch (_: Exception) { Toast.makeText(this, getString(R.string.app_unavailable, app.label), Toast.LENGTH_SHORT).show(); model.refresh() }
     }
 

@@ -44,15 +44,23 @@ fun upgradePreset(preset: LayoutPreset, schema: Int, expanded: Boolean): LayoutP
     else -> preset
 }
 
-fun homeGeometry(width: Float, height: Float, preset: LayoutPreset, labels: Boolean, statusHeight: Float = 0f, labelHeight: Float = 20f, inLibrary: Boolean = false, homeBottomSpace: Float = 44f, dockSlots: Int = MIN_DOCK_SLOTS, statusRailHeight: Float = 0f, homeRows: Int = DEFAULT_HOME_ROWS): HomeGeometry {
+/**
+ * Home's measurements for a [width] by [height] window. Without a [dockColumn] the grid takes the
+ * dock's place and spreads its [columns] across the whole width; [topBar] reserves a status band
+ * above everything else.
+ */
+fun homeGeometry(width: Float, fullHeight: Float, preset: LayoutPreset, labels: Boolean, statusHeight: Float = 0f, labelHeight: Float = 20f, inLibrary: Boolean = false, homeBottomSpace: Float = 44f, dockSlots: Int = MIN_DOCK_SLOTS, statusRailHeight: Float = 0f, homeRows: Int = DEFAULT_HOME_ROWS,
+    columns: Int = DEFAULT_HOME_COLUMNS, dockColumn: Boolean = true, topBar: Float = 0f): HomeGeometry {
     val p = preset.sanitized()
     val expanded = width >= 650f
+    val height = fullHeight - topBar
     val homeWidth = if (expanded) minOf(460f, width * 0.56f) else width
-    val gridWidth = (homeWidth - p.dockWidth - 44f).coerceAtLeast(192f)
-    val icon = minOf(p.iconSize, (gridWidth / 4f - 10f).coerceAtLeast(32f))
+    val gridWidth = (if (dockColumn) homeWidth - p.dockWidth - 44f else homeWidth - 32f).coerceAtLeast(192f)
+    val icon = minOf(p.iconSize, (gridWidth / columns - 10f).coerceAtLeast(32f))
     // Keep the same icon rhythm when labels are hidden; allow larger system text to fit.
     val tightRow = maxOf(48f, icon + if (labels) maxOf(20f, labelHeight) else 20f)
-    val widget = minOf(176f, gridWidth / 2f - 5f).coerceAtLeast(88f)
+    // The widget band's rows are as tall as two columns are wide.
+    val widget = minOf(176f, gridWidth * 2f / columns - 5f).coerceAtLeast(88f)
     // The first two rows form the widget band; each remaining row is one app row.
     val appRows = homeRows.coerceIn(DEFAULT_HOME_ROWS, GRID_ROWS) - 2
     // Extra rows first give up row spacing so the page fits between its 16dp top margin and
@@ -80,7 +88,7 @@ fun homeGeometry(width: Float, height: Float, preset: LayoutPreset, labels: Bool
     val homeDockTop = (if (p.dockAlignToGrid) contentTop + widget + 18f else height * p.dockPosition - homeDockHeight / 2f)
         .coerceIn(topLimit, maxOf(topLimit, height - homeDockHeight - 124f))
     val dockTop = homeDockTop.coerceIn(topLimit, maxOf(topLimit, height - dockHeight - bottomReserve))
-    return HomeGeometry(expanded, homeWidth, gridWidth, icon, row, widget, contentTop, dockTop, dockHeight, dockRowHeight,
+    return HomeGeometry(expanded, homeWidth, gridWidth, icon, row, widget, contentTop + topBar, dockTop + topBar, dockHeight, dockRowHeight,
         gridFits = gridSpace >= 24f - .01f)
 }
 

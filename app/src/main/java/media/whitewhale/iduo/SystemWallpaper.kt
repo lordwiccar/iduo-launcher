@@ -5,12 +5,17 @@ import android.app.WallpaperColors
 import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlin.concurrent.thread
+
+/** Samsung's flags for the inner (main) and cover (sub) screen's wallpaper. */
+private const val SAMSUNG_MAIN_DISPLAY = 4
+private const val SAMSUNG_SUB_DISPLAY = 16
 
 /** Where Android shows a wallpaper that iDuo sets. */
 enum class WallpaperTarget(val flags: Int) {
@@ -33,6 +38,11 @@ internal object SystemWallpaper {
     /** Colours of the Home wallpaper; snapshot state so stand-ins repaint when it changes. */
     var colors by mutableStateOf<WallpaperColors?>(null)
         private set
+    /** Colours of the cover screen's own Home wallpaper, on Samsung foldables that give it one. */
+    private var coverColors by mutableStateOf<WallpaperColors?>(null)
+
+    /** Colours of the Home wallpaper on the cover or inner screen. */
+    fun colorsFor(cover: Boolean): WallpaperColors? = if (cover) coverColors ?: colors else colors
     /** True while the Home wallpaper is the bundled iDuo dunes that iDuo set. */
     var mirrorsBundled by mutableStateOf(false)
         private set
@@ -47,11 +57,23 @@ internal object SystemWallpaper {
             listening = true
             // Fires for every wallpaper change, including ones made while iDuo is in the background.
             manager.addOnColorsChangedListener({ updated, which ->
-                if (which and WallpaperManager.FLAG_SYSTEM != 0) { colors = updated; verify(app) }
+                if (which and WallpaperManager.FLAG_SYSTEM != 0) { readColors(manager); verify(app) }
             }, Handler(Looper.getMainLooper()))
         }
-        colors = runCatching { manager.getWallpaperColors(WallpaperManager.FLAG_SYSTEM) }.getOrNull()
+        readColors(manager)
         verify(app)
+    }
+
+    /**
+     * Samsung foldables keep a Home wallpaper for each screen, selected by extra flags, and the
+     * plain Home flag reports the inner screen's. Elsewhere both screens share one wallpaper.
+     */
+    private fun readColors(manager: WallpaperManager) {
+        fun read(which: Int) = runCatching { manager.getWallpaperColors(which) }.getOrNull()
+        val samsung = Build.MANUFACTURER.equals("samsung", ignoreCase = true)
+        colors = (if (samsung) read(WallpaperManager.FLAG_SYSTEM or SAMSUNG_MAIN_DISPLAY) else null)
+            ?: read(WallpaperManager.FLAG_SYSTEM)
+        coverColors = if (samsung) read(WallpaperManager.FLAG_SYSTEM or SAMSUNG_SUB_DISPLAY) else null
     }
 
     /** Main thread. Keeps the mirror only while Android still shows the wallpaper iDuo set. */

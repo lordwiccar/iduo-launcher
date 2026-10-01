@@ -69,7 +69,7 @@ class WidgetPickerE2ETest {
     private fun prepareEmptySecondPage() {
         val layout = model().state.value.layout
         val app = model().state.value.apps.first { it.id !in layout.dock }
-        compose.runOnIdle { model().applyDrop(app.id, DropTarget.Home(47)) }
+        compose.runOnIdle { model().applyDrop(app.id, DropTarget.Home(58)) }
         compose.onNodeWithContentDescription("Home page 2").performClick()
         compose.waitForIdle()
         assertNull(model().state.value.homeSlots[HOME_CELLS])

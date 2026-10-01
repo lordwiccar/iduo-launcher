@@ -11,16 +11,16 @@ class FolderDisbandTest {
         val after = disbandFolder(layout, folder.id)
         assertNull(after.folder(folder.id))
         assertEquals("a", after.slotAt(1))
-        assertEquals(listOf("x", "a", "y", "b", "c"), after.slots.take(5))
+        assertEquals(fourColumns("x", "a", "y", "b", "c"), after.slots.take(GRID_COLUMNS + 1))
     }
 
     @Test fun `ungrouping skips widgets and hidden rows and spills onto the next page`() {
-        val full = List(DEFAULT_HOME_ROWS * GRID_COLUMNS) { if (it == 9) folder.id else "app$it" }
+        val full = fourColumns(*Array(DEFAULT_HOME_ROWS * DEFAULT_HOME_COLUMNS) { if (it == 9) folder.id else "app$it" })
         val widget = WidgetPlacement(1, 100, 0, 0, 0, 2, 2)
         val layout = HomeLayout(full.mapIndexed { i, id -> id.takeUnless { i in widget.coveredIndices() } }, emptyList(),
             widgetPlacements = listOf(widget), folders = listOf(folder))
         val after = disbandFolder(layout, folder.id)
-        assertEquals("a", after.slotAt(9))
+        assertEquals("a", after.slotAt(cell4(9)))
         assertEquals(HOME_CELLS, after.indexOfShortcut("b"))
         assertEquals(HOME_CELLS + 1, after.indexOfShortcut("c"))
         assertTrue(after.unavailableCells().none { after.slotAt(it) != null })

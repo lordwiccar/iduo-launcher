@@ -143,6 +143,7 @@ internal fun adjustedWidgetDropIndex(
     placement: WidgetPlacement,
     sourceBounds: Rect,
     grabPoint: Offset,
+    columns: Int = DEFAULT_HOME_COLUMNS,
 ): Int {
     val columnOffset = (((grabPoint.x - sourceBounds.left) / sourceBounds.width.coerceAtLeast(1f)) * placement.spanX)
         .toInt().coerceIn(0, placement.spanX - 1)
@@ -150,7 +151,7 @@ internal fun adjustedWidgetDropIndex(
         .toInt().coerceIn(0, placement.spanY - 1)
     val page = homeCellPage(rawIndex)
     val rawLocal = homeCellLocal(rawIndex)
-    val column = (rawLocal % GRID_COLUMNS - columnOffset).coerceIn(0, GRID_COLUMNS - placement.spanX)
+    val column = (rawLocal % GRID_COLUMNS - columnOffset).coerceIn(0, maxOf(0, columns - placement.spanX))
     val row = (rawLocal / GRID_COLUMNS - rowOffset)
         .coerceIn(0, GRID_ROWS - placement.spanY.coerceAtMost(GRID_ROWS))
     return homeCellIndex(page, row * GRID_COLUMNS + column)

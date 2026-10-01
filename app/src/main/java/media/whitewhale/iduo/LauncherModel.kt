@@ -2,6 +2,7 @@ package media.whitewhale.iduo
 
 import android.app.Application
 import android.content.ComponentName
+import android.content.Context
 import android.content.pm.LauncherApps
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -27,6 +28,15 @@ import java.text.Collator
 /** Home's left page: Google News headlines, or the user's own RSS sources. */
 enum class LeftPage { GOOGLE_NEWS, RSS }
 
+/** Recently opened apps remembered for the dock and the library. */
+const val MAX_RECENT_APPS = 12
+
+/** How the dock appears: always, slid in from the right edge on demand, or never. */
+enum class DockMode { SHOWN, SLIDE, HIDDEN }
+
+/** One drawing from an icon pack, chosen for a single app. */
+data class IconChoice(val pack: String, val drawable: String)
+
 data class AppEntry(
     val id: String,
     val label: String,
@@ -38,6 +48,8 @@ data class AppEntry(
     val profileLabel: String = "Personal",
     val isWork: Boolean = false,
     val available: Boolean = true,
+    /** The library folder the app belongs in. */
+    val category: AppCategory = AppCategory.OTHER,
 ) {
     val packageName: String get() = component.packageName
 }
@@ -58,11 +70,16 @@ data class LauncherState(
     val expanded: LayoutPreset = LayoutPreset(),
     val labels: Boolean = true,
     val verticalStatus: Boolean = true,
+    /** On the cover screen, status runs across the top rather than above the dock. */
+    val coverStatusAtTop: Boolean = true,
     val homeRows: Int = DEFAULT_HOME_ROWS,
+    val homeColumns: Int = DEFAULT_HOME_COLUMNS,
     /** How see-through an open folder's background is, from opaque (0) to [MAX_FOLDER_TRANSPARENCY]. */
     val folderTransparency: Float = DEFAULT_FOLDER_TRANSPARENCY,
     /** All apps as horizontal pages of a grid instead of a vertical list. */
     val libraryGrid: Boolean = false,
+    /** All apps as folders by purpose, like iOS's App Library; wins over [libraryGrid]. */
+    val libraryFolders: Boolean = false,
     /** What Home's left page shows. */
     val leftPage: LeftPage = LeftPage.GOOGLE_NEWS,
     /** A double tap on empty Home space locks the screen. */
@@ -71,18 +88,58 @@ data class LauncherState(
     val swipeDownShade: Boolean = true,
     /** An upward swipe on Home opens search. */
     val swipeUpSearch: Boolean = true,
+    /** Whether the cover screen follows the device's rotation; it stays upright by default. */
+    val coverRotation: Boolean = false,
+    /** Package of the chosen third-party icon pack, or null for the apps' own icons. */
+    val iconPack: String? = null,
+    /** Icons chosen by hand for single apps: app id to an icon pack's package and drawing. */
+    val iconOverrides: Map<String, IconChoice> = emptyMap(),
+    /** Every app lives on Home pages, and All apps is not shown. */
+    val appsOnHome: Boolean = false,
+    /** Apps that On Home put on Home, taken off again when it is turned off. */
+    val homeAddedApps: Set<String> = emptySet(),
+    /** Apps opened from Home, most recent first; empty dock positions show them. */
+    val recentApps: List<String> = emptyList(),
+    /** Whether empty dock positions show recently opened apps. */
+    val dockRecents: Boolean = true,
+    /** How the dock appears on the cover screen; the inner screen always shows it. */
+    val dockMode: DockMode = DockMode.SHOWN,
+    /** The cover screen has its own Home layout instead of mirroring the inner screen's. */
+    val separateCover: Boolean = false,
+    /** Whether the Home fields above hold the cover's own layout rather than the inner screen's. */
+    val showingCover: Boolean = false,
+    /**
+     * The layout not shown: the inner screen's while [showingCover], else the cover's own one,
+     * kept even while mirroring so switching back restores it. Its dock is not used.
+     */
+    val otherLayout: HomeLayout? = null,
     val loading: Boolean = true,
     val error: String? = null,
 ) {
     val order: List<String> get() = homeSlots.filterNotNull()
     val widgets: List<Int> get() = layout.widgets
-    val layout: HomeLayout get() = HomeLayout(homeSlots, dock, widgetPlacements, folders, widgetRestores, leadingSlots, homeRows)
+    /** The layout on screen now. */
+    val layout: HomeLayout get() = HomeLayout(homeSlots, dock, widgetPlacements, folders, widgetRestores, leadingSlots, homeRows, homeColumns)
     val homePages get() = layout.pageCount
+    /** Folders in the dock, shared by both screens like the dock itself. */
+    val dockFolderIds: Set<String> get() = dock.filterNotNull().filterTo(mutableSetOf(), ::isReservedFolderId)
+    val innerLayout: HomeLayout get() = if (!showingCover) layout else otherLayout!!.let { inner ->
+        inner.copy(dock = dock, folders = inner.folders.filterNot { it.id in dockFolderIds } + folders.filter { it.id in dockFolderIds })
+    }
+    /** The cover's own layout, when it has one, without the dock's folders (they belong to the dock). */
+    val coverLayout: HomeLayout? get() = (if (showingCover) layout else otherLayout?.copy(dock = dock))
+        ?.let { cover -> cover.copy(folders = cover.folders.filterNot { it.id in dockFolderIds }) }
+    /** The layout [cover] or the inner screen shows. */
+    fun layoutFor(cover: Boolean): HomeLayout = if (cover && separateCover) coverLayout ?: layout else innerLayout
+    /** These fields showing [next], keeping the shared dock. */
+    fun showing(next: HomeLayout) = copy(homeSlots = next.slots, leadingSlots = next.leadingSlots,
+        widgetPlacements = next.widgetPlacements, folders = next.folders, widgetRestores = next.widgetRestores,
+        homeRows = next.rows, homeColumns = next.columns)
 }
 
 class LauncherModel(application: Application) : AndroidViewModel(application) {
     private data class RefreshedApps(val entries: List<AppEntry>, val profiles: List<AppProfile>,
-        val authoritativeProfiles: Set<Long>, val removedProfiles: Set<Long>)
+        val authoritativeProfiles: Set<Long>, val removedProfiles: Set<Long>, val knownBefore: Set<String>)
     private data class UndoImportSettings(val compact: LayoutPreset, val expanded: LayoutPreset, val labels: Boolean,
         val googleSearch: Boolean, val verticalStatus: Boolean)
     private val prefs = application.getSharedPreferences("launcher", 0)
@@ -141,11 +198,16 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         invalidatedPackages.clear()
         removedPackages.clear()
         val resources = getApplication<Application>().resources
+        val iconPackName = mutable.value.iconPack
+        val iconOverrides = mutable.value.iconOverrides
         val configuration = resources.configuration.let { "${it.densityDpi}|${it.locales.toLanguageTags()}|${it.uiMode}" }
         viewModelScope.launch {
             try {
                 val apps = withContext(Dispatchers.IO) {
-                    if (configuration != iconConfiguration) { iconCache.clear(); iconConfiguration = configuration }
+                    // A chosen pack that was updated or removed redraws every icon, like a changed configuration.
+                    val iconPack = iconPackName?.let { IconPacks.load(getApplication(), it) }
+                    val iconKey = configuration + "|" + (iconPack?.stamp ?: "")
+                    if (iconKey != iconConfiguration) { iconCache.clear(); iconConfiguration = iconKey }
                     iconCache.keys.removeAll { key -> parseProfileAppId(key)?.let { identity ->
                         val serial = identity.userSerial ?: userManager.getSerialNumberForUser(Process.myUserHandle())
                         serial to (ComponentName.unflattenFromString(identity.component)?.packageName ?: "") in invalidated
@@ -185,9 +247,14 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
                             val id = profileAppId(component.flattenToString(), serial, personalSerial)
                             val label = info.label.toString()
                             iconCache[id]?.takeIf { it.label == label && it.available } ?: run {
-                                val icon = runCatching { info.getBadgedIcon(0) }.getOrElse { application.packageManager.defaultActivityIcon }
-                                AppEntry(id, label, launcherIcon(icon), component, profile, serial, descriptor.label,
-                                    descriptor.isWork, available = true).also { iconCache[id] = it }
+                                val icon = iconOverrides[id]?.let { choice -> runCatching { chosenIcon(application, choice, profile) }.getOrNull() }
+                                    ?: iconPack?.let { pack -> runCatching { packIcon(application, pack, info, profile) }.getOrNull() }
+                                    ?: launcherIcon(runCatching { info.getBadgedIcon(0) }.getOrElse { application.packageManager.defaultActivityIcon })
+                                val appInfo = info.applicationInfo
+                                val category = appCategory(component.packageName, label, appInfo.category,
+                                    appInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM != 0)
+                                AppEntry(id, label, icon, component, profile, serial, descriptor.label,
+                                    descriptor.isWork, available = true, category = category).also { iconCache[id] = it }
                             }
                         }
                     }
@@ -208,7 +275,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
                     iconCache.keys.retainAll(entries.map { it.id }.toSet())
                     RefreshedApps(entries, (profiles + unavailable.map { AppProfile(it.userSerial, it.profileLabel, false, true,
                         quiet = true, unlocked = false, available = false) }).distinctBy(AppProfile::userSerial),
-                        authoritativeProfiles.toSet(), removedProfileSerials)
+                        authoritativeProfiles.toSet(), removedProfileSerials, cachedBeforeProfiles.mapTo(mutableSetOf(), AppEntry::id))
                 }
                 mutable.update { old ->
                     val entries = apps.entries
@@ -235,10 +302,27 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
                         apps.removedProfiles)
                     val validPins = followedPins.map { it?.takeUnless(removedIds::contains) }
                     val validDock = followedDock.map { it?.takeUnless(removedIds::contains) }
-                    val reconciled = reconcileFolders(HomeLayout(validPins, validDock, old.widgetPlacements, followedFolders,
-                        old.widgetRestores, followedLeading, old.homeRows), removedIds)
+                    val reconciledHome = reconcileFolders(HomeLayout(validPins, validDock, old.widgetPlacements, followedFolders,
+                        old.widgetRestores, followedLeading, old.homeRows, old.homeColumns), removedIds)
+                    // With apps on Home, a newly installed app joins the end of the last page. Apps
+                    // already known stay where the user left them, including off Home.
+                    val known = apps.knownBefore + old.apps.map(AppEntry::id) + renamed.values
+                    val installedNow = if (!old.appsOnHome || known.isEmpty()) emptyList()
+                        else entries.filter { it.available && it.id !in known }.map(AppEntry::id)
+                    val reconciled = if (installedNow.isEmpty()) reconciledHome
+                        else appendHomeApps(reconciledHome, installedNow, onNewPage = false)
+                    // The layout not on screen loses removed apps too, and gains new ones when it is in use.
+                    val other = old.otherLayout?.let { stored ->
+                        val followed = stored.copy(slots = stored.slots.map(::follow),
+                            folders = stored.folders.map { folder -> folder.copy(appIds = folder.appIds.map { renamed[it] ?: it }) })
+                        val cleaned = reconcileFolders(followed.copy(slots = followed.slots.map { it?.takeUnless(removedIds::contains) }),
+                            removedIds).copy(dock = reconciled.dock)
+                        if (installedNow.isEmpty() || !old.separateCover) cleaned
+                            else appendHomeApps(cleaned, installedNow, onNewPage = false)
+                    }
                     old.copy(apps = entries, profiles = profiles, homeSlots = reconciled.slots, leadingSlots = reconciled.leadingSlots,
-                        dock = reconciled.dock, folders = reconciled.folders,
+                        dock = reconciled.dock, folders = reconciled.folders, otherLayout = other,
+                        homeAddedApps = (old.homeAddedApps.map { renamed[it] ?: it } + installedNow).toSet() - removedIds,
                         canUndoEdit = old.canUndoEdit && old.layout == reconciled, loading = false,
                         error = if (statePayloadInvalid) old.error else null)
                 }
@@ -337,6 +421,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         if (statePayloadInvalid) return
         if (slot !in mutable.value.dock.indices) return
         if (id != null && (isReservedFolderId(id) || mutable.value.folders.any { id in it.appIds })) return
+        if (mutable.value.dock[slot]?.let(::isReservedFolderId) == true) return
         mutable.update { old -> old.copy(canUndoEdit = false,
             homeSlots = if (id == null) old.homeSlots else old.homeSlots.map { it?.takeUnless(id::equals) }.dropLastWhile { it == null },
             leadingSlots = if (id == null) old.leadingSlots else old.leadingSlots.map { it?.takeUnless(id::equals) },
@@ -364,7 +449,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         val folder = old.layout.folder(id)
         if (old.apps.none { it.id == id } && folder == null) return false
         if (target is DropTarget.Folder) return folder == null && addAppToFolder(target.id, id)
-        if (folder != null && target !is DropTarget.Home) return false
+        if (folder != null && target !is DropTarget.Home && target !is DropTarget.Dock) return false
         return commitLayout(dropApp(old.layout, id, target))
     }
 
@@ -388,13 +473,31 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
     fun folder(id: String) = mutable.value.layout.folder(id)
 
     fun applyImportedLayout(preview: LayoutImportPreview): Boolean {
+        val changed = onInnerLayout { applyImportedInnerLayout(preview) }
+        // A backup with the cover's own layout brings it back too; an older one leaves the cover as it is.
+        val cover = preview.cover ?: return changed
+        if (mutable.value.showingCover) swapLayouts()
+        mutable.update { it.copy(otherLayout = cover.copy(dock = it.dock), separateCover = preview.separateCover) }
+        showDisplay(onCover)
+        persist()
+        return true
+    }
+
+    /** Runs [block] with the inner screen's layout in the Home fields, then shows the cover's again if it was. */
+    private fun <T> onInnerLayout(block: () -> T): T {
+        val wasCover = mutable.value.showingCover
+        if (wasCover) swapLayouts()
+        try { return block() } finally { if (wasCover && mutable.value.separateCover && !mutable.value.showingCover) swapLayouts() }
+    }
+
+    private fun applyImportedInnerLayout(preview: LayoutImportPreview): Boolean {
         if (statePayloadInvalid) return false
         val old = mutable.value
         if (old.layout == preview.layout && old.compact == preview.compact && old.expanded == preview.expanded &&
             old.labels == preview.labels && old.googleSearch == preview.googleSearch && old.verticalStatus == preview.verticalStatus) return false
         undoLayout = old.layout to preview.layout
         undoImportSettings = UndoImportSettings(old.compact, old.expanded, old.labels, old.googleSearch, old.verticalStatus)
-        mutable.value = old.copy(homeSlots = preview.layout.slots, leadingSlots = preview.layout.leadingSlots, dock = preview.layout.dock, homeRows = preview.layout.rows,
+        mutable.value = old.copy(homeSlots = preview.layout.slots, leadingSlots = preview.layout.leadingSlots, dock = preview.layout.dock, homeRows = preview.layout.rows, homeColumns = preview.layout.columns,
             widgetPlacements = preview.layout.widgetPlacements, folders = preview.layout.folders,
             widgetRestores = preview.layout.widgetRestores, compact = preview.compact, expanded = preview.expanded,
             labels = preview.labels, googleSearch = preview.googleSearch, verticalStatus = preview.verticalStatus,
@@ -419,7 +522,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         if (old.layout == next) return false
         undoLayout = old.layout to next
         undoImportSettings = null
-        mutable.value = old.copy(homeSlots = next.slots, leadingSlots = next.leadingSlots, dock = next.dock, homeRows = next.rows,
+        mutable.value = old.copy(homeSlots = next.slots, leadingSlots = next.leadingSlots, dock = next.dock, homeRows = next.rows, homeColumns = next.columns,
             widgetPlacements = next.widgetPlacements, folders = next.folders,
             widgetRestores = next.widgetRestores,
             editRevision = old.editRevision + 1, canUndoEdit = true)
@@ -435,7 +538,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         val settings = undoImportSettings
         mutable.value = old.copy(homeSlots = reconcileHomeSlots(before.slots, installed),
             leadingSlots = before.leadingSlots.map { it?.takeIf(installed::contains) },
-            dock = before.dock.map { it?.takeIf(installed::contains) }, widgetPlacements = before.widgetPlacements, folders = before.folders, homeRows = before.rows,
+            dock = before.dock.map { it?.takeIf(installed::contains) }, widgetPlacements = before.widgetPlacements, folders = before.folders, homeRows = before.rows, homeColumns = before.columns,
             widgetRestores = before.widgetRestores, compact = settings?.compact ?: old.compact,
             expanded = settings?.expanded ?: old.expanded, labels = settings?.labels ?: old.labels,
             googleSearch = settings?.googleSearch ?: old.googleSearch, verticalStatus = settings?.verticalStatus ?: old.verticalStatus,
@@ -447,6 +550,11 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         return true
     }
     fun setLabels(value: Boolean) { if (statePayloadInvalid) return; undoLayout = null; undoImportSettings = null; mutable.update { it.copy(labels = value, canUndoEdit = false) }; persist() }
+    /** A device-local look setting, like the dock's appearance. */
+    fun setCoverStatusAtTop(value: Boolean) {
+        if (statePayloadInvalid) return
+        mutable.update { it.copy(coverStatusAtTop = value) }; persist()
+    }
     fun setVerticalStatus(value: Boolean) { if (statePayloadInvalid) return; undoLayout = null; undoImportSettings = null; mutable.update { it.copy(verticalStatus = value, canUndoEdit = false) }; persist() }
     /** A device-local look setting, so it is not part of layout backups or layout undo. */
     fun setFolderTransparency(value: Float) {
@@ -454,6 +562,10 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         mutable.update { it.copy(folderTransparency = value.coerceIn(0f, MAX_FOLDER_TRANSPARENCY)) }; persist()
     }
     /** A device-local view setting, like folder transparency. */
+    fun setLibraryFolders(value: Boolean) {
+        if (statePayloadInvalid) return
+        mutable.update { it.copy(libraryFolders = value) }; persist()
+    }
     fun setLibraryGrid(value: Boolean) {
         if (statePayloadInvalid) return
         mutable.update { it.copy(libraryGrid = value) }; persist()
@@ -472,9 +584,145 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         if (statePayloadInvalid) return
         mutable.update { it.copy(swipeDownShade = value) }; persist()
     }
+    /** Remembers [appId] as the most recently opened app. A device-local record, like the views. */
+    fun noteLaunch(appId: String) {
+        if (statePayloadInvalid) return
+        mutable.update { it.copy(recentApps = (listOf(appId) + it.recentApps.filterNot(appId::equals)).take(MAX_RECENT_APPS)) }
+        persist()
+    }
+    fun setDockRecents(value: Boolean) {
+        if (statePayloadInvalid) return
+        mutable.update { it.copy(dockRecents = value) }; persist()
+    }
     fun setSwipeUpSearch(value: Boolean) {
         if (statePayloadInvalid) return
         mutable.update { it.copy(swipeUpSearch = value) }; persist()
+    }
+    /**
+     * Puts every app that is not yet on Home onto new pages after the last one, alphabetically,
+     * and hides All apps. Turning it off takes the apps it added off Home again, except those
+     * since moved into a folder or the dock.
+     */
+    fun setAppsOnHome(value: Boolean) {
+        if (statePayloadInvalid || value == mutable.value.appsOnHome) return
+        val separate = mutable.value.separateCover
+        val otherIsCover = !mutable.value.showingCover
+        if (value) {
+            val ids = mutable.value.apps.filter { it.available }.map(AppEntry::id)
+            fun placed(layout: HomeLayout) = (layout.slots + layout.leadingSlots + layout.dock).filterNotNull().toSet() +
+                layout.folders.flatMap { it.appIds }
+            val added = ids.filter { it !in placed(mutable.value.layout) }.toMutableSet()
+            if (separate) mutable.value.layoutFor(cover = otherIsCover).let { other -> added += ids.filter { it !in placed(other) } }
+            mutable.update { it.copy(appsOnHome = true, homeAddedApps = added) }; persist()
+            if (separate) updateLayoutFor(otherIsCover) { appendHomeApps(it, ids, onNewPage = true) }
+            commitLayout(appendHomeApps(mutable.value.layout, ids, onNewPage = true))
+        } else {
+            val added = mutable.value.homeAddedApps
+            mutable.update { it.copy(appsOnHome = false, homeAddedApps = emptySet()) }; persist()
+            if (separate) updateLayoutFor(otherIsCover) { removeHomeApps(it, added) }
+            commitLayout(removeHomeApps(mutable.value.layout, added))
+        }
+    }
+    fun setDockMode(value: DockMode) {
+        if (statePayloadInvalid) return
+        mutable.update { it.copy(dockMode = value) }
+        // Five columns need the dock's room, so an always-shown dock takes the cover back to four.
+        if (value == DockMode.SHOWN) setCoverColumns(DEFAULT_HOME_COLUMNS)
+        persist()
+    }
+
+    /** Whether the activity is on the cover screen; the Home fields follow it when the cover has its own layout. */
+    private var onCover = false
+
+    /** Shows the Home layout for the cover or the inner screen. */
+    fun showDisplay(cover: Boolean) {
+        onCover = cover
+        val old = mutable.value
+        if (statePayloadInvalid || (cover && old.separateCover) == old.showingCover) return
+        swapLayouts()
+    }
+
+    private fun swapLayouts() {
+        val old = mutable.value
+        val next = old.otherLayout ?: return
+        undoLayout = null; undoImportSettings = null
+        // The dock and its folders stay with the screen being shown.
+        val dockFolders = old.folders.filter { it.id in old.dockFolderIds }
+        val shown = next.copy(folders = next.folders.filterNot { it.id in old.dockFolderIds } + dockFolders)
+        mutable.value = old.showing(shown).copy(otherLayout = old.layout.copy(folders = old.folders.filterNot { it.id in old.dockFolderIds }),
+            showingCover = !old.showingCover, canUndoEdit = false, editRevision = old.editRevision + 1)
+    }
+
+    /**
+     * Gives the cover its own layout or mirrors the inner screen's again. The first own layout is
+     * a copy of the inner screen's; turning mirroring back on keeps it for next time.
+     */
+    fun setSeparateCover(value: Boolean) {
+        if (statePayloadInvalid || value == mutable.value.separateCover) return
+        if (value) {
+            if (mutable.value.coverLayout == null) {
+                val inner = mutable.value.innerLayout
+                mutable.update { state -> state.copy(otherLayout = coverLayoutFrom(inner, ::widgetRestoreFor)
+                    .let { cover -> cover.copy(folders = cover.folders.filterNot { it.id in state.dockFolderIds }) }) }
+            }
+            mutable.update { it.copy(separateCover = true) }
+            showDisplay(onCover)
+        } else {
+            if (mutable.value.showingCover) swapLayouts()
+            mutable.update { it.copy(separateCover = false) }
+        }
+        persist()
+    }
+
+    /** Describes a bound Android widget so the cover's copy can reconnect the same provider. */
+    private fun widgetRestoreFor(placement: WidgetPlacement): WidgetRestore? = runCatching {
+        val application = getApplication<Application>()
+        val info = android.appwidget.AppWidgetManager.getInstance(application).getAppWidgetInfo(placement.id) ?: return null
+        val serial = userManager.getSerialNumberForUser(info.profile)
+        val work = serial != userManager.getSerialNumberForUser(Process.myUserHandle())
+        WidgetRestore(placement.slot, info.provider.flattenToString(), serial,
+            info.loadLabel(application.packageManager).takeIf { it.isNotBlank() } ?: info.provider.shortClassName,
+            if (work) "Work" else "Personal", work)
+    }.getOrNull()
+
+    /** Replaces the layout [cover] or the inner screen shows with [transform]'s result. */
+    private fun updateLayoutFor(cover: Boolean, transform: (HomeLayout) -> HomeLayout) {
+        val old = mutable.value
+        val separate = cover && old.separateCover
+        if (separate == old.showingCover || old.otherLayout == null) { commitLayout(transform(old.layout)); return }
+        mutable.value = old.copy(otherLayout = transform(old.otherLayout.copy(dock = old.dock)), editRevision = old.editRevision + 1)
+        persist()
+    }
+
+    fun setHomeRows(rows: Int, cover: Boolean) = updateLayoutFor(cover) { resizeHomeRows(it, rows) }
+
+    /** Four or five columns on the cover's own layout; the fifth needs a dock that is not always shown. */
+    fun setCoverColumns(columns: Int) {
+        val old = mutable.value
+        if (statePayloadInvalid || old.coverLayout == null) return
+        val allowed = if (old.dockMode == DockMode.SHOWN) DEFAULT_HOME_COLUMNS else columns
+        if (!old.showingCover) {
+            val cover = old.otherLayout!!.copy(dock = old.dock)
+            if (cover.columns == allowed) return
+            mutable.value = old.copy(otherLayout = resizeHomeColumns(cover, allowed), editRevision = old.editRevision + 1)
+            persist()
+        } else commitLayout(resizeHomeColumns(old.layout, allowed))
+    }
+    fun setCoverRotation(value: Boolean) {
+        if (statePayloadInvalid) return
+        mutable.update { it.copy(coverRotation = value) }; persist()
+    }
+    /** Switches the icon pack and redraws every app icon with it. */
+    fun setIconPack(packageName: String?) {
+        if (statePayloadInvalid || packageName == mutable.value.iconPack) return
+        mutable.update { it.copy(iconPack = packageName) }; persist(); refresh()
+    }
+    /** Draws [app] with [choice] from an icon pack, or with its usual icon again when null. */
+    fun setIconOverride(app: AppEntry, choice: IconChoice?) {
+        if (statePayloadInvalid || mutable.value.iconOverrides[app.id] == choice) return
+        mutable.update { it.copy(iconOverrides = if (choice == null) it.iconOverrides - app.id else it.iconOverrides + (app.id to choice)) }
+        persist()
+        refresh(app.packageName, app.user)
     }
     fun setGoogleSearch(value: Boolean) { if (statePayloadInvalid) return; undoLayout = null; undoImportSettings = null; mutable.update { it.copy(googleSearch = value, canUndoEdit = false) }; persist() }
     fun setPreset(expanded: Boolean, value: LayoutPreset) {
@@ -484,6 +732,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         persist()
     }
     val retainedWidgetIds get() = (mutable.value.widgetPlacements.map { it.id } +
+        mutable.value.otherLayout?.widgetPlacements.orEmpty().map { it.id } +
         (if (mutable.value.canUndoEdit) undoLayout?.first?.widgetPlacements.orEmpty().map { it.id } else emptyList())).filter { it >= 0 }.toSet()
     val canPruneWidgetIds get() = !statePayloadInvalid
     fun setWidget(slot: Int, id: Int) {
@@ -508,7 +757,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         val installed = (mutable.value.apps.map { it.id } + layout.folders.map { it.id }).toSet()
         mutable.update { it.copy(homeSlots = reconcileHomeSlots(layout.slots, installed),
             leadingSlots = layout.slotsForPage(-1).map { id -> id?.takeIf { it in installed || isFolderId(it) } },
-            dock = layout.dock.map { id -> id?.takeIf { it in installed || isFolderId(it) } }, widgetPlacements = layout.widgetPlacements, homeRows = layout.rows,
+            dock = layout.dock.map { id -> id?.takeIf { it in installed || isFolderId(it) } }, widgetPlacements = layout.widgetPlacements, homeRows = layout.rows, homeColumns = layout.columns,
             folders = layout.folders, widgetRestores = layout.widgetRestores,
             canUndoEdit = false, editRevision = it.editRevision + 1) }
         undoLayout = null
@@ -518,7 +767,9 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
 
     private fun persist() {
         if (needsMigration || statePayloadInvalid) return
-        val s = mutable.value
+        val current = mutable.value
+        // Saved state always holds the inner screen's layout at the top level.
+        val s = current.showing(current.innerLayout)
         fun preset(p: LayoutPreset) = JSONObject().put("iconSize", p.iconSize).put("rowGap", p.rowGap)
             .put("dockWidth", p.dockWidth).put("dockPosition", p.dockPosition).put("dockAlignToGrid", p.dockAlignToGrid)
         val widgets = JSONArray().also { array -> s.widgetPlacements.forEach { w -> array.put(JSONObject()
@@ -530,21 +781,34 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             .put("slot", restore.slot).put("provider", restore.providerComponent).put("userSerial", restore.userSerial)
             .put("title", restore.title).put("profileLabel", restore.profileLabel).put("work", restore.isWork)
             .put("sourceScope", restore.sourceScope)) } }
-        val data = JSONObject().put("schema", 9).put("pinned", JSONArray(s.order)).put("homeSlots", JSONArray(s.homeSlots))
+        val data = JSONObject().put("schema", 10).put("pinned", JSONArray(s.order)).put("homeSlots", JSONArray(s.homeSlots))
             .put("leadingSlots", JSONArray(s.leadingSlots)).put("dock", JSONArray(s.dock))
             .put("widgets", widgets).put("labels", s.labels)
             .put("folders", folders)
             .put("restores", restores)
             .put("googleSearch", s.googleSearch)
             .put("verticalStatus", s.verticalStatus)
+            .put("coverStatusAtTop", s.coverStatusAtTop)
             .put("homeRows", s.homeRows)
             .put("folderTransparency", s.folderTransparency.toDouble())
             .put("libraryGrid", s.libraryGrid)
+            .put("libraryFolders", s.libraryFolders)
             .put("leftPage", s.leftPage.name)
             .put("doubleTapLock", s.doubleTapLock)
             .put("swipeDownShade", s.swipeDownShade)
             .put("swipeUpSearch", s.swipeUpSearch)
+            .put("coverRotation", s.coverRotation)
+            .put("iconPack", s.iconPack ?: "")
+            .put("iconOverrides", JSONObject().also { all -> s.iconOverrides.forEach { (id, choice) ->
+                all.put(id, JSONObject().put("pack", choice.pack).put("drawable", choice.drawable)) } })
+            .put("appsOnHome", s.appsOnHome)
+            .put("homeAddedApps", JSONArray(s.homeAddedApps.toList()))
+            .put("dockMode", s.dockMode.name)
+            .put("recentApps", JSONArray(s.recentApps))
+            .put("dockRecents", s.dockRecents)
+            .put("separateCover", s.separateCover)
             .put("compact", preset(s.compact)).put("expanded", preset(s.expanded))
+        current.coverLayout?.let { data.put("cover", encodeCoverLayout(it)) }
         val editor = prefs.edit()
         if (legacyRaw != null && sourceSchema == 2 && !prefs.contains("state_v2_backup"))
             editor.putString("state_v2_backup", legacyRaw)
@@ -560,6 +824,8 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             editor.putString("state_v7_backup", legacyRaw)
         if (legacyRaw != null && sourceSchema < 9 && !prefs.contains("state_v8_backup"))
             editor.putString("state_v8_backup", legacyRaw)
+        if (legacyRaw != null && sourceSchema < 10 && !prefs.contains("state_v9_backup"))
+            editor.putString("state_v9_backup", legacyRaw)
         editor.putString("state", data.toString()).putBoolean("initialized", true).apply()
     }
 
@@ -577,17 +843,23 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         val order = j.optJSONArray(if (j.optInt("schema", 1) >= 2) "pinned" else "order") ?: JSONArray()
         val cells = j.optJSONArray("homeSlots").takeIf { j.optInt("schema", 1) >= 4 } ?: order
         val schema = j.optInt("schema", 1)
-        require(schema <= 9) { "Unsupported saved-state schema $schema" }
+        require(schema <= 10) { "Unsupported saved-state schema $schema" }
         val storedSlots = List(cells.length()) { cells.optString(it).takeIf { id -> id.isNotBlank() && id != "null" } }
-        // Schema 9 stores eight rows per page; older schemas stored six. Schemas 2..5 are
-        // rebuilt by migrateSchema5Apps directly in the eight-row format.
-        val rawSlots = if (schema <= 8 && schema !in 2..5) upgradeLegacySlots(storedSlots) else storedSlots
+        // Schema 10 stores five columns of eight rows per page; schema 9 stored four columns of
+        // eight rows, older schemas four of six. Schemas 2..5 are rebuilt by migrateSchema5Apps
+        // directly in the current format.
+        val rawSlots = when {
+            schema in 2..5 || schema >= 10 -> storedSlots
+            schema == 9 -> upgradeLegacySlots(storedSlots, GRID_ROWS)
+            else -> upgradeLegacySlots(storedSlots)
+        }
         val legacySlots = normalizeHomeSlots(rawSlots)
         val rawLeadingSlots = if (schema >= 8) {
             val leading = j.optJSONArray("leadingSlots") ?: error("Schema 8 requires a leading slot array")
-            val storedCells = if (schema >= 9) HOME_CELLS else LEGACY_HOME_CELLS
+            val storedCells = when { schema >= 10 -> HOME_CELLS; schema == 9 -> SCHEMA9_HOME_CELLS; else -> LEGACY_HOME_CELLS }
             require(leading.length() == storedCells)
-            upgradeLegacyLeadingSlots(List(storedCells) { leading.optString(it).takeIf { id -> id.isNotBlank() && id != "null" } })
+            val stored = List(storedCells) { leading.optString(it).takeIf { id -> id.isNotBlank() && id != "null" } }
+            if (schema >= 10) stored else upgradeLegacyLeadingSlots(stored, if (schema == 9) GRID_ROWS else LEGACY_GRID_ROWS)
         } else List(HOME_CELLS) { null }
         val dockArray = j.optJSONArray("dock")
         val loadedDock = List((dockArray?.length() ?: 0).coerceIn(MIN_DOCK_SLOTS, MAX_DOCK_SLOTS)) {
@@ -614,11 +886,11 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
                 require(loaded.map { it.slot }.distinct().size == loaded.size) { "Widget placement slots must be unique" }
                 loaded.forEach { placement ->
                     val baseGeometry = placement.slot >= 0 && placement.id != EMPTY_WIDGET && placement.page >= -1 &&
-                        placement.column >= 0 && placement.row >= 0 && placement.spanX in 1..GRID_COLUMNS &&
-                        placement.spanY in 1..storedRows && placement.column + placement.spanX <= GRID_COLUMNS
+                        placement.column >= 0 && placement.row >= 0 && placement.spanX in 1..DEFAULT_HOME_COLUMNS &&
+                        placement.spanY in 1..storedRows && placement.column + placement.spanX <= DEFAULT_HOME_COLUMNS
                     val insideGrid = placement.row + placement.spanY <= storedRows
                     val migratedOverflow = placement.page > 0 && placement.slot / 3 == placement.page && placement.slot % 3 == 2 &&
-                        placement.column == 0 && placement.row == storedRows && placement.spanX == GRID_COLUMNS && placement.spanY == 4
+                        placement.column == 0 && placement.row == storedRows && placement.spanX == LEGACY_GRID_COLUMNS && placement.spanY == 4
                     require(baseGeometry && (insideGrid || migratedOverflow)) { "Invalid widget placement" }
                 }
             }.map { if (schema <= 8) upgradeLegacyPlacement(it) else it }
@@ -645,11 +917,10 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
                 }
                 val children = loaded.flatMapTo(mutableSetOf(), FolderEntry::appIds)
                 val folderIds = loaded.mapTo(mutableSetOf(), FolderEntry::id)
-                val rawFolderRefs = (rawSlots + rawLeadingSlots).filterNotNull().filter(::isReservedFolderId)
+                val rawFolderRefs = (rawSlots + rawLeadingSlots + loadedDock).filterNotNull().filter(::isReservedFolderId)
                 require(rawFolderRefs.all(::isFolderId))
                 require(rawFolderRefs.size == folderIds.size && rawFolderRefs.toSet() == folderIds)
-                require((rawSlots + rawLeadingSlots).none { it in children } &&
-                    loadedDock.none { it in children || (it != null && isReservedFolderId(it)) })
+                require((rawSlots + rawLeadingSlots + loadedDock).none { it in children })
             }
         } else emptyList()
         if (schema >= 8) {
@@ -659,7 +930,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             }
             val leadingApps = leadingIds.filterNot(::isReservedFolderId)
             val otherApps = rawSlots.filterNotNull().filterNot(::isReservedFolderId) +
-                loadedDock.filterNotNull() + folders.flatMap(FolderEntry::appIds)
+                loadedDock.filterNotNull().filterNot(::isReservedFolderId) + folders.flatMap(FolderEntry::appIds)
             require(leadingApps.none { it in otherApps }) {
                 "An unfolded-only app shortcut appears on another surface"
             }
@@ -693,16 +964,36 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             googleSearch = j.optBoolean("googleSearch", true),
             labels = j.optBoolean("labels", true), compact = preset("compact", LayoutPreset()),
             expanded = preset("expanded", LayoutPreset()), verticalStatus = j.optBoolean("verticalStatus", true),
+            coverStatusAtTop = j.optBoolean("coverStatusAtTop", true),
             homeRows = j.optInt("homeRows", DEFAULT_HOME_ROWS).coerceIn(DEFAULT_HOME_ROWS, GRID_ROWS),
             folderTransparency = j.optDouble("folderTransparency", DEFAULT_FOLDER_TRANSPARENCY.toDouble()).toFloat()
                 .takeIf { it.isFinite() }?.coerceIn(0f, MAX_FOLDER_TRANSPARENCY) ?: DEFAULT_FOLDER_TRANSPARENCY,
             libraryGrid = j.optBoolean("libraryGrid", false),
+            libraryFolders = j.optBoolean("libraryFolders", false),
             // Layouts from before Google News chose "DISCOVER", which now falls back to Google News.
             leftPage = LeftPage.entries.firstOrNull { it.name == j.optString("leftPage") } ?: LeftPage.GOOGLE_NEWS,
             doubleTapLock = j.optBoolean("doubleTapLock", true),
             swipeDownShade = j.optBoolean("swipeDownShade", true),
-            swipeUpSearch = j.optBoolean("swipeUpSearch", true))
+            swipeUpSearch = j.optBoolean("swipeUpSearch", true),
+            coverRotation = j.optBoolean("coverRotation", false),
+            iconPack = j.optString("iconPack").takeIf { it.isNotEmpty() },
+            iconOverrides = j.optJSONObject("iconOverrides")?.let { all -> all.keys().asSequence().mapNotNull { id ->
+                all.optJSONObject(id)?.let { item -> IconChoice(item.optString("pack"), item.optString("drawable"))
+                    .takeIf { it.pack.isNotBlank() && it.drawable.isNotBlank() }?.let { id to it } } }.toMap() } ?: emptyMap(),
+            appsOnHome = j.optBoolean("appsOnHome", false),
+            homeAddedApps = j.optJSONArray("homeAddedApps")?.let { array ->
+                (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) }.toSet() } ?: emptySet(),
+            dockMode = DockMode.entries.firstOrNull { it.name == j.optString("dockMode") } ?: DockMode.SHOWN,
+            recentApps = j.optJSONArray("recentApps")?.let { array ->
+                (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) }.distinct().take(MAX_RECENT_APPS) } ?: emptyList(),
+            dockRecents = j.optBoolean("dockRecents", true),
+            separateCover = j.optBoolean("separateCover", false))
             .let { it.copy(homeRows = maxOf(it.homeRows, it.layout.requiredRows())) }
+            .let { loaded ->
+                // A cover layout that cannot be read is dropped; the cover then mirrors the inner screen.
+                val cover = j.optJSONObject("cover")?.let { runCatching { decodeCoverLayout(it, loaded.dock) }.getOrNull() }
+                loaded.copy(otherLayout = cover, separateCover = loaded.separateCover && cover != null)
+            }
     }.getOrElse {
         statePayloadInvalid = legacyRaw != null
         LauncherState(loading = false, error = getApplication<Application>().getString(R.string.layout_load_failed))
@@ -711,8 +1002,29 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() { launcherApps.unregisterCallback(callback) }
 }
 
+/**
+ * An app's icon from [pack]: its own drawing, else the app's icon on the pack's backdrop when the
+ * pack provides one, else null for the app's own icon. Work apps keep Android's badge.
+ */
+private fun packIcon(context: Context, pack: IconPack, info: android.content.pm.LauncherActivityInfo, user: UserHandle): Bitmap? {
+    val themed = pack.iconFor(info.componentName)?.let { launcherIcon(it) }
+        ?: pack.compose(launcherIcon(info.getIcon(0)), info.componentName.flattenToString())
+        ?: return null
+    if (user == Process.myUserHandle()) return themed
+    val badged = context.packageManager.getUserBadgedIcon(android.graphics.drawable.BitmapDrawable(context.resources, themed), user)
+    return badged.toBitmap(ICON_SIZE, ICON_SIZE)
+}
+
+/** An icon chosen by hand from a pack; work apps keep Android's badge. Null when the pack lacks it. */
+private fun chosenIcon(context: Context, choice: IconChoice, user: UserHandle): Bitmap? {
+    val drawn = IconPacks.load(context, choice.pack)?.drawable(choice.drawable)?.let(::launcherIcon) ?: return null
+    if (user == Process.myUserHandle()) return drawn
+    val badged = context.packageManager.getUserBadgedIcon(android.graphics.drawable.BitmapDrawable(context.resources, drawn), user)
+    return badged.toBitmap(ICON_SIZE, ICON_SIZE)
+}
+
 /** Render adaptive layers through our rounded-square mask, preserving original app artwork. */
-private fun launcherIcon(drawable: Drawable): Bitmap {
+internal fun launcherIcon(drawable: Drawable): Bitmap {
     if (drawable !is AdaptiveIconDrawable) return drawable.toBitmap(144, 144)
     val bitmap = Bitmap.createBitmap(144, 144, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)

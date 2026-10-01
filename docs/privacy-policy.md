@@ -4,7 +4,7 @@ title: iDuo Launcher – Privacy Policy
 
 # iDuo Launcher – Privacy Policy
 
-**Effective date:** 29 September 2026 · **App:** iDuo Launcher (`media.whitewhale.iduo`) for Android
+**Effective date:** 1 October 2026 · **App:** iDuo Launcher (`media.whitewhale.iduo`) for Android
 **Developer:** Danny, whitewhale.media · **Contact:** [studio@whitewhale.media](mailto:studio@whitewhale.media)
 
 [Česká verze níže](#zásady-ochrany-soukromí--česky)
@@ -19,11 +19,12 @@ The following information is used only on your device and is never sent to the d
 
 - **Installed apps** (names, icons and launch entries, including eligible work-profile apps), to show them on Home, in the dock and in All apps.
 - **Your layout and settings** (Home pages, dock, folders and folder names, widget positions, appearance, language, All apps view, left-page choice), stored in the app's private storage.
-- **Device status** (battery, Wi-Fi and mobile signal strength, airplane mode), shown in the Home status rail while Home is visible. Signal display does not use location.
-- **Wallpaper photo.** When you choose a photo, Android's photo picker gives the app access only to that image. The app sets it as your Android wallpaper on the screens you choose and keeps a private copy on the device to draw transitions.
+- **Device status** (battery, Wi-Fi and mobile signal strength, airplane mode), shown in the Home status display while Home is visible. Signal display does not use location.
+- **Wallpaper photo.** When you choose a photo, Android's photo picker gives the app access only to that image. The app sets it as your Android wallpaper on the screens you choose and keeps a private copy on the device, from which iDuo draws Home with the part of the photo you choose for each screen.
 - **Approximate location (optional).** Only if you tap "Use device location" for the sunrise/sunset appearance, the app requests approximate location once to calculate sunrise and sunset times on the device. Coordinates you enter or obtain are stored on the device until you clear them. There is no background location access.
 - **News settings and articles.** Your Google News edition and sections, the RSS addresses you add, and the most recently downloaded headlines are stored on the device.
 - **Searches.** What you type in Home search or in Settings search is matched against your apps and settings on the device and is not stored.
+- **Icon packs.** To offer icon packs, the app looks for installed apps that declare themselves as launcher icon packs, and reads the icons of the pack you choose on the device.
 
 ## Internet use (news page)
 
@@ -52,7 +53,9 @@ The optional "Home gestures" accessibility service lets a downward swipe on Home
 | --- | --- |
 | Bind app widgets | Host Android widgets on Home (Android asks you to allow each one). |
 | Internet | Download news for the news page: Google News, or the RSS sources you add. |
-| Network and Wi-Fi state | Show connection and signal strength in the status rail. |
+| Network and Wi-Fi state | Show connection and signal strength in the Home status display. |
+| Notifications | Optional. After an update from Google Play, a notification that links to the changelog. Asked once, after an update, and turned off under Settings → Help & information. |
+| Request to delete packages | Open Android's own uninstall confirmation when you choose Uninstall in an app's menu. iDuo never removes an app itself. |
 | Approximate location | Optional, on request, to calculate sunrise and sunset times on the device. |
 | Set wallpaper | Set a photo or the bundled dunes as your Android wallpaper when you ask. |
 | Accessibility service | Optional, see above. |
@@ -81,7 +84,7 @@ Changes to this policy will be published on this page with a new effective date.
 
 # Zásady ochrany soukromí – česky
 
-**Účinnost od:** 29. září 2026 · **Aplikace:** iDuo Launcher (`media.whitewhale.iduo`) pro Android
+**Účinnost od:** 1. října 2026 · **Aplikace:** iDuo Launcher (`media.whitewhale.iduo`) pro Android
 **Vývojář:** Danny, whitewhale.media · **Kontakt:** [studio@whitewhale.media](mailto:studio@whitewhale.media)
 
 ## Shrnutí
@@ -95,10 +98,11 @@ Následující informace se používají jen ve vašem zařízení a nikdy se ne
 - **Nainstalované aplikace** (názvy, ikony a spouštěcí položky včetně aplikací pracovního profilu), aby se zobrazily na ploše, v docku a ve Všech aplikacích.
 - **Rozložení a nastavení** (stránky plochy, dock, složky a jejich názvy, umístění widgetů, vzhled, jazyk, zobrazení všech aplikací, volba levé stránky), uložené v soukromém úložišti aplikace.
 - **Stav zařízení** (baterie, síla signálu Wi-Fi a mobilní sítě, režim letadla), zobrazený ve stavovém pruhu plochy. Zobrazení signálu nepoužívá polohu.
-- **Fotka tapety.** Při výběru fotky dá systémový výběr fotek aplikaci přístup jen k této fotce. Aplikace ji nastaví jako tapetu Androidu na zvolené obrazovky a ponechá si její kopii v zařízení pro vykreslení přechodů.
+- **Fotka tapety.** Při výběru fotky dá systémový výběr fotek aplikaci přístup jen k této fotce. Aplikace ji nastaví jako tapetu Androidu na zvolené obrazovky a ponechá si její kopii v zařízení, ze které iDuo kreslí plochu s výřezem zvoleným pro každou obrazovku.
 - **Přibližná poloha (volitelná).** Jen pokud klepnete na „Použít polohu zařízení“ u vzhledu podle východu a západu slunce, aplikace jednorázově požádá o přibližnou polohu a časy vypočítá v zařízení. Souřadnice zůstanou v zařízení, dokud je nesmažete. Poloha na pozadí se nepoužívá.
 - **Nastavení zpráv a články.** Zvolená edice a rubriky Google News, přidané adresy RSS a naposledy stažené titulky jsou uložené v zařízení.
 - **Hledání.** Co napíšete do hledání na ploše nebo v Nastavení, se porovnává s aplikacemi a nastaveními v zařízení a neukládá se.
+- **Balíčky ikon.** Aby mohla nabídnout balíčky ikon, aplikace vyhledá nainstalované aplikace, které se hlásí jako balíčky ikon pro spouštěče, a ikony zvoleného balíčku čte v zařízení.
 
 ## Použití internetu (stránka se zprávami)
 
@@ -128,6 +132,8 @@ Volitelná služba „gesta plochy“ umožňuje přejetím dolů na ploše otev
 | Vázání widgetů | Zobrazení widgetů Androidu na ploše (Android se na každý widget zeptá). |
 | Internet | Stahování zpráv pro stránku se zprávami: Google News nebo přidané zdroje RSS. |
 | Stav sítě a Wi-Fi | Zobrazení připojení a síly signálu ve stavovém pruhu. |
+| Oznámení | Volitelné. Po aktualizaci z Obchodu Play oznámení s odkazem na changelog. Žádost se zobrazí jednou, po aktualizaci, a vypnout ji lze v Nastavení → Nápověda a informace. |
+| Žádost o odinstalaci balíčků | Otevře vlastní potvrzení odinstalace Androidu, když v nabídce aplikace zvolíte Odinstalovat. iDuo samo žádnou aplikaci neodstraní. |
 | Přibližná poloha | Volitelně, na vyžádání, pro výpočet východu a západu slunce v zařízení. |
 | Nastavení tapety | Nastavení fotky nebo dun jako tapety Androidu, když o to požádáte. |
 | Služba usnadnění | Volitelná, viz výše. |

@@ -13,9 +13,9 @@ class HomeEditingTest {
     }
 
     @Test fun `existing home app inserts backward and rotates only intervening cells`() {
-        val before = HomeLayout(listOf("a", "b", "c", "d", "e"), emptyList())
+        val before = HomeLayout(fourColumns("a", "b", "c", "d", "e"), emptyList())
         val next = dropApp(before, "e", DropTarget.Home(1))
-        assertEquals(listOf("a", "e", "b", "c", "d"), next.slots)
+        assertEquals(fourColumns("a", "e", "b", "c", "d"), next.slots)
     }
 
     @Test fun `existing home app moved to an empty target leaves its source hole`() {
@@ -25,9 +25,9 @@ class HomeEditingTest {
     }
 
     @Test fun `existing move across rows preserves sparse cells within and outside its range`() {
-        val before = HomeLayout(listOf("a", null, "b", "c", "d", null, "e", "f", "g", "h"), emptyList())
-        val next = dropApp(before, "a", DropTarget.Home(8))
-        assertEquals(listOf(null, "b", "c", "d", null, "e", "f", "g", "a", "h"), next.slots)
+        val before = HomeLayout(fourColumns("a", null, "b", "c", "d", null, "e", "f", "g", "h"), emptyList())
+        val next = dropApp(before, "a", DropTarget.Home(cell4(8)))
+        assertEquals(fourColumns(null, "b", "c", "d", null, "e", "f", "g", "a", "h"), next.slots)
         assertEquals(before.slots.filterNotNull().toSet(), next.slots.filterNotNull().toSet())
     }
     @Test fun `move to new page retains empty cells and exact destination`() {
@@ -65,14 +65,14 @@ class HomeEditingTest {
     }
 
     @Test fun `new home app wraps through rows and overflows a full page`() {
-        val fullPage = (0 until 16).map(Int::toString)
-        val next = dropApp(HomeLayout(fullPage, emptyList()), "new", DropTarget.Home(14))
-        assertEquals(17, next.slots.size)
-        assertEquals("new", next.slots[14])
-        assertEquals("14", next.slots[15])
-        assertEquals("15", next.slots[16])
+        val fullPage = fourColumns(*Array(16) { "$it" })
+        val next = dropApp(HomeLayout(fullPage, emptyList()), "new", DropTarget.Home(cell4(14)))
+        assertEquals(cell4(16) + 1, next.slots.size)
+        assertEquals("new", next.slots[cell4(14)])
+        assertEquals("14", next.slots[cell4(15)])
+        assertEquals("15", next.slots[cell4(16)])
         assertEquals(1, next.pageCount)
-        assertEquals((fullPage + "new").toSet(), next.slots.filterNotNull().toSet())
+        assertEquals((fullPage.filterNotNull() + "new").toSet(), next.slots.filterNotNull().toSet())
     }
 
     @Test fun `empty home target accepts a new shortcut without shifting sparse cells`() {

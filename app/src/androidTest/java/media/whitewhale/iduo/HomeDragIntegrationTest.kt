@@ -81,7 +81,7 @@ class HomeDragIntegrationTest {
             drag("dock-slot-0", "dock-slot-1")
             assertEquals(expectedDockMove, model().state.value.layout)
             val movedOut = expectedDockMove.dock[0]!!
-            val homeTarget = expectedDockMove.slots.indices.first { it !in expectedDockMove.widgetPlacements.flatMap { w -> w.coveredIndices() } }
+            val homeTarget = expectedDockMove.slots.indices.first { expectedDockMove.cellVisible(it) && it !in expectedDockMove.widgetPlacements.flatMap { w -> w.coveredIndices() } }
             val expectedVacancy = dropApp(expectedDockMove, movedOut, DropTarget.Home(homeTarget))
             drag("dock-slot-0", "home-cell-$homeTarget")
             assertEquals(expectedVacancy, model().state.value.layout)
@@ -194,17 +194,17 @@ class HomeDragIntegrationTest {
                 compose.onNodeWithTag("app-pager").fetchSemanticsNode().config[SemanticsProperties.StateDescription] == "Home page 2 of 2"
             }
             compose.waitForIdle()
-            val destination = center("home-cell-47")
+            val destination = center("home-cell-58")
             root().performTouchInput { moveTo(destination, 300); up() }
             compose.waitForIdle()
             assertNull("Result: ${model().state.value.homeSlots}", model().state.value.homeSlots[source])
-            assertEquals(id, model().state.value.homeSlots[47])
+            assertEquals(id, model().state.value.homeSlots[58])
             val saved = org.json.JSONObject(compose.activity.getSharedPreferences("launcher", 0).getString("state", "{}")!!)
             assertEquals(id, saved.getJSONArray("homeSlots").getString(47))
             assertTrue(saved.getJSONArray("homeSlots").isNull(source))
             compose.activityRule.scenario.recreate()
             ready()
-            assertEquals(id, model().state.value.homeSlots[47])
+            assertEquals(id, model().state.value.homeSlots[58])
             compose.onNodeWithTag("app-pager").assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Home page 2 of 2"))
         } finally { restore(before) }
     }

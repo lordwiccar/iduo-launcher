@@ -12,6 +12,8 @@ internal data class WorkspacePageMotion(
     val homePages: Int,
     val pageWidth: Float,
     val homeStride: Float,
+    /** How far the page after Home moves in: the full width, or one pane when it sits beside Home. */
+    val libraryStride: Float = pageWidth,
 ) {
     init {
         require(homePages > 0)
@@ -28,7 +30,7 @@ internal data class WorkspacePageMotion(
         return when {
             logical < 0f -> logical * pageWidth
             logical <= lastHome -> logical * homeStride
-            else -> lastHomeOffset + (logical - lastHome) * pageWidth
+            else -> lastHomeOffset + (logical - lastHome) * libraryStride
         }
     }
 
@@ -37,7 +39,7 @@ internal data class WorkspacePageMotion(
         val logical = when {
             offset < 0f -> offset / pageWidth
             offset <= lastHomeOffset && lastHome > 0 -> offset / homeStride
-            else -> lastHome + (offset - lastHomeOffset) / pageWidth
+            else -> lastHome + (offset - lastHomeOffset) / libraryStride
         }
         return logical + firstHome
     }

@@ -18,10 +18,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -98,7 +100,10 @@ internal fun AppLibrary(
                     focusedTrailingIconColor = ink, unfocusedTrailingIconColor = ink,
                 ) else OutlinedTextFieldDefaults.colors())
             val workUnavailable = showWork && selectedProfile?.available == false
-            if (state.libraryGrid && !editing && !workUnavailable && visibleApps.isNotEmpty()) {
+            if (state.libraryFolders && !editing && !workUnavailable && query.isBlank() && visibleApps.isNotEmpty()) {
+                // Searching shows the plain list, as iOS's App Library does.
+                LibraryFolders(visibleApps, state.recentApps, drag, page, onLaunchFrom, onActions, Modifier.weight(1f))
+            } else if (state.libraryGrid && !editing && !workUnavailable && visibleApps.isNotEmpty()) {
                 LibraryGrid(visibleApps, resetKey = query to showWork, drag, Modifier.weight(1f)) { app ->
                     val launchBounds = remember { android.graphics.Rect() }
                     Column(Modifier.fillMaxSize().testTag("library-app-${app.id}")
@@ -152,6 +157,79 @@ internal fun AppLibrary(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * All apps as two columns of large folders by purpose, like iOS's App Library. A folder's first
+ * three apps open with a tap; the small icons in its corner, or its name, open the whole folder.
+ */
+@Composable
+private fun LibraryFolders(apps: List<AppEntry>, recent: List<String>, drag: HomeDragState?, page: Int?,
+    onLaunch: (AppEntry, android.graphics.Rect?) -> Unit, onActions: (AppEntry) -> Unit, modifier: Modifier) {
+    val folders = remember(apps, recent) { libraryFolders(apps, recent, AppEntry::id, AppEntry::category) }
+    var openName by rememberSaveable { mutableStateOf<String?>(null) }
+    val open = folders.firstOrNull { it.first.name == openName }
+    androidx.activity.compose.BackHandler(enabled = open != null) { openName = null }
+    if (open != null) {
+        Column(modifier.fillMaxWidth().testTag("library-folder-${open.first.name.lowercase()}")) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { openName = null }) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.back)) }
+                Text(stringResource(open.first.label), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                Text("${open.second.size}", fontSize = 12.sp, modifier = Modifier.padding(end = 8.dp))
+            }
+            androidx.compose.foundation.lazy.grid.LazyVerticalGrid(androidx.compose.foundation.lazy.grid.GridCells.Adaptive(LibraryCellWidth),
+                Modifier.fillMaxWidth().weight(1f), contentPadding = PaddingValues(bottom = 12.dp)) {
+                items(open.second.size, key = { open.second[it].id }) { index ->
+                    val app = open.second[index]
+                    val launchBounds = remember { android.graphics.Rect() }
+                    Column(Modifier.fillMaxWidth().testTag("library-app-${app.id}")
+                        .then(libraryItemInput(app, drag, page, { onLaunch(app, launchBounds) }, onActions))
+                        .padding(horizontal = 4.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Image(app.icon.asImageBitmap(), null, Modifier.size(52.dp)
+                            .onGloballyPositioned { launchBounds.set(it.boundsInWindow().toAndroidBounds()) }.clip(RoundedCornerShape(13.dp)))
+                        Text(app.label, Modifier.padding(top = 6.dp), maxLines = 2, overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center, fontSize = 12.sp, lineHeight = 14.sp)
+                    }
+                }
+            }
+        }
+        return
+    }
+    androidx.compose.foundation.lazy.grid.LazyVerticalGrid(androidx.compose.foundation.lazy.grid.GridCells.Fixed(2),
+        modifier.fillMaxWidth().testTag("library-folders"), contentPadding = PaddingValues(bottom = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        items(folders.size, key = { folders[it].first.name }) { index ->
+            val (category, members) = folders[index]
+            val title = stringResource(category.label)
+            Column(Modifier.fillMaxWidth().testTag("library-category-${category.name.lowercase()}")) {
+                BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(26.dp))
+                    .background(Color.White.copy(alpha = .22f)).padding(10.dp)) {
+                    val cell = (maxWidth - 10.dp) / 2
+                    val big = members.size <= 4
+                    members.take(if (big) 4 else 3).forEachIndexed { position, app ->
+                        val launchBounds = remember { android.graphics.Rect() }
+                        Box(Modifier.offset(x = (cell + 10.dp) * (position % 2), y = (cell + 10.dp) * (position / 2)).size(cell)
+                            .then(libraryItemInput(app, drag, page, { onLaunch(app, launchBounds) }, onActions))
+                            .testTag("library-category-app-${app.id}"), contentAlignment = Alignment.Center) {
+                            Image(app.icon.asImageBitmap(), app.label, Modifier.fillMaxSize()
+                                .onGloballyPositioned { launchBounds.set(it.boundsInWindow().toAndroidBounds()) }
+                                .clip(RoundedCornerShape(cell * .24f)))
+                        }
+                    }
+                    if (!big) Box(Modifier.offset(x = cell + 10.dp, y = cell + 10.dp).size(cell).clip(RoundedCornerShape(cell * .24f))
+                        .clickable { openName = category.name }.testTag("library-category-open-${category.name.lowercase()}")) {
+                        val mini = (cell - 6.dp) / 2
+                        members.drop(3).take(4).forEachIndexed { position, app ->
+                            Image(app.icon.asImageBitmap(), null, Modifier.offset(x = (mini + 6.dp) * (position % 2), y = (mini + 6.dp) * (position / 2))
+                                .size(mini).clip(RoundedCornerShape(mini * .24f)))
+                        }
+                    }
+                }
+                Text(title, Modifier.fillMaxWidth().clickable { openName = category.name }.padding(top = 6.dp),
+                    textAlign = TextAlign.Center, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }

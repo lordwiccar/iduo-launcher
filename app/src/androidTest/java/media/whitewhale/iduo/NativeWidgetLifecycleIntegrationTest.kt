@@ -172,7 +172,7 @@ class NativeWidgetLifecycleIntegrationTest {
                 before = model.state.value.layout
                 idsBefore = widgets.host.appWidgetIds.toSet()
                 val app = model.state.value.apps.first { it.id !in model.state.value.layout.dock }
-                assertTrue(model.applyDrop(app.id, DropTarget.Home(47)))
+                assertTrue(model.applyDrop(app.id, DropTarget.Home(58)))
                 assertTrue("Fixture must create a second Home page", model.state.value.homePages >= 2)
                 slot = model.nextWidgetSlot()
             }

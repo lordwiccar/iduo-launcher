@@ -74,7 +74,8 @@ class BackupController(
 
     fun startExport(fileName: String = "duo-launcher-layout.json") {
         val state = model.state.value
-        val raw = runCatching { encodeLayoutBackup(state, widgetDescriptors(state), scope) }.getOrElse {
+        val raw = runCatching { encodeLayoutBackup(state, widgetDescriptors(state.innerLayout), scope,
+            state.coverLayout?.let(::widgetDescriptors).orEmpty()) }.getOrElse {
             errorMessage = activity.getString(R.string.backup_prepare_failed); return
         }
         begin(OP_EXPORT, raw)
@@ -198,7 +199,7 @@ class BackupController(
         }
     }
 
-    private fun widgetDescriptors(state: LauncherState): List<BackupWidgetDescriptor> = state.widgetPlacements.mapNotNull { placement ->
+    private fun widgetDescriptors(layout: HomeLayout): List<BackupWidgetDescriptor> = layout.widgetPlacements.mapNotNull { placement ->
         if (placement.id < 0) return@mapNotNull null
         val info = widgets.manager.getAppWidgetInfo(placement.id) ?: error("Widget ${placement.slot} is unavailable")
         BackupWidgetDescriptor(placement.slot, info.provider.flattenToString(), userManager.getSerialNumberForUser(info.profile),

@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.1.1
+
+Third release on Google Play (version code 4).
+
+### New features
+- A separate Home for the cover screen: mirror the inner screen or give the cover its own pages, with up to five columns when its dock slides in or hides.
+- Three ways to show the cover screen's dock: always, sliding in from the right edge, or hidden.
+- Two new All apps views: Library sorts apps into folders by purpose, like on iPhone, and On Home places every app on Home pages.
+- A menu on a long-pressed app with its shortcuts, Remove, Uninstall, Icon and App info.
+- Icon packs from Google Play, for all apps or a single one.
+- Move and zoom your own photo wallpaper, separately for each screen.
+- Folders in the dock, and recently opened apps in its empty places.
+- A notification after each update that opens this changelog.
+
+### Look and feel
+- A redesigned status ring, at the top or above the dock on the cover screen.
+- A blurred wallpaper behind All apps, the news page and folders, and a frosted dock that blurs exactly the wallpaper behind it.
+- The cover screen stays upright; rotating it is an experimental option.
+
+### Fixes
+- Text in Settings is readable in dark mode again.
+- The news page help points to Settings → News page.
+
 ## 1.1.0
 
 Second release on Google Play (version code 3).

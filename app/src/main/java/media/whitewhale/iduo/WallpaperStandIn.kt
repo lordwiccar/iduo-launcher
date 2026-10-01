@@ -34,7 +34,8 @@ internal fun WallpaperStandIn(modifier: Modifier = Modifier.fillMaxSize()) {
     val photo = produceState(initialValue = initial, key1 = context, key2 = revision) {
         value = withContext(Dispatchers.IO) { loadLauncherBackground(context) }
     }.value
-    Canvas(modifier) { drawLauncherBackground(photo?.asImageBitmap()) }
+    val cover = onCoverScreen()
+    Canvas(modifier) { drawLauncherBackground(photo?.asImageBitmap(), cover) }
 }
 
 /** Short edge the bundled landscape is decoded to: the Fold 7's tallest crop (inner display) stays sharp. */
@@ -68,7 +69,7 @@ internal object DefaultWallpaper {
  * Draws the mirror of a wallpaper iDuo set ([photo], or the bundled dunes), or else a gradient
  * of the Home wallpaper's colours, since Android does not let apps read its pixels.
  */
-internal fun DrawScope.drawLauncherBackground(photo: ImageBitmap?) {
+internal fun DrawScope.drawLauncherBackground(photo: ImageBitmap?, cover: Boolean = false) {
     if (photo != null && photo.width > 0 && photo.height > 0) {
         drawCovering(photo)
         return
@@ -78,7 +79,7 @@ internal fun DrawScope.drawLauncherBackground(photo: ImageBitmap?) {
         drawCovering(bundled)
         return
     }
-    val colors = SystemWallpaper.colors
+    val colors = SystemWallpaper.colorsFor(cover)
     val stops = listOfNotNull(colors?.primaryColor, colors?.secondaryColor, colors?.tertiaryColor)
         .map { Color(it.toArgb()) }
     when (stops.size) {

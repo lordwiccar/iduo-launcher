@@ -90,8 +90,8 @@ class WorkspaceIntegrationTest {
             compose.waitUntil(10000) { imeVisible() }
             begin("library-app-${app.id}")
             compose.waitUntil(10000) { !imeVisible() && page().startsWith("Home page") }
-            drop("home-cell-8")
-            assertEquals(app.id, model().state.value.homeSlots[8])
+            drop("home-cell-10")
+            assertEquals(app.id, model().state.value.homeSlots[10])
         } finally {
             restore(before)
             for ((key, value) in listOf("show_ime_with_hard_keyboard" to ime, "stylus_handwriting_enabled" to handwriting))
@@ -208,7 +208,7 @@ class WorkspaceIntegrationTest {
             compose.runOnIdle { model().placeWidget(WidgetPlacement(slot, id, 1, 0, 0, 2, 2)) }
             compose.onNodeWithContentDescription("Home page 2").performClick()
             compose.waitForIdle()
-            begin("widget-slot-$slot"); drop("home-cell-27")
+            begin("widget-slot-$slot"); drop("home-cell-43")
             assertEquals(WidgetPlacement(slot, id, 1, 2, 0, 2, 2), model().placement(slot))
             assertEquals(provider.provider, manager.getAppWidgetInfo(id).provider)
             compose.activityRule.scenario.recreate(); ready()

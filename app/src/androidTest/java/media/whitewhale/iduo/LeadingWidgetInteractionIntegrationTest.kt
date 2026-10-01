@@ -93,7 +93,7 @@ class LeadingWidgetInteractionIntegrationTest {
             }
             compose.onNodeWithTag("expanded-leading-home").assertIsDisplayed()
             compose.onNodeWithTag("home-cell-${-HOME_CELLS}").assertIsDisplayed()
-            compose.onNodeWithTag("home-cell-${-HOME_CELLS + 23}").assertIsDisplayed()
+            compose.onNodeWithTag("home-cell-${-HOME_CELLS + 28}").assertIsDisplayed()
 
             val first = placeOptionalAt(-HOME_CELLS)
             assertEquals(WidgetPlacement(first.slot, first.id, -1, 0, 0, 2, 2), first)
@@ -190,7 +190,7 @@ class LeadingWidgetInteractionIntegrationTest {
             assertTrue("Fixture provider must bind through the real AppWidgetManager",
                 controller().manager.bindAppWidgetIdIfAllowed(id, provider().profile, provider().provider, null))
             val fixture = before.copy(
-                slots = MutableList<String?>(HOME_CELLS) { null }.apply { this[23] = chosenApp.id },
+                slots = MutableList<String?>(HOME_CELLS) { null }.apply { this[28] = chosenApp.id },
                 leadingSlots = List(HOME_CELLS) { null },
                 widgetPlacements = before.widgetPlacements.map {
                     if (it.page == -1) it.copy(page = before.pageCount) else it
@@ -219,15 +219,15 @@ class LeadingWidgetInteractionIntegrationTest {
             val leadingWidget = WidgetPlacement(slot, id, -1, 0, 0, 2, 2)
             assertEquals(leadingWidget, model().placement(slot))
             assertEquals(provider().provider, controller().manager.getAppWidgetInfo(id)?.provider)
-            drag("widget-slot-$slot", "home-cell-8")
+            drag("widget-slot-$slot", "home-cell-10")
             assertEquals(WidgetPlacement(slot, id, 0, 0, 2, 2, 2), model().placement(slot))
             assertEquals(provider().provider, controller().manager.getAppWidgetInfo(id)?.provider)
 
-            drag("home-cell-23", "home-cell-${-HOME_CELLS + 23}")
+            drag("home-cell-28", "home-cell-${-HOME_CELLS + 28}")
             assertEquals(chosenApp.id, model().state.value.layout.slotAt(-1))
-            assertNull(model().state.value.layout.slotAt(23))
-            drag("home-cell-${-HOME_CELLS + 23}", "home-cell-23")
-            assertEquals(chosenApp.id, model().state.value.layout.slotAt(23))
+            assertNull(model().state.value.layout.slotAt(28))
+            drag("home-cell-${-HOME_CELLS + 28}", "home-cell-28")
+            assertEquals(chosenApp.id, model().state.value.layout.slotAt(28))
             assertNull(model().state.value.layout.slotAt(-1))
             assertEquals(id, model().placement(slot)?.id)
             assertTrue(id in controller().host.appWidgetIds)

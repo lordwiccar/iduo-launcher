@@ -27,7 +27,7 @@ class LeadingWorkspaceIntegrationTest {
     @Test fun unfoldedLeadingPageIsAFullGridCenteredInThePhysicalLeftHalf() {
         ready()
         compose.onNodeWithTag("expanded-leading-home").assertIsDisplayed()
-        repeat(HOME_CELLS) { local ->
+        (0 until HOME_CELLS).filter { it % GRID_COLUMNS < DEFAULT_HOME_COLUMNS }.forEach { local ->
             compose.onNodeWithTag("home-cell-${homeCellIndex(-1, local)}").assertExists()
         }
 

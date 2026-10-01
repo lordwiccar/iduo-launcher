@@ -32,7 +32,7 @@ class RailPagerGestureIntegrationTest {
         compose.waitForIdle()
         compose.onNodeWithTag("app-pager").performTouchInput { swipeRight() }
         compose.waitForIdle()
-        return page().also { assertTrue(it.startsWith("Home page")) }
+        return page().also { assertTrue("Expected a Home page, was $it", it.startsWith("Home page")) }
     }
 
     private fun page() = compose.onNodeWithTag("app-pager").fetchSemanticsNode()

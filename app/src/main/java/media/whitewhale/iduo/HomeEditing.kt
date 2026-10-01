@@ -1,14 +1,21 @@
 package media.whitewhale.iduo
 
-const val GRID_COLUMNS = 4
+/** Stored columns per page. Pages always reserve the widest grid so cell indices never shift. */
+const val GRID_COLUMNS = 5
 /** Stored rows per page. Pages always reserve the largest grid so cell indices never shift. */
 const val GRID_ROWS = 8
 const val HOME_CELLS = GRID_COLUMNS * GRID_ROWS
+/** Columns shown by default; only the cover's own layout may show a fifth. */
+const val DEFAULT_HOME_COLUMNS = 4
 /** Rows shown by default: the top widget band (two rows) plus four app rows. */
 const val DEFAULT_HOME_ROWS = 6
+/** Saved layouts before schema 10 and backups before version 4 stored four columns per page. */
+const val LEGACY_GRID_COLUMNS = 4
 /** Saved layouts before schema 9 and backups before version 3 stored six rows per page. */
 const val LEGACY_GRID_ROWS = 6
-const val LEGACY_HOME_CELLS = GRID_COLUMNS * LEGACY_GRID_ROWS
+const val LEGACY_HOME_CELLS = LEGACY_GRID_COLUMNS * LEGACY_GRID_ROWS
+/** Cells per page in schema 9 and version 3 backups: four columns of eight rows. */
+const val SCHEMA9_HOME_CELLS = LEGACY_GRID_COLUMNS * GRID_ROWS
 const val MIN_DOCK_SLOTS = 4
 const val MAX_DOCK_SLOTS = 8
 const val EMPTY_WIDGET = -1
@@ -54,13 +61,15 @@ data class HomeLayout(
     val leadingSlots: List<String?> = List(HOME_CELLS) { null },
     /** Visible rows per page; stored rows below this stay empty. */
     val rows: Int = DEFAULT_HOME_ROWS,
+    /** Visible columns per page; stored columns to the right stay empty. */
+    val columns: Int = DEFAULT_HOME_COLUMNS,
 ) {
-    fun cellVisible(index: Int) = homeCellLocal(index) / GRID_COLUMNS < rows
-    /** Cells that cannot take a shortcut: widget footprints plus hidden rows on every reachable page. */
+    fun cellVisible(index: Int) = homeCellLocal(index).let { it / GRID_COLUMNS < rows && it % GRID_COLUMNS < columns }
+    /** Cells that cannot take a shortcut: widget footprints plus hidden rows and columns on every reachable page. */
     fun unavailableCells(exceptSlot: Int? = null): Set<Int> = buildSet {
         widgetPlacements.filter { it.slot != exceptSlot }.forEach { addAll(it.coveredIndices()) }
-        for (page in -1..pageCount + 1) for (row in rows until GRID_ROWS) repeat(GRID_COLUMNS) { column ->
-            add(homeCellIndex(page, row * GRID_COLUMNS + column))
+        for (page in -1..pageCount + 1) for (row in 0 until GRID_ROWS) repeat(GRID_COLUMNS) { column ->
+            if (row >= rows || column >= columns) add(homeCellIndex(page, row * GRID_COLUMNS + column))
         }
     }
     val widgets: List<Int> get() {
@@ -104,8 +113,9 @@ sealed interface DropTarget {
     data object Remove : DropTarget
 }
 
+/** Apps and whole folders fit in the dock; a folder takes one position. */
 fun canPlaceInDock(layout: HomeLayout, id: String): Boolean =
-    id.isNotBlank() && !isReservedFolderId(id) && layout.folders.none { id in it.appIds } &&
+    id.isNotBlank() && (!isReservedFolderId(id) || layout.folder(id) != null) && layout.folders.none { id in it.appIds } &&
         (id in layout.dock || layout.dock.any { it == null })
 
 fun WidgetPlacement.coveredIndices(): Set<Int> {
@@ -133,8 +143,8 @@ fun widgetCandidate(layout: HomeLayout, slot: Int, targetIndex: Int, spanX: Int,
     val local = homeCellLocal(targetIndex)
     val candidate = WidgetPlacement(slot, EMPTY_WIDGET, page,
         local % GRID_COLUMNS, local / GRID_COLUMNS, spanX, spanY)
-    if (spanX !in 1..GRID_COLUMNS || spanY !in 1..layout.rows ||
-        candidate.column + spanX > GRID_COLUMNS || candidate.row + spanY > layout.rows) return null
+    if (spanX !in 1..layout.columns || spanY !in 1..layout.rows ||
+        candidate.column + spanX > layout.columns || candidate.row + spanY > layout.rows) return null
     if (layout.widgetPlacements.any { it.slot != slot && overlaps(it, candidate) }) return null
     if (candidate.coveredIndices().any { layout.slotAt(it) != null }) return null
     return candidate
@@ -284,7 +294,7 @@ fun replaceWidgetAtSameFootprint(layout: HomeLayout, placement: WidgetPlacement)
     val sameFootprint = placement.page == existing.page && placement.column == existing.column &&
         placement.row == existing.row && placement.spanX == existing.spanX && placement.spanY == existing.spanY
     val retainedSpecial = existing.page > 0 && existing.slot / 3 == existing.page && existing.slot % 3 == 2 &&
-        existing.column == 0 && existing.row == GRID_ROWS && existing.spanX == GRID_COLUMNS && existing.spanY == 4
+        existing.column == 0 && existing.row == GRID_ROWS && existing.spanX == LEGACY_GRID_COLUMNS && existing.spanY == 4
     if (!sameFootprint || !retainedSpecial || placement.id == EMPTY_WIDGET ||
         (placement.id == NEEDS_BINDING_WIDGET && layout.widgetRestore(placement.slot) == null)) return layout
     return layout.copy(widgetPlacements = layout.widgetPlacements.map { if (it.slot == placement.slot) placement else it },
@@ -310,10 +320,44 @@ fun resizeWidget(layout: HomeLayout, slot: Int, spanX: Int, spanY: Int): HomeLay
 fun removePlacement(layout: HomeLayout, source: DropTarget): HomeLayout = when (source) {
     is DropTarget.Home -> if (layout.slotAt(source.index)?.let(::isFolderId) == true) layout
         else layout.withSlot(source.index, null)
-    is DropTarget.Dock -> layout.copy(dock = layout.dock.mapIndexed { i, id -> if (i == source.index) null else id })
+    // A folder is ungrouped, never removed with its apps.
+    is DropTarget.Dock -> if (layout.dock.getOrNull(source.index)?.let(::isFolderId) == true) layout
+        else layout.copy(dock = layout.dock.mapIndexed { i, id -> if (i == source.index) null else id })
     is DropTarget.Widget -> layout.copy(widgetPlacements = layout.widgetPlacements.filterNot { it.slot == source.index },
         widgetRestores = layout.widgetRestores.filterNot { it.slot == source.index })
     else -> layout
+}
+
+/**
+ * Places [ids] after everything already on Home, in order: from the first cell of the page after
+ * the last one in use when [onNewPage], else from the first free cell after the last one in use.
+ * Hidden rows and widget footprints are skipped, and pages are added as needed.
+ */
+fun appendHomeApps(layout: HomeLayout, ids: List<String>, onNewPage: Boolean): HomeLayout {
+    val placed = (layout.slots + layout.leadingSlots + layout.dock).filterNotNull().toSet() + layout.folders.flatMap { it.appIds }
+    val adding = ids.filter { it !in placed }.distinct()
+    if (adding.isEmpty()) return layout
+    val covered = layout.widgetPlacements.flatMap { it.coveredIndices() }.filter { it >= 0 }.toSet()
+    val lastUsed = maxOf(layout.slots.indexOfLast { it != null }, covered.maxOrNull() ?: -1)
+    var index = when {
+        lastUsed < 0 -> 0
+        onNewPage -> (homeCellPage(lastUsed) + 1) * HOME_CELLS
+        else -> lastUsed + 1
+    }
+    val slots = layout.slots.toMutableList()
+    adding.forEach { id ->
+        while (!layout.cellVisible(index) || index in covered || slots.getOrNull(index) != null) index++
+        while (slots.size <= index) slots += null
+        slots[index] = id
+        index++
+    }
+    return layout.copy(slots = slots)
+}
+
+/** Takes [ids] off Home's pages, leaving folders, the dock and the unfolded-only page as they are. */
+fun removeHomeApps(layout: HomeLayout, ids: Set<String>): HomeLayout {
+    if (ids.isEmpty() || layout.slots.none { it in ids }) return layout
+    return layout.copy(slots = layout.slots.map { it?.takeUnless(ids::contains) }.dropLastWhile { it == null })
 }
 
 fun pinHomeApp(slots: List<String?>, id: String, pinned: Boolean, blocked: Set<Int> = emptySet()): List<String?> {
@@ -329,7 +373,10 @@ fun pinHomeApp(slots: List<String?>, id: String, pinned: Boolean, blocked: Set<I
 fun migrateSchema5Apps(slots: List<String?>): List<String?> {
     if (slots.isEmpty()) return emptyList()
     val result = MutableList(((slots.lastIndex / 16) + 1) * HOME_CELLS) { null as String? }
-    slots.forEachIndexed { index, id -> result[index / 16 * HOME_CELLS + 8 + index % 16] = id }
+    // Sixteen apps per page filled four columns below the two-row widget band.
+    slots.forEachIndexed { index, id ->
+        result[index / 16 * HOME_CELLS + (2 + index % 16 / LEGACY_GRID_COLUMNS) * GRID_COLUMNS + index % LEGACY_GRID_COLUMNS] = id
+    }
     return normalizeHomeSlots(result)
 }
 
@@ -346,27 +393,39 @@ fun migrateSchema5Widgets(widgets: List<Int>): List<WidgetPlacement> = buildList
     }
 }
 
-/** Maps a pre-schema-9 cell index (six stored rows per page) to the current eight-row storage. */
-fun upgradeLegacyCellIndex(index: Int): Int =
-    homeCellIndex(Math.floorDiv(index, LEGACY_HOME_CELLS), Math.floorMod(index, LEGACY_HOME_CELLS))
+/**
+ * Maps a cell index stored with four columns of [storedRows] rows per page (schema 9 and older)
+ * to the current five-column, eight-row storage.
+ */
+fun upgradeLegacyCellIndex(index: Int, storedRows: Int = LEGACY_GRID_ROWS): Int {
+    val cells = LEGACY_GRID_COLUMNS * storedRows
+    val local = Math.floorMod(index, cells)
+    return homeCellIndex(Math.floorDiv(index, cells), local / LEGACY_GRID_COLUMNS * GRID_COLUMNS + local % LEGACY_GRID_COLUMNS)
+}
 
-fun upgradeLegacySlots(slots: List<String?>): List<String?> {
+fun upgradeLegacySlots(slots: List<String?>, storedRows: Int = LEGACY_GRID_ROWS): List<String?> {
     val result = mutableListOf<String?>()
     slots.forEachIndexed { index, id ->
         if (id == null) return@forEachIndexed
-        val target = upgradeLegacyCellIndex(index)
+        val target = upgradeLegacyCellIndex(index, storedRows)
         while (result.size <= target) result.add(null)
         result[target] = id
     }
     return result
 }
 
-fun upgradeLegacyLeadingSlots(slots: List<String?>): List<String?> =
-    slots.take(HOME_CELLS) + List(HOME_CELLS - slots.size.coerceAtMost(HOME_CELLS)) { null }
+/** The unfolded-only page's cells, stored with four columns of [storedRows] rows, in the current storage. */
+fun upgradeLegacyLeadingSlots(slots: List<String?>, storedRows: Int = LEGACY_GRID_ROWS): List<String?> {
+    val result = MutableList<String?>(HOME_CELLS) { null }
+    slots.take(LEGACY_GRID_COLUMNS * storedRows).forEachIndexed { local, id ->
+        result[local / LEGACY_GRID_COLUMNS * GRID_COLUMNS + local % LEGACY_GRID_COLUMNS] = id
+    }
+    return result
+}
 
 /** Retained overflow widgets sat just below the old six-row grid; keep them below the stored grid. */
 fun upgradeLegacyPlacement(placement: WidgetPlacement): WidgetPlacement =
-    if (placement.row == LEGACY_GRID_ROWS && placement.spanX == GRID_COLUMNS && placement.spanY == 4)
+    if (placement.row == LEGACY_GRID_ROWS && placement.spanX == LEGACY_GRID_COLUMNS && placement.spanY == 4)
         placement.copy(row = GRID_ROWS) else placement
 
 /** Rows a layout needs so that nothing it holds is hidden. */
@@ -409,6 +468,46 @@ fun resizeHomeRows(layout: HomeLayout, rows: Int): HomeLayout {
     displacedLeading.forEach { local ->
         val id = layout.leadingSlots[local]
         next = next.withSlot(firstFree((0 until HOME_CELLS).asSequence().map { homeCellIndex(-1, it) } + homeCells), id)
+    }
+    displacedHome.forEach { index ->
+        val pageStart = homeCellIndex(homeCellPage(index), 0)
+        next = next.withSlot(firstFree(generateSequence(pageStart) { it + 1 } + homeCells), layout.slots[index])
+    }
+    return next
+}
+
+/**
+ * Changes the visible columns per page. Showing fewer columns never drops anything: widgets
+ * reaching into the hidden column move to the first free space (same page first, narrowed if
+ * wider than the grid), then shortcuts move to the first free visible cells of their page or later.
+ */
+fun resizeHomeColumns(layout: HomeLayout, columns: Int): HomeLayout {
+    val size = columns.coerceIn(DEFAULT_HOME_COLUMNS, GRID_COLUMNS)
+    if (size >= layout.columns) return layout.copy(columns = size)
+    fun hidden(local: Int) = local % GRID_COLUMNS >= size
+    val displacedWidgets = layout.widgetPlacements.filter { it.row < GRID_ROWS && it.column + it.spanX > size }
+    val displacedLeading = layout.leadingSlots.indices.filter { layout.leadingSlots[it] != null && hidden(it) }
+    val displacedHome = layout.slots.indices.filter { layout.slots[it] != null && hidden(homeCellLocal(it)) }
+    var next = layout.copy(columns = size,
+        widgetPlacements = layout.widgetPlacements - displacedWidgets.toSet(),
+        leadingSlots = layout.leadingSlots.mapIndexed { index, id -> id.takeUnless { index in displacedLeading } },
+        slots = layout.slots.mapIndexed { index, id -> id.takeUnless { index in displacedHome } }.dropLastWhile { it == null })
+    for (widget in displacedWidgets) {
+        val spanX = minOf(widget.spanX, size)
+        val pages = listOf(widget.page) + (0..next.pageCount).filter { it != widget.page }
+        val candidate = pages.asSequence().flatMap { page -> (0 until HOME_CELLS).asSequence().map { homeCellIndex(page, it) } }
+            .firstNotNullOfOrNull { widgetCandidate(next, widget.slot, it, spanX, widget.spanY) }
+            ?: error("A new page always has room for a widget")
+        next = next.copy(widgetPlacements = (next.widgetPlacements + candidate.copy(id = widget.id)).sortedBy { it.slot })
+    }
+    fun firstFree(cells: Sequence<Int>): Int {
+        val blocked = next.unavailableCells()
+        return cells.first { it !in blocked && next.cellVisible(it) && next.slotAt(it) == null }
+    }
+    val homeCells = generateSequence(0) { it + 1 }
+    displacedLeading.forEach { local ->
+        next = next.withSlot(firstFree((0 until HOME_CELLS).asSequence().map { homeCellIndex(-1, it) } + homeCells),
+            layout.leadingSlots[local])
     }
     displacedHome.forEach { index ->
         val pageStart = homeCellIndex(homeCellPage(index), 0)

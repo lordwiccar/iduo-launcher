@@ -53,7 +53,9 @@ internal const val MAX_FOLDER_COLUMNS = 6
 internal const val MAX_FOLDER_ROWS = 6
 internal const val DEFAULT_FOLDER_TRANSPARENCY = .03f
 internal const val MAX_FOLDER_TRANSPARENCY = .9f
-internal val FOLDER_BACKDROP_BLUR = 6.dp
+internal val FOLDER_BACKDROP_BLUR = 12.dp
+/** How strongly the wallpaper blurs behind a folder, search, All apps or the news page. */
+internal val WALLPAPER_BACKDROP_BLUR = 28.dp
 /** An opening folder starts at about its Home icon's size and grows to full size. */
 private const val FOLDER_OPEN_START_SCALE = .25f
 

@@ -19,10 +19,10 @@ class GridEditingTest {
     @Test fun `schema5 apps retain pages gaps and rows below top widgets`() {
         val old = MutableList<String?>(18) { null }.apply { this[0] = "a"; this[15] = "p"; this[17] = "b" }
         val migrated = migrateSchema5Apps(old)
-        assertEquals("a", migrated[8])
-        assertEquals("p", migrated[23])
+        assertEquals("a", migrated[cell4(8)])
+        assertEquals("p", migrated[cell4(23)])
         assertNull(migrated[HOME_CELLS])
-        assertEquals("b", migrated[HOME_CELLS + 9])
+        assertEquals("b", migrated[HOME_CELLS + cell4(9)])
         assertEquals(2, homePageCount(migrated.size))
     }
 
@@ -43,33 +43,30 @@ class GridEditingTest {
 
     @Test fun `existing app insertion rotates only usable cells around widget footprint`() {
         val widget = WidgetPlacement(0, 101, 0, 1, 1, 2, 2) // cells 5, 6, 9, 10
-        val slots = MutableList<String?>(12) { null }.apply {
-            listOf(0, 1, 2, 3, 4, 7, 8, 11).forEach { this[it] = "app$it" }
-        }
+        val slots = fourColumns(*Array(12) { if (it in listOf(0, 1, 2, 3, 4, 7, 8, 11)) "app$it" else null })
         val before = HomeLayout(slots, emptyList(), listOf(widget))
-        val next = dropApp(before, "app0", DropTarget.Home(11))
+        val next = dropApp(before, "app0", DropTarget.Home(cell4(11)))
         assertEquals(listOf("app1", "app2", "app3", "app4", "app7", "app8", "app11", "app0"),
-            listOf(0, 1, 2, 3, 4, 7, 8, 11).map { next.slots[it] })
+            listOf(0, 1, 2, 3, 4, 7, 8, 11).map { next.slots[cell4(it)] })
         assertEquals(before.widgetPlacements, next.widgetPlacements)
     }
 
     @Test fun `new insertion shifts through usable cells around widget footprint`() {
         val widget = WidgetPlacement(0, 101, 0, 1, 1, 2, 2)
-        val slots = MutableList<String?>(12) { null }.apply {
-            this[4] = "a"; this[7] = "b"; this[8] = "c"; this[11] = "d"
-        }
-        val next = dropApp(HomeLayout(slots, emptyList(), listOf(widget)), "new", DropTarget.Home(4))
-        assertEquals(listOf("new", "a", "b", "c", "d"), listOf(4, 7, 8, 11, 12).map { next.slots[it] })
+        val slots = fourColumns(*Array(12) { when (it) { 4 -> "a"; 7 -> "b"; 8 -> "c"; 11 -> "d"; else -> null } })
+        val next = dropApp(HomeLayout(slots, emptyList(), listOf(widget)), "new", DropTarget.Home(cell4(4)))
+        assertEquals(listOf("new", "a", "b", "c", "d"), listOf(4, 7, 8, 11, 12).map { next.slots[cell4(it)] })
     }
 
     @Test fun `full page insertion spills past hidden rows and widget cells at start of next page`() {
         val pageOneWidget = WidgetPlacement(0, 101, 1, 0, 0, 4, 1)
-        val visibleCells = DEFAULT_HOME_ROWS * GRID_COLUMNS
-        val before = HomeLayout((0 until visibleCells).map(Int::toString), emptyList(), listOf(pageOneWidget))
-        val next = dropApp(before, "new", DropTarget.Home(visibleCells - 1))
-        assertEquals("new", next.slots[visibleCells - 1])
+        val visibleCells = DEFAULT_HOME_ROWS * DEFAULT_HOME_COLUMNS
+        val before = HomeLayout(fourColumns(*Array(visibleCells) { "$it" }), emptyList(), listOf(pageOneWidget))
+        val last = cell4(visibleCells - 1)
+        val next = dropApp(before, "new", DropTarget.Home(last))
+        assertEquals("new", next.slots[last])
         assertEquals("${visibleCells - 1}", next.slots[HOME_CELLS + GRID_COLUMNS])
-        assertTrue((visibleCells until HOME_CELLS + GRID_COLUMNS).all { next.slots[it] == null })
+        assertTrue((last + 1 until HOME_CELLS + GRID_COLUMNS).all { next.slots[it] == null })
     }
 
     @Test fun `widget movement and resize reject app and widget collisions`() {

@@ -11,6 +11,13 @@ fun isReservedFolderId(id: String) = id.startsWith(FOLDER_PREFIX)
 fun isFolderId(id: String) = id.startsWith(FOLDER_PREFIX) &&
     runCatching { UUID.fromString(id.removePrefix(FOLDER_PREFIX)) }.isSuccess
 
+/** [old]'s place on Home or in the dock, given to [new]. */
+private fun HomeLayout.replacingShortcut(old: String, new: String?) = copy(
+    slots = slots.map { if (it == old) new else it }.dropLastWhile { it == null },
+    leadingSlots = leadingSlots.map { if (it == old) new else it },
+    dock = dock.map { if (it == old) new else it },
+)
+
 private fun HomeLayout.withoutShortcut(id: String) = copy(
     slots = slots.map { it?.takeUnless(id::equals) }.dropLastWhile { it == null },
     leadingSlots = leadingSlots.map { it?.takeUnless(id::equals) },
@@ -69,8 +76,8 @@ fun removeAppFromFolder(layout: HomeLayout, folderId: String, appId: String, tar
     val remaining = folder.appIds.filterNot(appId::equals)
     var next = when (remaining.size) {
         0 -> layout.withoutShortcut(folderId).copy(folders = layout.folders.filterNot { it.id == folderId })
-        1 -> (folderCell?.let { layout.withSlot(it, remaining.single()) } ?: layout)
-            .copy(folders = layout.folders.filterNot { it.id == folderId })
+        // The last app takes the folder's place, on Home or in the dock.
+        1 -> layout.replacingShortcut(folderId, remaining.single()).copy(folders = layout.folders.filterNot { it.id == folderId })
         else -> layout.copy(folders = layout.folders.map { if (it.id == folderId) it.copy(appIds = remaining) else it })
     }
     if (target == DropTarget.Remove) return next
@@ -85,7 +92,7 @@ fun removeAppFromFolder(layout: HomeLayout, folderId: String, appId: String, tar
  */
 fun disbandFolder(layout: HomeLayout, folderId: String): HomeLayout {
     val folder = layout.folder(folderId) ?: return layout
-    val cell = layout.indexOfShortcut(folderId) ?: return layout
+    val cell = layout.indexOfShortcut(folderId) ?: return disbandDockFolder(layout, folder)
     val cleared = layout.withSlot(cell, null).copy(folders = layout.folders.filterNot { it.id == folderId })
     val blocked = cleared.unavailableCells()
     val page = homeCellPage(cell)
@@ -96,6 +103,19 @@ fun disbandFolder(layout: HomeLayout, folderId: String): HomeLayout {
         .filter { it != cell && it !in blocked && cleared.cellVisible(it) && cleared.slotAt(it) == null }
     val targets = (sequenceOf(cell) + free).take(folder.appIds.size).toList()
     return folder.appIds.zip(targets).fold(cleared) { next, (appId, index) -> next.withSlot(index, appId) }
+}
+
+/** A folder in the dock ungroups with its first app in its dock position and the rest on Home. */
+private fun disbandDockFolder(layout: HomeLayout, folder: FolderEntry): HomeLayout {
+    if (folder.id !in layout.dock) return layout
+    val first = folder.appIds.firstOrNull()
+    var next = layout.replacingShortcut(folder.id, first).copy(folders = layout.folders.filterNot { it.id == folder.id })
+    folder.appIds.drop(1).forEach { appId ->
+        val blocked = next.unavailableCells()
+        val cell = generateSequence(0) { it + 1 }.first { it !in blocked && next.cellVisible(it) && next.slotAt(it) == null }
+        next = next.withSlot(cell, appId)
+    }
+    return next
 }
 
 fun reconcileFolders(layout: HomeLayout, removedAppIds: Set<String>): HomeLayout {

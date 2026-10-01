@@ -93,13 +93,13 @@ class WidgetMoveIntegrationTest {
                 down(grab); advanceEventTime(700); moveTo(grab + Offset(-4f, 0f))
             }
             pointerHeld = true
-            root().performTouchInput { moveTo(center("home-cell-27"), 350) }
+            root().performTouchInput { moveTo(center("home-cell-43"), 350) }
             compose.waitForIdle()
 
             // The live preview now covers the release point. This is the state that
             // previously let its Widget region shadow the Home cell underneath.
             val preview = compose.onNodeWithTag("widget-slot-${bound.slot}").fetchSemanticsNode().boundsInRoot
-            assertTrue(preview.contains(center("home-cell-27")))
+            assertTrue(preview.contains(center("home-cell-43")))
             root().performTouchInput { up() }
             pointerHeld = false
             compose.waitForIdle()
@@ -156,7 +156,7 @@ class WidgetMoveIntegrationTest {
             pointerHeld = true
             compose.waitUntil(5_000) { page() == "Home page 2 of 2" }
 
-            val destination = center("home-cell-29")
+            val destination = center("home-cell-46")
             root().performTouchInput { moveTo(destination, 300) }
             compose.waitForIdle()
             assertTrue(compose.onNodeWithTag("widget-slot-${bound.slot}").fetchSemanticsNode().boundsInRoot.contains(destination))

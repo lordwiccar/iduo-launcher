@@ -104,7 +104,7 @@ class ManagedProfileIntegrationTest {
             controller.providers(work).any { it.provider.packageName == removablePackage })
 
         val before = model().state.value.layout
-        val homeIndex = (0 until HOME_CELLS * (before.pageCount + 1)).first { before.slots.getOrNull(it) == null &&
+        val homeIndex = (0 until HOME_CELLS * (before.pageCount + 1)).first { before.slots.getOrNull(it) == null && before.cellVisible(it) &&
             before.widgetPlacements.none { widget -> it in widget.coveredIndices() } }
         val dockIndex = before.dock.indexOfFirst { it == null }.takeIf { it >= 0 } ?: 0
         try {

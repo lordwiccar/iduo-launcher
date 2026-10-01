@@ -262,6 +262,7 @@ class LauncherBackgroundController(
         runCatching { staged.commit(launcherBackgroundFile(activity)) }
             .onSuccess {
                 releasePreviewGrant(staged.operation)
+                HomeWallpaper.adoptPendingCrops(activity)
                 prefs.edit().putBoolean(BACKGROUND_ENABLED, true).putString(BACKGROUND_ID, staged.operation)
                     .putInt(MIRROR_ID, homeId).remove(MIRROR_BUNDLED)
                     .remove(PENDING_URI).remove(PENDING_OPERATION).remove(PREVIEW_PHASE).remove(PREVIEW_FILE).apply()
@@ -423,6 +424,7 @@ class LauncherBackgroundController(
     }
 
     private fun discardPreview() {
+        HomeWallpaper.clearPendingCrops()
         preview?.discard()
         preview = null
         previewBitmap = null

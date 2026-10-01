@@ -138,7 +138,7 @@ class NativeWidgetHomeBehaviorIntegrationTest {
                 baseline = model.state.value.layout
                 idsBefore = widgets.host.appWidgetIds.toSet()
                 val app = model.state.value.apps.first { it.available && it.id !in model.state.value.layout.dock }
-                assertTrue(model.applyDrop(app.id, DropTarget.Home(47)))
+                assertTrue(model.applyDrop(app.id, DropTarget.Home(58)))
                 slot = model.nextWidgetSlot()
             }
             tap("Home page 2")

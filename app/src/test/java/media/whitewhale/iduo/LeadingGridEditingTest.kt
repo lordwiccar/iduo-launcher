@@ -31,19 +31,19 @@ class LeadingGridEditingTest {
         val before = HomeLayout(listOf("home"), listOf(null, null, null, null), leadingSlots = List(HOME_CELLS) { null })
         val toLeading = dropApp(before, "home", DropTarget.Home(L))
         assertEquals("home", toLeading.slotAt(L)); assertNull(toLeading.slotAt(0))
-        val back = dropApp(toLeading, "home", DropTarget.Home(4))
-        assertNull(back.slotAt(L)); assertEquals("home", back.slotAt(4))
+        val back = dropApp(toLeading, "home", DropTarget.Home(cell4(4)))
+        assertNull(back.slotAt(L)); assertEquals("home", back.slotAt(cell4(4)))
         assertEquals(1, (back.leadingSlots + back.slots + back.dock).count { it == "home" })
     }
 
     @Test fun `leading widgets collide with leading apps using signed cells`() {
         val widget = WidgetPlacement(4, 26, -1, 0, 0, 2, 2)
-        val leading = List<String?>(24) { if (it == 2) "app" else null }
+        val leading = List<String?>(HOME_CELLS) { if (it == 2) "app" else null }
         val layout = HomeLayout(emptyList(), emptyList(), listOf(widget), leadingSlots = leading)
-        assertEquals(setOf(L, L + 1, L + 4, L + 5), widget.coveredIndices())
+        assertEquals(setOf(L, L + 1, L + cell4(4), L + cell4(5)), widget.coveredIndices())
         assertNull(widgetCandidate(layout, 5, L, 2, 2))
         assertNull(widgetCandidate(layout, 5, L + 2, 1, 1))
-        assertEquals(WidgetPlacement(5, EMPTY_WIDGET, -1, 2, 1, 1, 1), widgetCandidate(layout, 5, L + 6, 1, 1))
+        assertEquals(WidgetPlacement(5, EMPTY_WIDGET, -1, 2, 1, 1, 1), widgetCandidate(layout, 5, L + cell4(6), 1, 1))
         assertEquals(widget.copy(column = 2), moveWidget(layout.copy(leadingSlots = List(HOME_CELLS) { null }), 4, L + 2).placement(4))
     }
 

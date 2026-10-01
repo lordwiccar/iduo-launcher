@@ -49,7 +49,7 @@ class CustomizationNavigationIntegrationTest {
         val before = model().state.value.layout
         val idsBefore = model().state.value.widgetPlacements.map { it.slot to it.id }
         val blocked = before.widgetPlacements.flatMapTo(mutableSetOf()) { it.coveredIndices() }
-        val empty = (0 until HOME_CELLS).first { before.slotAt(it) == null && it !in blocked }
+        val empty = (0 until HOME_CELLS).first { before.slotAt(it) == null && before.cellVisible(it) && it !in blocked }
 
         compose.onNodeWithTag("home-cell-$empty").performSemanticsAction(SemanticsActions.OnLongClick)
         compose.onNodeWithTag("empty-space-wallpaper").performClick()
@@ -66,8 +66,9 @@ class CustomizationNavigationIntegrationTest {
             .first { id -> model().state.value.apps.any { it.id == id } }
         val index = requireNotNull(before.indexOfShortcut(appId))
 
-        val start = compose.onNodeWithTag("home-cell-$index").fetchSemanticsNode().boundsInRoot.center
-        compose.onNodeWithTag("launcher-root").performTouchInput { down(start); advanceEventTime(700); up() }
+        // The app's own long-press action: a touch that the emulator reads as a tap would open the app instead.
+        compose.onNode(hasAnyAncestor(hasTestTag("home-app-$appId")) and SemanticsMatcher.keyIsDefined(SemanticsActions.OnLongClick))
+            .performSemanticsAction(SemanticsActions.OnLongClick)
         compose.onNodeWithText("Move on Home").performClick()
         compose.onNodeWithText("Move to first position").assertIsDisplayed()
         UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressBack()

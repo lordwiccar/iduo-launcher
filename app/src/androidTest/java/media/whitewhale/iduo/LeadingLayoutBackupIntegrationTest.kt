@@ -111,6 +111,34 @@ class LeadingLayoutBackupIntegrationTest {
         assertThrows(Exception::class.java) { decodeLayoutBackup(negativePage.toString(), state.apps, profiles, "scope") }
     }
 
+    @Test fun theCoversOwnLayoutRoundTripsWithFiveColumns() {
+        val state = mixedState()
+        val folder = FolderEntry("folder:00000000-0000-0000-0000-000000000002", "Cover", listOf(state.apps[1].id, state.apps[2].id))
+        val cover = HomeLayout(listOf(null, null, null, null, state.apps[0].id, folder.id), state.dock,
+            widgetPlacements = listOf(WidgetPlacement(3, NEEDS_BINDING_WIDGET, 1, 3, 0, 2, 2)), folders = listOf(folder),
+            widgetRestores = listOf(WidgetRestore(3, "com.example.app1/com.example.app1.Widget", 0, "Personal widget", "Personal",
+                sourceScope = "same-scope")), rows = 7, columns = 5)
+        val separate = state.copy(separateCover = true, otherLayout = cover)
+        val preview = decodeLayoutBackup(encodeLayoutBackup(separate, emptyList(), "same-scope"), state.apps, profiles, "same-scope")
+        assertTrue(preview.separateCover)
+        val restored = requireNotNull(preview.cover)
+        assertEquals(cover.slots, restored.slots)
+        assertEquals(cover.folders, restored.folders)
+        assertEquals(cover.widgetPlacements, restored.widgetPlacements)
+        assertEquals(cover.widgetRestores, restored.widgetRestores)
+        assertEquals(5, restored.columns)
+        assertEquals(7, restored.rows)
+        // The inner layout comes back unchanged beside it.
+        assertEquals(state.leadingSlots, preview.layout.leadingSlots)
+        assertEquals(state.homeSlots, preview.layout.slots)
+
+        // A four-column cover cannot hold an app in the fifth column.
+        val narrow = JSONObject(encodeLayoutBackup(separate, emptyList(), "same-scope")).also {
+            it.getJSONObject("cover").put("homeColumns", 4)
+        }
+        assertThrows(Exception::class.java) { decodeLayoutBackup(narrow.toString(), state.apps, profiles, "same-scope") }
+    }
+
     @Test fun fullLeadingPageRoundTripsWithoutCreatingCoverPageSlots() {
         val apps = (100 until 100 + HOME_CELLS).map(::app)
         val state = LauncherState(apps = apps, profiles = profiles, homeSlots = emptyList(),

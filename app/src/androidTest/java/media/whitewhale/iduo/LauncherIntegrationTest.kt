@@ -228,7 +228,8 @@ class LauncherIntegrationTest {
             val full = model().state.value.layout
             val preferences = compose.activity.getSharedPreferences("launcher", 0).getString("state", null)
             val revision = model().state.value.editRevision
-            compose.onNodeWithTag("dock-slot-0").performTouchInput { longClick() }
+            // A long touch on a dock app starts dragging it; the slot's own action opens the chooser.
+            compose.onNodeWithTag("dock-slot-0").performSemanticsAction(SemanticsActions.OnLongClick)
             compose.onNodeWithTag("search-field").performTextInput(clock.label)
             compose.onNodeWithTag("dock-full-guidance").assertIsDisplayed()
             compose.onNodeWithTag("picker-app-${clock.id}").assertIsNotEnabled().performTouchInput { click() }
@@ -294,16 +295,18 @@ class LauncherIntegrationTest {
 
     @Test fun statusRailCanBeDisabledAndRestored() {
         ready()
-        compose.onNodeWithTag("status-rail").assertIsDisplayed()
+        // The inner screen shows status as a rail above the dock, the cover as a bar across the top.
+        val status = hasTestTag("status-rail") or hasTestTag("cover-status")
+        compose.onNode(status).assertIsDisplayed()
         compose.openHomeCustomization()
         compose.onNodeWithTag("customization-home").performClick()
         compose.onNodeWithTag("status-switch").performScrollTo().performClick()
         compose.closeSettingsPage()
-        compose.onNodeWithTag("status-rail").assertDoesNotExist()
+        compose.onNode(status).assertDoesNotExist()
         compose.activityRule.scenario.recreate()
         ready()
-        compose.onNodeWithTag("status-rail").assertDoesNotExist()
+        compose.onNode(status).assertDoesNotExist()
         compose.runOnIdle { model().setVerticalStatus(true) }
-        compose.onNodeWithTag("status-rail").assertIsDisplayed()
+        compose.onNode(status).assertIsDisplayed()
     }
 }

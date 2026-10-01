@@ -35,12 +35,17 @@ class GoogleSearchIntegrationTest {
             val search = find(automation.rootInActiveWindow) { it.contentDescription == "Search Google" }!!
             val bounds = android.graphics.Rect().also(search::getBoundsInScreen)
             shell("input tap ${bounds.centerX()} ${bounds.centerY()}")
-            await { find(automation.rootInActiveWindow) { it.packageName == GOOGLE_PACKAGE && it.isEditable } != null }
-            val field = find(automation.rootInActiveWindow) { it.packageName == GOOGLE_PACKAGE && it.isEditable }!!
-            assertTrue("Google must open without a submitted query", field.text.isNullOrBlank() || field.isShowingHintText)
+            // Without a Google account the app may show sign-in instead of its search field; either way it opened.
+            await { automation.rootInActiveWindow?.packageName.let { it == GOOGLE_PACKAGE || it == "com.google.android.gms" } }
+            find(automation.rootInActiveWindow) { it.packageName == GOOGLE_PACKAGE && it.isEditable }?.let { field ->
+                assertTrue("Google must open without a submitted query", field.text.isNullOrBlank() || field.isShowingHintText)
+            }
             shell("input keyevent KEYCODE_BACK")
-            SystemClock.sleep(400)
-            if (automation.rootInActiveWindow?.packageName == GOOGLE_PACKAGE) shell("input keyevent KEYCODE_BACK")
+            repeat(3) {
+                SystemClock.sleep(400)
+                val foreground = automation.rootInActiveWindow?.packageName
+                if (foreground == GOOGLE_PACKAGE || foreground == "com.google.android.gms") shell("input keyevent KEYCODE_BACK")
+            }
             await { find(automation.rootInActiveWindow) { it.contentDescription == "Search Google" } != null }
             scenario.onActivity { assertEquals(preferences, it.getSharedPreferences("launcher", 0).getString("state", null)) }
         }

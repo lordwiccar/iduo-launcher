@@ -2,6 +2,8 @@
 
 package media.whitewhale.iduo
 
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.systemGestureExclusion
 import android.appwidget.AppWidgetProviderInfo
 import android.os.UserManager
 import androidx.activity.compose.BackHandler
@@ -99,7 +101,7 @@ internal val Glass: Color
 
 private fun findFreeWidgetIndex(layout: HomeLayout, page: Int, spanX: Int, spanY: Int): Int? {
     val blocked = layout.unavailableCells()
-    for (row in 0..layout.rows - spanY) for (column in 0..GRID_COLUMNS - spanX) {
+    for (row in 0..layout.rows - spanY) for (column in 0..layout.columns - spanX) {
         val cells = buildList {
             repeat(spanY) { y -> repeat(spanX) { x -> add(homeCellIndex(page, (row + y) * GRID_COLUMNS + column + x)) } }
         }
@@ -128,6 +130,7 @@ fun LauncherScreen(
     onLaunch: (AppEntry) -> Unit, onMakeDefault: () -> Unit, onAppInfo: (AppEntry) -> Unit,
     isDefaultHome: Boolean, deviceStatus: DeviceStatus, onStatusMode: (Boolean) -> Unit, onWallpaperSettings: () -> Unit,
     searchRequests: Int = 0,
+    changelogRequests: Int = 0,
     onLaunchFrom: (AppEntry, android.graphics.Rect?) -> Unit = { app, _ -> onLaunch(app) },
     onGoogleSearch: (android.graphics.Rect?) -> Boolean = { false },
     onWebSearch: (String) -> Unit = {},
@@ -165,7 +168,18 @@ fun LauncherScreen(
     LaunchedEffect(sheet) { if (sheet.isEmpty()) customizationPage = SettingsPage.OVERVIEW }
     var openFolderId by rememberSaveable { mutableStateOf<String?>(null) }
     var spotlight by rememberSaveable { mutableStateOf(false) }
+    // A sliding dock opens from the right edge and closes when Home is touched or left.
+    var dockOpen by rememberSaveable { mutableStateOf(false) }
+    val startsWide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= 650
+    val dockReveal = remember { androidx.compose.animation.core.Animatable(if (startsWide || state.dockMode == DockMode.SHOWN) 1f else 0f) }
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_PAUSE) { dockOpen = false }
     var createFolderFirstId by rememberSaveable { mutableStateOf<String?>(null) }
+    // A long press on an app opens its menu beside the icon; without bounds (after recreation or
+    // from accessibility) the full options sheet opens instead.
+    var appMenuAnchor by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    var appMenuDock by remember { mutableStateOf<Int?>(null) }
+    var iconChoiceFor by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(selectedId) { if (selectedId == null) { appMenuAnchor = null; appMenuDock = null } }
     var savedPage by rememberSaveable { mutableIntStateOf(0) }
     var lastHomePage by rememberSaveable { mutableIntStateOf(0) }
     var libraryQuery by rememberSaveable { mutableStateOf("") }
@@ -173,6 +187,13 @@ fun LauncherScreen(
     val launcherActivity = androidx.activity.compose.LocalActivity.current as MainActivity
     val launcherRootView = LocalView.current.rootView
     val appsById = remember(state.apps) { state.apps.associateBy { it.id } }
+    // Empty dock positions show the most recently opened apps that are not in the dock, in order.
+    val dockRecentApps: Map<Int, AppEntry> = remember(state.dockRecents, state.recentApps, state.dock, appsById) {
+        if (!state.dockRecents) emptyMap() else {
+            val candidates = state.recentApps.filter { it !in state.dock }.mapNotNull(appsById::get).filter { it.available }.iterator()
+            buildMap { state.dock.forEachIndexed { index, id -> if (id == null && candidates.hasNext()) put(index, candidates.next()) } }
+        }
+    }
     val drag = remember { HomeDragState() }
     val haptic = LocalHapticFeedback.current
     val homePages = state.homePages
@@ -181,7 +202,9 @@ fun LauncherScreen(
     var expandedWorkspace by remember { mutableStateOf(false) }
     // Home's left page (Google News or RSS) is physical page 0, so Home 1 is page 1.
     val firstHome = 1
-    val pageCount = visibleHomePages + 1
+    // All apps follows the Home pages unless every app lives on Home.
+    val hasLibrary = !state.appsOnHome
+    val pageCount = visibleHomePages + if (hasLibrary) 1 else 0
     val nativePager = rememberPagerState(initialPage = savedPage.coerceIn(-firstHome, pageCount - 1) + firstHome, pageCount = { pageCount + firstHome })
     val pager = remember(nativePager) { LauncherPager(nativePager, firstHome) }
     fun leaveTemporaryWidgetPage() {
@@ -215,7 +238,7 @@ fun LauncherScreen(
         if (homePages != previousHomePages && !drag.active) {
             // Pin edits in the library keep the library selected; a completed drop stays on home.
             if (state.editRevision == previousEditRevision) {
-                if (pager.currentPage == previousHomePages) pager.scrollToPage(homePages)
+                if (hasLibrary && pager.currentPage == previousHomePages) pager.scrollToPage(homePages)
                 else if (pager.currentPage >= pageCount) pager.scrollToPage(homePages - 1)
             } else if (pager.currentPage >= homePages) pager.scrollToPage(homePages - 1)
         }
@@ -230,12 +253,17 @@ fun LauncherScreen(
             ?: lastHomePage.coerceIn(0, homePages - 1)
         drag.clear(); widgetSession = null; resizeSlot = null; sheet = ""; widgetPackage = null
         widgetExactTarget = false; widgetPlacementMessage = null; selectedId = null; appMoveMenu = false
-        openFolderId = null; createFolderFirstId = null; emptyCellIndex = null; spotlight = false
+        openFolderId = null; createFolderFirstId = null; emptyCellIndex = null; spotlight = false; dockOpen = false
         focus.clearFocus(); keyboard?.hide()
         pager.animateScrollToPage(page)
     } }
     LaunchedEffect(searchRequests) { if (searchRequests > 0) { drag.clear(); widgetSession = null; resizeSlot = null; sheet = ""; widgetPackage = null; widgetExactTarget = false; selectedId = null
         if (!state.googleSearch || !onGoogleSearch(null)) spotlight = true
+    } }
+    // The update notice opens the changelog in Settings.
+    LaunchedEffect(changelogRequests) { if (changelogRequests > 0) {
+        drag.clear(); selectedId = null; openFolderId = null; spotlight = false
+        customizationPage = SettingsPage.CHANGELOG; sheet = "settings"
     } }
     val widgetPickerBack = {
         if (widgetSession != null) {
@@ -262,7 +290,7 @@ fun LauncherScreen(
     val target = if (rawTarget is DropTarget.Home && drag.source?.target is DropTarget.Widget) {
         val slot = (drag.source!!.target as DropTarget.Widget).index
         model.placement(slot)?.let {
-            DropTarget.Home(adjustedWidgetDropIndex(rawTarget.index, it, drag.source!!.bounds, drag.origin))
+            DropTarget.Home(adjustedWidgetDropIndex(rawTarget.index, it, drag.source!!.bounds, drag.origin, state.homeColumns))
         } ?: rawTarget
     } else rawTarget
     val blockedDock = drag.moved && target is DropTarget.Dock &&
@@ -323,7 +351,7 @@ fun LauncherScreen(
         val rawDestination = if (moved && !cancelled) drag.destination(drag.pointer, eligibleDragPages)?.target else null
         val destination = if (rawDestination is DropTarget.Home && source.target is DropTarget.Widget) {
             model.placement(source.target.index)?.let {
-                DropTarget.Home(adjustedWidgetDropIndex(rawDestination.index, it, source.bounds, drag.origin))
+                DropTarget.Home(adjustedWidgetDropIndex(rawDestination.index, it, source.bounds, drag.origin, state.homeColumns))
             }
                 ?: rawDestination
         } else rawDestination
@@ -359,10 +387,18 @@ fun LauncherScreen(
             withFrameNanos { }
             pager.scrollToPage(if (returnToLibrary) model.state.value.homePages else page.coerceIn(0, model.state.value.homePages - 1))
             if (!moved && !cancelled) {
-                if (source.target is DropTarget.Dock) { dockSlot = source.target.index; sheet = "dock" }
+                if (source.target is DropTarget.Dock) {
+                    val docked = model.state.value.dock.getOrNull(source.target.index)
+                    val recent = dockRecentApps[source.target.index]?.id
+                    if (docked != null && isFolderId(docked)) openFolderId = docked
+                    else if (docked != null || recent != null) {
+                        selectedId = docked ?: recent; appMenuAnchor = source.bounds; appMenuDock = source.target.index
+                    }
+                    else { dockSlot = source.target.index; sheet = "dock" }
+                }
                 else if (source.target is DropTarget.Widget) { widgetSlot = source.target.index; sheet = "widgetActions" }
                 else if (source.appId?.let(::isFolderId) == true) openFolderId = source.appId
-                else if (source.folderId == null) selectedId = source.appId
+                else if (source.folderId == null) { selectedId = source.appId; appMenuAnchor = source.bounds; appMenuDock = null }
             }
         }
     }
@@ -372,12 +408,40 @@ fun LauncherScreen(
     val backdropBlurred = openFolderId != null || spotlight
     val folderBlur by animateDpAsState(if (backdropBlurred) FOLDER_BACKDROP_BLUR else 0.dp, label = "folder blur")
     val behindFolder = if (folderBlur > 0.dp) Modifier.blur(folderBlur) else Modifier
-    // Android's wallpaper lies behind this window, so the window blurs it rather than Compose.
-    val wallpaperBlur = with(LocalDensity.current) { FOLDER_BACKDROP_BLUR.roundToPx() }
-    DisposableEffect(backdropBlurred) {
-        launcherActivity.window.setWallpaperBlur(if (backdropBlurred) wallpaperBlur else 0)
-        onDispose { launcherActivity.window.setWallpaperBlur(0) }
+    // The wallpaper blurs fully behind an open folder or search, and as All apps or the news
+    // page slides in, so their labels stay readable on busy wallpapers. The dock instead frosts
+    // only the wallpaper behind itself; see frostedWallpaper.
+    val wallpaperBlurProgress by remember(nativePager, firstHome, visibleHomePages, hasLibrary) {
+        derivedStateOf {
+            val position = nativePager.currentPage + nativePager.currentPageOffsetFraction - firstHome
+            val panel = maxOf((-position).coerceIn(0f, 1f),
+                if (hasLibrary) (position - (visibleHomePages - 1)).coerceIn(0f, 1f) else 0f)
+            maxOf(panel, folderBlur / FOLDER_BACKDROP_BLUR)
+        }
     }
+    // Android's wallpaper lies behind this window, so the window blurs it where Android allows
+    // that. Samsung turns cross-window blur off but offers its own (SamsungBlur); elsewhere
+    // without it Home draws a blurred stand-in of the wallpaper instead.
+    val windowManager = launcherActivity.windowManager
+    var windowBlurs by remember { mutableStateOf(windowManager.isCrossWindowBlurEnabled) }
+    DisposableEffect(windowManager) {
+        val listener = java.util.function.Consumer<Boolean> { windowBlurs = it }
+        windowManager.addCrossWindowBlurEnabledListener(listener)
+        onDispose { windowManager.removeCrossWindowBlurEnabledListener(listener) }
+    }
+    val wallpaperBlurPx = with(LocalDensity.current) { WALLPAPER_BACKDROP_BLUR.toPx() }
+    LaunchedEffect(windowBlurs, wallpaperBlurPx) {
+        var applied = -1
+        // Android's wallpaper is hidden behind one iDuo draws, which blurs itself.
+        snapshotFlow { if (windowBlurs && HomeWallpaper.image == null) (wallpaperBlurProgress * wallpaperBlurPx).roundToInt() else 0 }.collect { radius ->
+            // Each change relayouts the window, so small steps mid-swipe are skipped.
+            if (radius == 0 || radius >= wallpaperBlurPx.roundToInt() || kotlin.math.abs(radius - applied) >= 4) {
+                if (radius != applied) launcherActivity.window.setWallpaperBlur(radius)
+                applied = radius
+            }
+        }
+    }
+    DisposableEffect(Unit) { onDispose { launcherActivity.window.setWallpaperBlur(0) } }
     // Let a wallpaper wider than the screen scroll with the Home pages.
     LaunchedEffect(nativePager, homePages, firstHome) {
         val wallpapers = android.app.WallpaperManager.getInstance(launcherActivity)
@@ -385,9 +449,14 @@ fun LauncherScreen(
         wallpapers.setWallpaperOffsetSteps(1f / span, 1f)
         snapshotFlow { nativePager.currentPage + nativePager.currentPageOffsetFraction - firstHome }.collect { position ->
             val token = launcherActivity.window.decorView.windowToken ?: return@collect
-            wallpapers.setWallpaperOffsets(token, if (homePages > 1) (position / span).coerceIn(0f, 1f) else .5f, .5f)
+            val xOffset = if (homePages > 1) (position / span).coerceIn(0f, 1f) else .5f
+            WallpaperFrost.xOffset = xOffset
+            wallpapers.setWallpaperOffsets(token, xOffset, .5f)
         }
     }
+    FollowHomeWallpaper()
+    // Home draws a wallpaper iDuo set itself, with each screen's crop, and blurs it itself too.
+    val ownWallpaper = HomeWallpaper.image != null
     Box(Modifier.fillMaxSize().testTag("launcher-root").homeDragInput(drag,
         enabled = sheet.isEmpty() && !showFirstRun && selectedId == null && resizeSlot == null && !spotlight && pager.currentPage >= 0,
         page = pager.currentPage, eligiblePages = eligibleDragPages, onStart = {
@@ -399,24 +468,50 @@ fun LauncherScreen(
             }
         },
         onFinish = { cancelled -> finishDrag(cancelled) })) {
+        HomeWallpaperLayer(wallpaperBlurProgress)
+        val samsungBlurs = !ownWallpaper && !windowBlurs && SamsungBlur.available
+        if (samsungBlurs) {
+            // Each change of Samsung's blur redraws the window behind, so it moves in steps.
+            val step by remember { derivedStateOf { (wallpaperBlurProgress * SAMSUNG_BLUR_STEPS).roundToInt() } }
+            if (step > 0) SamsungWallpaperBlur(WALLPAPER_BACKDROP_BLUR * step / SAMSUNG_BLUR_STEPS, 0.dp, Color.Transparent,
+                Modifier.fillMaxSize().testTag("wallpaper-blur"))
+        } else if (!ownWallpaper && !windowBlurs && wallpaperBlurProgress > 0f) WallpaperStandIn(Modifier.fillMaxSize()
+            .graphicsLayer { alpha = wallpaperBlurProgress }
+            .blur(WALLPAPER_BACKDROP_BLUR, androidx.compose.ui.draw.BlurredEdgeTreatment.Rectangle)
+            .testTag("wallpaper-blur"))
         BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
             val wide = maxWidth.value >= 650f
             val preset = if (wide) state.expanded else state.compact
+            // The activity picks the screen's layout before drawing; this follows window resizes.
+            LaunchedEffect(wide) { model.showDisplay(!wide) }
             val density = LocalDensity.current
-            val inLibrary = pager.currentPage == visibleHomePages
+            val inLibrary = hasLibrary && pager.currentPage == visibleHomePages
+            // The inner screen always shows its dock; only the cover's may slide in or hide.
+            val dockMode = if (wide) DockMode.SHOWN else state.dockMode
+            // Status above the dock, always on the inner screen and by choice on the cover, keeps
+            // the right column even while the cover's dock slides in or hides.
+            val statusRail = state.verticalStatus && (wide || !state.coverStatusAtTop)
+            val dockColumn = dockMode == DockMode.SHOWN || statusRail
+            // On the cover, status runs across the top: in the camera's band when there is one.
+            val coverStatus = !wide && state.verticalStatus && state.coverStatusAtTop
+            val topInset = with(density) { WindowInsets.safeDrawing.getTop(this).toDp() }
+            val coverStatusHeight = maxOf(topInset, 36.dp)
+            val topBar = if (coverStatus) (coverStatusHeight - topInset).value else 0f
             var statusHeight by remember { mutableFloatStateOf(0f) }
             val geometry = homeGeometry(maxWidth.value, maxHeight.value, preset, state.labels,
-                statusRailHeight = if (state.verticalStatus) statusHeight + 22f else 0f,
+                statusRailHeight = if (statusRail) statusHeight + 22f else 0f,
                 labelHeight = with(density) { 14.sp.toDp().value } + 6f, inLibrary = inLibrary,
-                homeBottomSpace = if (isDefaultHome) 44f else 88f, dockSlots = state.dock.size, homeRows = state.homeRows)
+                homeBottomSpace = if (isDefaultHome) 44f else 88f, dockSlots = state.dock.size, homeRows = state.homeRows,
+                columns = state.homeColumns, dockColumn = dockColumn, topBar = topBar)
             // The most Home rows this screen can show in full, measured like the page itself.
             val maxRowsFit = (GRID_ROWS downTo DEFAULT_HOME_ROWS + 1).firstOrNull { rows ->
                 homeGeometry(maxWidth.value, maxHeight.value, preset, state.labels,
                     labelHeight = with(density) { 14.sp.toDp().value } + 6f,
-                    homeBottomSpace = if (isDefaultHome) 44f else 88f, homeRows = rows).gridFits
+                    homeBottomSpace = if (isDefaultHome) 44f else 88f, homeRows = rows,
+                    columns = state.homeColumns, dockColumn = dockColumn, topBar = topBar).gridFits
             } ?: DEFAULT_HOME_ROWS
             SideEffect {
-                resizePitchX = with(density) { (geometry.gridWidth / GRID_COLUMNS).dp.toPx() }
+                resizePitchX = with(density) { (geometry.gridWidth / state.homeColumns).dp.toPx() }
                 resizePitchY = with(density) { minOf((geometry.widgetHeight + 18f) / 2f, geometry.rowHeight).dp.toPx() }
                 resizeTopPitch = with(density) { ((geometry.widgetHeight + 18f) / 2f).dp.toPx() }
                 resizeAppPitch = with(density) { geometry.rowHeight.dp.toPx() }
@@ -447,14 +542,38 @@ fun LauncherScreen(
             }
             val contentHeight = maxHeight
             val panelWidth = maxWidth - geometry.homeWidth.dp
-            val pagerWidth = maxWidth - preset.dockWidth.dp - 28.dp
+            val pagerWidth = if (dockColumn) maxWidth - preset.dockWidth.dp - 28.dp else maxWidth
             val leftColumnOrigin = (maxWidth / 2f - geometry.gridWidth.dp) / 2f - 16.dp
             val homeStride = panelWidth - leftColumnOrigin
             val bottomSpace = if (isDefaultHome) 44.dp else 88.dp
-            val workspaceMotion = if (geometry.expanded) remember(firstHome, visibleHomePages, pagerWidth, homeStride, density) {
-                WorkspacePageMotion(firstHome, visibleHomePages, with(density) { pagerWidth.toPx() }, with(density) { homeStride.toPx() })
+            val workspaceMotion = if (geometry.expanded) remember(firstHome, visibleHomePages, pagerWidth, homeStride, density, state.libraryFolders) {
+                // The library's folders fill one pane beside the last Home page, like another page.
+                WorkspacePageMotion(firstHome, visibleHomePages, with(density) { pagerWidth.toPx() }, with(density) { homeStride.toPx() },
+                    libraryStride = with(density) { (if (state.libraryFolders) homeStride else pagerWidth).toPx() })
             } else null
             val dockScroll = rememberScrollState()
+            val dockShown = dockMode == DockMode.SHOWN || (dockMode == DockMode.SLIDE && (dockOpen || drag.active))
+            var dockDragging by remember { mutableStateOf(false) }
+            LaunchedEffect(dockShown, dockDragging) {
+                if (!dockDragging) dockReveal.animateTo(if (dockShown) 1f else 0f,
+                    androidx.compose.animation.core.spring(stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow))
+            }
+            // The slide covers the dock, its 12dp margin and a little more, so no edge peeks out.
+            val dockTravel = with(density) { (preset.dockWidth + 24f).dp.toPx() }
+            // Read only by gesture code, so plain holders: layout writes them without recomposing.
+            val dockBounds = remember { arrayOf(androidx.compose.ui.geometry.Rect.Zero) }
+            val dockHandleBounds = remember { arrayOf(androidx.compose.ui.geometry.Rect.Zero) }
+            val dockDrag: (Float) -> Unit = { dx ->
+                scope.launch { dockReveal.snapTo((dockReveal.value - dx / dockTravel).coerceIn(0f, 1f)) }
+            }
+            var dockDragStart by remember { mutableFloatStateOf(0f) }
+            val dockDragBegin: (Offset) -> Unit = { dockDragging = true; dockDragStart = dockReveal.value }
+            val dockDragEnd: () -> Unit = {
+                dockDragging = false
+                // A short pull is enough either way: a sixth of the way in opens it, a sixth out closes it.
+                dockOpen = if (dockDragStart >= .5f) dockReveal.value > .85f else dockReveal.value > .15f
+                scope.launch { dockReveal.animateTo(if (dockOpen || drag.active) 1f else 0f) }
+            }
             var gestureOriginInRoot by remember { mutableStateOf(Offset.Zero) }
             var gestureOriginInWindow by remember { mutableStateOf(Offset.Zero) }
             val pagerInputEnabled = pager.currentPage in -firstHome..visibleHomePages && !drag.active &&
@@ -513,17 +632,22 @@ fun LauncherScreen(
                 canStartUpwardSwipe = { point -> homeOwnsVerticalSwipe(point, upward = true) },
                 onUpwardSwipe = if (state.swipeUpSearch) ({ spotlight = true }) else null,
                 childPagesHorizontally = { point, travel ->
-                    drag.childPager?.let { child -> child.bounds().contains(point + gestureOriginInRoot) && child.canPage(travel) } == true
+                    val rootPoint = point + gestureOriginInRoot
+                    // A sliding dock takes a leftward swipe at its edge handle and a rightward one over itself.
+                    (dockMode == DockMode.SLIDE && ((travel < 0f && !dockOpen && dockHandleBounds[0].contains(rootPoint)) ||
+                        (travel > 0f && dockOpen && dockBounds[0].contains(rootPoint)))) ||
+                        drag.childPager?.let { child -> child.bounds().contains(rootPoint) && child.canPage(travel) } == true
                 },
             ).pointerInput(Unit) {
                 // Bare wallpaper anywhere on Home opens Home options. Icons, cells, the dock and
                 // controls consume their own presses first, and a page swipe cancels this one.
-                detectTapGestures(onLongPress = { openHomeOptionsAt(it, size.width) }, onDoubleTap = { lockAt(it) })
+                detectTapGestures(onTap = { dockOpen = false },
+                    onLongPress = { openHomeOptionsAt(it, size.width) }, onDoubleTap = { lockAt(it) })
             }) {
             val leftPageTitle = stringResource(leftPageTitle(state.leftPage))
             val pagerModifier = Modifier.fillMaxHeight().width(pagerWidth).testTag("app-pager")
                 .semantics { stateDescription = if (pager.currentPage == -1) leftPageTitle
-                    else if (pager.currentPage == visibleHomePages) launcherActivity.getString(R.string.all_apps)
+                    else if (hasLibrary && pager.currentPage == visibleHomePages) launcherActivity.getString(R.string.all_apps)
                     else launcherActivity.getString(R.string.home_page_of, pager.currentPage + 1, visibleHomePages) }
             if (geometry.expanded) {
                 Box(pagerModifier) {
@@ -575,7 +699,11 @@ fun LauncherScreen(
                     }
                 }
             }
-            if (state.verticalStatus) StatusRail(deviceStatus,
+            // Sheets bring back Android's own status bar in the same band, so this one steps aside.
+            val systemBarShown = sheet.isNotEmpty() || emptyCellIndex != null || selectedId != null
+            if (coverStatus && !systemBarShown) CoverStatusBar(deviceStatus, Modifier.align(Alignment.TopStart).offset(y = -topInset)
+                .fillMaxWidth().height(coverStatusHeight).padding(horizontal = 20.dp))
+            if (statusRail) StatusRail(deviceStatus,
                 Modifier.align(Alignment.TopEnd).padding(end = 12.dp).offset(y = geometry.contentTop.dp)
                     .width(preset.dockWidth.dp).onSizeChanged {
                         // The normal rail's 20dp location slot and 3dp gap do not move the dock.
@@ -583,17 +711,46 @@ fun LauncherScreen(
                             if (contentHeight < 500.dp) 0f else 23f).coerceAtLeast(0f)
                     },
                 compact = contentHeight < 500.dp, iconSize = dockIconSize(geometry.iconSize).dp)
-            Surface(Modifier.align(Alignment.TopEnd).padding(end = 12.dp).offset(y = geometry.dockTop.dp)
+            if (dockMode != DockMode.HIDDEN) Surface(Modifier.align(Alignment.TopEnd).padding(end = 12.dp).offset(y = geometry.dockTop.dp)
                 .width(preset.dockWidth.dp).height(geometry.dockHeight.dp).graphicsLayer {
                     // Composite the stationary dock independently of the shared pager layer.
                     compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
-                }.testTag("dock"),
+                    translationX = (1f - dockReveal.value) * dockTravel
+                }.onGloballyPositioned { dockBounds[0] = it.boundsInRoot() }.frostedWallpaper(RoundedCornerShape(30.dp))
+                .then(if (dockMode == DockMode.SLIDE) Modifier.pointerInput(Unit) {
+                    detectHorizontalDragGestures(onDragStart = dockDragBegin, onDragEnd = dockDragEnd,
+                        onDragCancel = dockDragEnd) { change, dx -> if (dx > 0f || dockReveal.value < 1f) { change.consume(); dockDrag(dx) } }
+                } else Modifier).testTag("dock"),
+                // Frosted glass covers what lies behind, so icons under a sliding dock do not show through.
                 shape = RoundedCornerShape(30.dp), color = Glass.copy(alpha = .32f),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = .3f))) {
+                if (!ownWallpaper && SamsungBlur.available)
+                    SamsungWallpaperBlur(DOCK_SAMSUNG_BLUR, 30.dp, Glass.copy(alpha = .32f), Modifier.fillMaxSize())
                 Column(Modifier.padding(vertical = 8.dp).verticalScroll(dockScroll)) {
                     DockAppColumn(state.dock, previewLayout.dock, appsById, geometry.dockRowHeight,
                         dockIconSize(geometry.iconSize), drag, insertionTarget,
-                        onLaunch = onLaunchFrom, onChoose = { dockSlot = it; sheet = "dock" })
+                        onLaunch = onLaunchFrom, onChoose = { dockSlot = it; sheet = "dock" },
+                        folders = state.folders, onFolder = { openFolderId = it },
+                        recents = if (drag.active) emptyMap() else dockRecentApps)
+                }
+            }
+            if (dockMode == DockMode.SLIDE && dockReveal.value < 1f) {
+                // Android lets an app claim at most 200dp of an edge from the back gesture, so
+                // the handle is that tall, centred on the dock.
+                val handleHeight = minOf(200f, geometry.dockHeight)
+                Box(Modifier.align(Alignment.TopEnd).offset(y = (geometry.dockTop + (geometry.dockHeight - handleHeight) / 2f).dp)
+                    .width(28.dp).height(handleHeight.dp).systemGestureExclusion()
+                    .onGloballyPositioned { dockHandleBounds[0] = it.boundsInRoot() }
+                    .pointerInput(Unit) {
+                        detectHorizontalDragGestures(onDragStart = dockDragBegin, onDragEnd = dockDragEnd,
+                            onDragCancel = dockDragEnd) { change, dx -> change.consume(); dockDrag(dx) }
+                    }
+                    .semantics { contentDescription = launcherActivity.getString(R.string.dock_show) }
+                    .clickable { dockOpen = true }.testTag("dock-handle"),
+                    contentAlignment = Alignment.CenterEnd) {
+                    Box(Modifier.padding(end = 4.dp).width(4.dp).height(56.dp)
+                        .graphicsLayer { alpha = 1f - dockReveal.value }
+                        .background(Color.White.copy(alpha = .7f), RoundedCornerShape(2.dp)))
                 }
             }
             Column(Modifier.align(Alignment.BottomStart).width(pagerWidth).padding(start = 16.dp, bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -614,7 +771,7 @@ fun LauncherScreen(
                             else Box(Modifier.size(if (index == pager.currentPage) 6.dp else 4.dp).background(Color.White.copy(alpha = if (index == pager.currentPage) 1f else .4f), CircleShape))
                         }
                     } else Text("${minOf(pager.currentPage + 1, homePages)} / $homePages", color = Color.White, fontSize = 12.sp)
-                    IconButton(onClick = openLibrary, Modifier.size(32.dp).testTag("library-page-link")) {
+                    if (hasLibrary) IconButton(onClick = openLibrary, Modifier.size(32.dp).testTag("library-page-link")) {
                         Icon(Icons.AutoMirrored.Rounded.FormatListBulleted, stringResource(R.string.all_apps_page), tint = Color.White.copy(alpha = if (pager.currentPage == homePages) 1f else .6f), modifier = Modifier.size(17.dp))
                     }
                 }
@@ -676,11 +833,11 @@ fun LauncherScreen(
                         }
                         "widgetActions" -> model.placement(widgetSlot)?.let { placement ->
                             val topPitch = (geometry.widgetHeight + 18f) / 2f
-                            val gridSizing = WidgetGridSizing(GRID_COLUMNS, state.homeRows, geometry.gridWidth / GRID_COLUMNS,
+                            val gridSizing = WidgetGridSizing(state.homeColumns, state.homeRows, geometry.gridWidth / state.homeColumns,
                                 minOf(topPitch, geometry.rowHeight), maxOf(topPitch, geometry.rowHeight), 10f, 18f,
                                 topRowHeightDp = topPitch, appRowHeightDp = geometry.rowHeight)
                             val constraints = widgets.manager.getAppWidgetInfo(placement.id)?.let { widgets.sizing(it, gridSizing) }
-                            WidgetActions(placement, constraints, rows = state.homeRows,
+                            WidgetActions(placement, constraints, rows = state.homeRows, columns = state.homeColumns,
                                 canConfigure = widgets.canReconfigure(placement.id),
                                 onConfigure = { widgets.reconfigure(placement.id); sheet = "" },
                                 isValid = { x, y -> (x == placement.spanX && y == placement.spanY) || resizeWidget(state.layout, widgetSlot, x, y) != state.layout },
@@ -750,8 +907,8 @@ fun LauncherScreen(
                     value = withContext(Dispatchers.IO) { widgetCatalog(launcherActivity, providers, selectedProfile) }
                 }
                 val topPitch = (geometry.widgetHeight + 18f) / 2f
-                val pickerSizing = remember(geometry, state.homeRows) { WidgetGridSizing(GRID_COLUMNS, state.homeRows,
-                    geometry.gridWidth / GRID_COLUMNS, minOf(topPitch, geometry.rowHeight),
+                val pickerSizing = remember(geometry, state.homeRows, state.homeColumns) { WidgetGridSizing(state.homeColumns, state.homeRows,
+                    geometry.gridWidth / state.homeColumns, minOf(topPitch, geometry.rowHeight),
                     maxOf(topPitch, geometry.rowHeight), 10f, 18f,
                     topRowHeightDp = topPitch, appRowHeightDp = geometry.rowHeight) }
                 val footprint: (AppWidgetProviderInfo) -> WidgetSpan? = { provider ->
@@ -909,7 +1066,7 @@ fun LauncherScreen(
                         }
                         if (anchor != null) {
                             val density = LocalDensity.current
-                            val cellWidthPx = with(density) { (geometry.gridWidth / GRID_COLUMNS).dp.toPx() }
+                            val cellWidthPx = with(density) { (geometry.gridWidth / state.homeColumns).dp.toPx() }
                             fun pickerRowTop(row: Int): Float = if (row <= 2) row * with(density) { topPitch.dp.toPx() }
                                 else with(density) { (geometry.widgetHeight + 18f + (row - 2) * geometry.rowHeight).dp.toPx() }
                             val candidateRow = homeCellLocal(visualIndex ?: 0) / GRID_COLUMNS
@@ -1032,7 +1189,7 @@ fun LauncherScreen(
             if (placement != null && bounds != null) {
                 val minW = resizeConstraints?.minimum?.width ?: 2
                 val minH = resizeConstraints?.minimum?.height ?: 2
-                val maxW = minOf(GRID_COLUMNS - placement.column, resizeConstraints?.maximum?.width ?: GRID_COLUMNS)
+                val maxW = minOf(state.homeColumns - placement.column, resizeConstraints?.maximum?.width ?: state.homeColumns)
                 val maxH = minOf(state.homeRows - placement.row, resizeConstraints?.maximum?.height ?: state.homeRows)
                 val feasible = placement.page >= -1 && placement.row in 0 until state.homeRows &&
                     !(placement.id >= 0 && resizeConstraints == null) && minW <= maxW && minH <= maxH
@@ -1076,7 +1233,54 @@ fun LauncherScreen(
                 }
             }
         }
-        appsById[selectedId]?.let { app ->
+        val menuAnchor = appMenuAnchor
+        val closeAppMenu = { selectedId = null; appMenuAnchor = null; appMenuDock = null }
+        if (menuAnchor != null) appsById[selectedId]?.let { app ->
+            val details by produceState<AppMenuDetails?>(null, app.id) {
+                value = withContext(Dispatchers.IO) { appMenuDetails(launcherActivity, app) }
+            }
+            val dockIndex = appMenuDock
+            val pinned = state.layout.indexOfShortcut(app.id) != null
+            val actions = buildList {
+                when {
+                    // A recent app shown in an empty dock position can be kept there.
+                    dockIndex != null && state.dock.getOrNull(dockIndex) == null ->
+                        add(AppMenuAction(AppMenuIcons.pin, stringResource(R.string.app_menu_pin), "app-menu-pin") {
+                            model.setDock(dockIndex, app.id); closeAppMenu() })
+                    dockIndex != null -> {
+                        add(AppMenuAction(AppMenuIcons.replace, stringResource(R.string.app_menu_replace), "app-menu-replace") {
+                            closeAppMenu(); dockSlot = dockIndex; sheet = "dock" })
+                        add(AppMenuAction(AppMenuIcons.remove, stringResource(R.string.app_menu_remove), "app-menu-remove") {
+                            model.setDock(dockIndex, null); closeAppMenu() })
+                    }
+                    pinned -> add(AppMenuAction(AppMenuIcons.remove, stringResource(R.string.app_menu_remove), "app-menu-remove") {
+                        model.setPinned(app.id, false); closeAppMenu() })
+                    else -> add(AppMenuAction(AppMenuIcons.add, stringResource(R.string.app_menu_add), "app-menu-add") {
+                        model.setPinned(app.id, true); closeAppMenu() })
+                }
+                if (details?.canUninstall == true) add(AppMenuAction(AppMenuIcons.uninstall, stringResource(R.string.app_menu_uninstall), "app-menu-uninstall") {
+                    closeAppMenu(); if (!requestUninstall(launcherActivity, app)) onAppInfo(app) })
+                add(AppMenuAction(AppMenuIcons.icon, stringResource(R.string.app_menu_icon), "app-menu-icon") {
+                    closeAppMenu(); iconChoiceFor = app.id })
+                add(AppMenuAction(AppMenuIcons.info, stringResource(R.string.app_menu_info), "app-menu-info") {
+                    closeAppMenu(); onAppInfo(app) })
+                if (dockIndex == null) add(AppMenuAction(AppMenuIcons.more, stringResource(R.string.app_menu_more), "app-menu-more") {
+                    appMenuAnchor = null })
+            }
+            AppShortcutMenu(app, menuAnchor, details, actions,
+                onShortcut = { shortcut ->
+                    closeAppMenu()
+                    if (!startAppShortcut(launcherActivity, shortcut, null))
+                        android.widget.Toast.makeText(launcherActivity, launcherActivity.getString(R.string.app_unavailable, shortcut.label),
+                            android.widget.Toast.LENGTH_SHORT).show()
+                },
+                onDismiss = closeAppMenu)
+        }
+        iconChoiceFor?.let { id -> appsById[id] }?.let { app ->
+            IconChoiceDialog(app, state.iconOverrides[app.id], onChoose = { model.setIconOverride(app, it); iconChoiceFor = null },
+                onDismiss = { iconChoiceFor = null })
+        }
+        if (menuAnchor == null) appsById[selectedId]?.let { app ->
             val pinned = state.layout.indexOfShortcut(app.id) != null
             val packageName = app.packageName
             val hasWidgets = packageName.isNotEmpty() && runCatching {
@@ -1281,9 +1485,9 @@ private fun ExpandedWorkspace(
         }
     }
     val libraryPhysicalPage = firstHome + visibleHomePages
-    val showLibrary by remember(nativePager, libraryPhysicalPage) {
+    val showLibrary by remember(nativePager, libraryPhysicalPage, state.appsOnHome) {
         derivedStateOf(structuralEqualityPolicy()) {
-            nativePager.currentPage + nativePager.currentPageOffsetFraction >= libraryPhysicalPage - 1.25f
+            !state.appsOnHome && nativePager.currentPage + nativePager.currentPageOffsetFraction >= libraryPhysicalPage - 1.25f
         }
     }
 
@@ -1332,7 +1536,9 @@ private fun ExpandedWorkspace(
 
         if (showLibrary) {
             key("library-pane") {
-                Box(Modifier.place((visibleHomePages - 1) * stride + viewportWidth).fillMaxSize()) {
+                val halfPane = state.libraryFolders
+                Box(Modifier.place(if (halfPane) initialHomeOrigin + visibleHomePages * stride else (visibleHomePages - 1) * stride + viewportWidth)
+                    .then(if (halfPane) Modifier.width((geometry.gridWidth + 16f).dp).fillMaxHeight() else Modifier.fillMaxSize())) {
                     AppLibrary(state, libraryQuery, onLibraryQuery, onLaunch, onPinned,
                         onActions = onActions,
                         modifier = Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = bottomSpace)
@@ -1412,7 +1618,7 @@ private fun HomePagePane(
             })
         Column(Modifier.offset(x = 16.dp).width(geometry.gridWidth.dp).fillMaxHeight()
             .verticalScroll(homeScroll).padding(top = geometry.contentTop.dp, bottom = 8.dp)) {
-            SharedHomeGrid(page, state.homeRows, state.homeSlots, state.leadingSlots, previewSlots, previewLeadingSlots, previewWidgetPlacements,
+            SharedHomeGrid(page, state.homeRows, state.homeColumns, state.homeSlots, state.leadingSlots, previewSlots, previewLeadingSlots, previewWidgetPlacements,
                 appsById, geometry, state.labels, widgets, drag, target,
                 folders = state.folders, onLaunch = onLaunch, onActions = onActions, onWidget = onWidget,
                 onFolder = onFolder, onEmptyWidget = onEmptyWidget)
@@ -1437,6 +1643,7 @@ private fun CircleControl(icon: ImageVector, label: String, tag: String, visualS
 private fun SharedHomeGrid(
     page: Int,
     rows: Int,
+    columns: Int,
     savedSlots: List<String?>,
     savedLeadingSlots: List<String?>,
     previewSlots: List<String?>,
@@ -1487,11 +1694,13 @@ private fun SharedHomeGrid(
     fun rowTop(row: Int) = if (row <= 2) row * topPitch else geometry.widgetHeight + 18f + (row - 2) * rowHeight
     BoxWithConstraints(Modifier.fillMaxWidth().height(rowTop(renderedRows).dp)) {
         val density = LocalDensity.current
-        val cellWidth = maxWidth / 4
+        val cellWidth = maxWidth / columns
         val cellWidthPx = with(density) { cellWidth.toPx() }
         val rowHeightPx = with(density) { rowHeight.dp.toPx() }
 
         repeat(rows * GRID_COLUMNS) { localIndex ->
+            // Stored columns beyond the visible ones stay empty and are not drawn.
+            if (localIndex % GRID_COLUMNS >= columns) return@repeat
             val globalIndex = pageStart + localIndex
             val cell = DropTarget.Home(globalIndex)
             val savedId = savedAt(globalIndex)
@@ -1596,7 +1805,11 @@ private fun DockAppColumn(
     target: DropTarget?,
     onLaunch: (AppEntry, android.graphics.Rect?) -> Unit,
     onChoose: (Int) -> Unit,
+    folders: List<FolderEntry> = emptyList(),
+    onFolder: (String) -> Unit = {},
+    recents: Map<Int, AppEntry> = emptyMap(),
 ) {
+    val foldersById = remember(folders) { folders.associateBy(FolderEntry::id) }
     val draggedId = drag.source?.appId
     val dockTarget = (target as? DropTarget.Dock)?.index
     val source = drag.source?.target as? DropTarget.Dock
@@ -1623,6 +1836,8 @@ private fun DockAppColumn(
         savedDock.indices.forEach { index ->
             val cell = DropTarget.Dock(index)
             val savedApp = appsById[savedDock[index]]
+            val savedFolder = foldersById[savedDock[index]]
+            val recentApp = recents[index]
             val previewId = previewDock.getOrNull(index)
             val highlighted = drag.active && target == cell
             val gap = hiddenIndex == index
@@ -1633,14 +1848,25 @@ private fun DockAppColumn(
                     gap -> Box(Modifier.size(iconSize.dp).testTag("drag-gap-dock-$index")
                         .background(Glass.copy(alpha = .16f), RoundedCornerShape(14.dp))
                         .border(2.dp, Color.White.copy(alpha = .55f), RoundedCornerShape(14.dp)))
+                    previewId == null && recentApp != null -> Image(recentApp.icon.asImageBitmap(), null,
+                        Modifier.size((iconSize * .9f).dp).alpha(.85f).clip(RoundedCornerShape(10.dp)).testTag("dock-recent-${recentApp.id}"))
                     previewId == null -> Icon(Icons.Rounded.Add, null, tint = Color.White, modifier = Modifier.size(24.dp))
                 }
             }
             Box(Modifier.fillMaxWidth().height(rowHeight.dp).offset(y = (rowHeight * index).dp)
-                .testTag("dock-slot-$index").dropRegion(drag, cell, savedApp?.id)
-                .semantics(mergeDescendants = true) { contentDescription = savedApp?.label ?: resources.getString(R.string.dock_choose_slot, index + 1) }
+                .testTag("dock-slot-$index").dropRegion(drag, cell, savedApp?.id ?: savedFolder?.id ?: recentApp?.id)
+                .semantics(mergeDescendants = true) {
+                    contentDescription = savedApp?.label ?: savedFolder?.title
+                        ?: recentApp?.let { resources.getString(R.string.dock_recent_app, it.label) }
+                        ?: resources.getString(R.string.dock_choose_slot, index + 1)
+                }
                 .combinedClickable(interactionSource = interactions[index], indication = LocalIndication.current, role = Role.Button, onClick = {
-                    if (savedApp != null) onLaunch(savedApp, launchBounds[index]) else onChoose(index)
+                    when {
+                        savedApp != null -> onLaunch(savedApp, launchBounds[index])
+                        savedFolder != null -> onFolder(savedFolder.id)
+                        recentApp != null -> onLaunch(recentApp, launchBounds[index])
+                        else -> onChoose(index)
+                    }
                 }, onLongClick = null)
                 .semantics { onLongClick(chooseDockApp) { onChoose(index); true } })
         }
@@ -1650,7 +1876,9 @@ private fun DockAppColumn(
             val savedIndex = savedDock.indexOf(id)
             val previewIndex = previewDock.indexOf(id)
             val renderIndex = previewIndex.takeIf { it >= 0 } ?: savedIndex.takeIf { it >= 0 } ?: return@forEach
-            val app = appsById[id] ?: return@forEach
+            val app = appsById[id]
+            val folder = foldersById[id]
+            if (app == null && folder == null) return@forEach
             key(id) {
                 val animatedOffset by animateIntOffsetAsState(
                     IntOffset(0, (renderIndex * rowHeightPx).roundToInt()), label = "dock insertion $id")
@@ -1661,10 +1889,12 @@ private fun DockAppColumn(
                 )
                 Box(Modifier.offset { animatedOffset }.fillMaxWidth().height(rowHeight.dp).alpha(opacity)
                     .testTag("dock-app-$id"), contentAlignment = Alignment.Center) {
-                    Image(app.icon.asImageBitmap(), null, Modifier.size(iconSize.dp).testTag("dock-icon-$id")
+                    if (app != null) Image(app.icon.asImageBitmap(), null, Modifier.size(iconSize.dp).testTag("dock-icon-$id")
                         .onGloballyPositioned { if (savedIndex >= 0) launchBounds[savedIndex].set(it.boundsInWindow().toAndroidBounds()) }
                         .graphicsLayer { scaleX = slotScales[renderIndex]; scaleY = slotScales[renderIndex] }
                         .clip(RoundedCornerShape(11.dp)))
+                    else if (folder != null) DockFolderIcon(folder, appsById, iconSize, drag,
+                        Modifier.graphicsLayer { scaleX = slotScales[renderIndex]; scaleY = slotScales[renderIndex] })
                 }
             }
         }
@@ -1673,6 +1903,22 @@ private fun DockAppColumn(
 
 private fun <T> List<T>.slicePage(range: IntRange): List<T> =
     if (isEmpty() || range.first >= size) emptyList() else subList(range.first, minOf(range.last + 1, size))
+
+/** A folder in the dock: its first four apps in a glass square, which apps can be dropped onto. */
+@Composable
+private fun DockFolderIcon(folder: FolderEntry, apps: Map<String, AppEntry>, size: Float, drag: HomeDragState, modifier: Modifier = Modifier) {
+    Box(modifier.size(size.dp).clip(RoundedCornerShape((size * .26f).dp))
+        .background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), RoundedCornerShape((size * .26f).dp))
+        .dropRegion(drag, DropTarget.Folder(folder.id), folderId = folder.id).testTag("dock-folder-${folder.id}")) {
+        folder.appIds.take(4).forEachIndexed { index, id ->
+            apps[id]?.let { app ->
+                Image(app.icon.asImageBitmap(), null, Modifier.align(when (index) {
+                    0 -> Alignment.TopStart; 1 -> Alignment.TopEnd; 2 -> Alignment.BottomStart; else -> Alignment.BottomEnd
+                }).padding((size * .07f).dp).size((size * .36f).dp).clip(RoundedCornerShape(5.dp)))
+            }
+        }
+    }
+}
 
 @Composable
 private fun FolderTile(folder: FolderEntry, apps: Map<String, AppEntry>, size: Float, labels: Boolean,
@@ -1899,6 +2145,7 @@ private fun WidgetActions(
     onRemove: () -> Unit,
     onClose: () -> Unit,
     rows: Int = DEFAULT_HOME_ROWS,
+    columns: Int = DEFAULT_HOME_COLUMNS,
 ) {
     val sheetMaxHeight = with(LocalDensity.current) {
         (LocalWindowInfo.current.containerSize.height * .88f).toDp()
@@ -1907,7 +2154,7 @@ private fun WidgetActions(
     var height by remember(placement.slot, placement.spanY) { mutableIntStateOf(placement.spanY) }
     val minWidth = constraints?.minimum?.width ?: 2
     val minHeight = constraints?.minimum?.height ?: 2
-    val maxWidth = minOf(GRID_COLUMNS - placement.column, constraints?.maximum?.width ?: GRID_COLUMNS)
+    val maxWidth = minOf(columns - placement.column, constraints?.maximum?.width ?: columns)
     val maxHeight = minOf(rows - placement.row, constraints?.maximum?.height ?: rows)
     val feasible = placement.page >= -1 && placement.row in 0 until rows &&
         !(placement.id >= 0 && constraints == null) && minWidth <= maxWidth && minHeight <= maxHeight
