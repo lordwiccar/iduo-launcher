@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.1.2
+
+Fourth release on Google Play (version code 5).
+
+### New features
+- Add apps to a folder by ticking them in a list, or choose all of its apps at once, from the folder's menu.
+- A picture beside each Google News article.
+- The status ring shows the mobile network (5G, 4G) and, without Wi-Fi, airplane mode or the battery level in its middle.
+
+### Look and feel
+- The battery ring turns green while charging and yellow in battery saver.
+- A short line in the dock parts your own apps from the recently opened ones.
+
+### Fixes
+- Widgets from other apps come back by themselves after the app is updated; if Android lets one go, iDuo reconnects it or offers Reconnect.
+- Turning Wi-Fi off removes its symbol from the status ring.
+
 ## 1.1.1
 
 Third release on Google Play (version code 4).

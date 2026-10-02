@@ -13,6 +13,7 @@ import android.os.UserManager
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
@@ -26,7 +27,13 @@ class WidgetController(
     private val model: LauncherModel,
     private val onExternalSetupChanged: (Boolean) -> Unit = {},
 ) {
-    val host: android.appwidget.AppWidgetHost = ZeroPaddingWidgetHost(activity, 1024)
+    val host: android.appwidget.AppWidgetHost = ZeroPaddingWidgetHost(activity, 1024) { refreshProviders() }
+    /** Changes whenever widget providers may have come or gone, so Home asks for them again. */
+    var providersVersion by mutableIntStateOf(0)
+        private set
+    /** Each widget's provider, profile and name, so a widget Android lets go can be connected again. */
+    private val knownProviders = activity.getSharedPreferences("widget_providers", 0)
+    private val recovering = mutableSetOf<Int>()
     val manager = AppWidgetManager.getInstance(activity)
     private val launcherApps = activity.getSystemService(LauncherApps::class.java)
     var failureMessage by mutableStateOf<String?>(null)
@@ -113,6 +120,55 @@ class WidgetController(
     }
 
     fun clearFailure() { failureMessage = null }
+    fun refreshProviders() { providersVersion++ }
+
+    /** The widget's provider, remembered for [recover]; null while Android does not know it. */
+    fun info(id: Int): AppWidgetProviderInfo? = runCatching { manager.getAppWidgetInfo(id) }.getOrNull()?.also { rememberProvider(id, it) }
+
+    private fun rememberProvider(id: Int, info: AppWidgetProviderInfo) {
+        val serial = userManager.getSerialNumberForUser(info.profile)
+        val value = "${info.provider.flattenToString()}|$serial|${info.loadLabel(activity.packageManager) ?: ""}"
+        if (knownProviders.getString(id.toString(), null) != value) knownProviders.edit().putString(id.toString(), value).apply()
+    }
+
+    /**
+     * A widget whose provider Android no longer knows. While Android still holds the binding, the
+     * provider is only away, such as during its update, and Home waits for it. When Android has let
+     * the binding go, the same provider is connected again: silently where Android allows it,
+     * otherwise as a placeholder that reconnects it with a tap.
+     */
+    fun recover(slot: Int, id: Int) {
+        if (id < 0 || id in recovering || pendingId >= 0 || reconfigureWidgetId != null) return
+        if (!userManager.isUserUnlocked) return
+        val bound = runCatching { host.appWidgetIds }.getOrNull() ?: return
+        if (id in bound) return
+        val (component, serial, label) = knownProviders.getString(id.toString(), null)?.split('|', limit = 3)
+            ?.takeIf { it.size == 3 } ?: return
+        val profile = serial.toLongOrNull()?.let(userManager::getUserForSerialNumber) ?: return
+        val provider = runCatching { manager.getInstalledProvidersForProfile(profile) }.getOrNull()
+            ?.firstOrNull { it.provider.flattenToString() == component } ?: return
+        val placement = model.placement(slot)?.takeIf { it.id == id } ?: return
+        recovering += id
+        android.util.Log.w("iDuo", "Widget $id from $component lost its binding; connecting it again")
+        val work = profile != Process.myUserHandle()
+        val restore = WidgetRestore(slot, component, serial.toLong(), label.ifBlank { provider.provider.shortClassName },
+            if (work) "Work" else "Personal", work, layoutBackupScope(activity))
+        // Configuration a widget cannot do without needs the user, so it waits for a tap.
+        val needsSetup = provider.configure != null &&
+            provider.widgetFeatures and AppWidgetProviderInfo.WIDGET_FEATURE_CONFIGURATION_OPTIONAL == 0
+        val newId = if (needsSetup) -1 else runCatching { host.allocateAppWidgetId() }.getOrDefault(-1)
+        val bindsSilently = newId >= 0 &&
+            runCatching { manager.bindAppWidgetIdIfAllowed(newId, profile, provider.provider, null) }.getOrDefault(false)
+        if (bindsSilently) {
+            rememberProvider(newId, provider)
+            model.setWidget(placement.slot, newId)
+        } else {
+            if (newId >= 0) runCatching { host.deleteAppWidgetId(newId) }
+            model.markWidgetNeedsBinding(placement.slot, id, restore)
+        }
+        knownProviders.edit().remove(id.toString()).apply()
+        refreshProviders()
+    }
     fun label(id: Int): String = manager.getAppWidgetInfo(id)?.loadLabel(activity.packageManager) ?: activity.getString(R.string.widget)
     fun providers(profile: UserHandle): List<AppWidgetProviderInfo> =
         manager.getInstalledProvidersForProfile(profile)
@@ -259,6 +315,10 @@ class WidgetController(
         if (!model.canPruneWidgetIds) return
         val retained = model.retainedWidgetIds + pendingId + listOfNotNull(reconfigureWidgetId)
         host.appWidgetIds.filter { it !in retained }.forEach(host::deleteAppWidgetId)
+        // Learn the providers of widgets placed before they were remembered, and forget removed ones.
+        retained.filter { it >= 0 && !knownProviders.contains(it.toString()) }.forEach(::info)
+        val stale = knownProviders.all.keys.filter { key -> key.toIntOrNull()?.let { it !in retained } ?: true }
+        if (stale.isNotEmpty()) knownProviders.edit().apply { stale.forEach(::remove) }.apply()
     }
 
     private fun cancel() {

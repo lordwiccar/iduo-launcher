@@ -144,7 +144,22 @@ private fun RssArticleRow(item: RssItem, onOpen: () -> Unit) {
             if (item.summary.isNotBlank()) Text(item.summary, Modifier.padding(top = 3.dp), maxLines = 2,
                 overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall, color = Ink.copy(alpha = .8f))
         }
-        item.imageUrl?.let { RssThumbnail(it, Modifier.padding(start = 12.dp)) }
+        val googleArticle = remember(item.link) { GoogleNewsImages.articleId(item.link) }
+        if (item.imageUrl != null) RssThumbnail(item.imageUrl, Modifier.padding(start = 12.dp))
+        else if (googleArticle != null) GoogleNewsThumbnail(googleArticle, Modifier.padding(start = 12.dp))
+    }
+}
+
+/** A Google News article's picture, looked up when the article first shows; an empty place meanwhile. */
+@Composable
+private fun GoogleNewsThumbnail(id: String, modifier: Modifier) {
+    val context = LocalContext.current
+    val picture by produceState(GoogleNewsImages.cached(context, id), id) {
+        if (value == null) value = GoogleNewsImages.find(context, id) ?: ""
+    }
+    when {
+        picture == null -> Box(modifier.size(RssThumbnailSize).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = .16f)))
+        picture!!.isNotEmpty() -> RssThumbnail(picture!!, modifier)
     }
 }
 

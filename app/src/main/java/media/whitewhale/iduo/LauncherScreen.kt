@@ -1,4 +1,4 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 
 package media.whitewhale.iduo
 
@@ -1350,6 +1350,7 @@ fun LauncherScreen(
                     folderDestinations = homeDestinations.filter { homeCellPage(it) != folderPage },
                     onDismiss = { openFolderId = null }, onRename = { model.renameFolder(id, it) },
                     onLaunch = onLaunchFrom, transparency = state.folderTransparency,
+                    allApps = state.apps, folders = state.folders, onSetApps = { model.setFolderApps(id, it) },
                     origin = drag.regions[DropTarget.Folder(id)]?.bounds?.center,
                     onMoveFolder = { destination ->
                         if (model.applyDrop(id, DropTarget.Home(destination))) {
@@ -1870,6 +1871,17 @@ private fun DockAppColumn(
                 }, onLongClick = null)
                 .semantics { onLongClick(chooseDockApp) { onChoose(index); true } })
         }
+        // A short line parts the apps kept in the dock from the recent ones filling its empty places.
+        fun recentAt(index: Int) = previewDock.getOrNull(index) == null && recents[index] != null
+        fun keptAt(index: Int) = previewDock.getOrNull(index) != null
+        (1 until savedDock.size).filter { index ->
+            (keptAt(index - 1) && recentAt(index)) || (recentAt(index - 1) && keptAt(index))
+        }.forEach { index ->
+            Box(Modifier.fillMaxWidth().offset(y = (rowHeight * index).dp - .75.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxWidth(.42f).height(1.5.dp).background(Color.White.copy(alpha = .5f), RoundedCornerShape(1.dp))
+                    .testTag("dock-recents-divider-$index"))
+            }
+        }
 
         val ids = (savedDock + previewDock).filterNotNull().distinct()
         ids.forEach { id ->
@@ -2039,7 +2051,8 @@ private fun WidgetSlot(id: Int, slot: Int, controller: WidgetController, modifie
                         style = MaterialTheme.typography.bodySmall)
                     restoreMessage?.let { Text(it, color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center) }
-                    Row {
+                    // Side by side where they fit, one above the other on a narrow widget.
+                    FlowRow(horizontalArrangement = Arrangement.Center) {
                         TextButton(onClick = {
                             if (!controller.rebindRestoredWidget(slot, contentSize = displayedContentSize))
                                 restoreMessage = restoreUnavailable
@@ -2051,8 +2064,19 @@ private fun WidgetSlot(id: Int, slot: Int, controller: WidgetController, modifie
             }
             return@BoxWithConstraints
         }
-        val info = remember(id) { if (id >= 0) controller.manager.getAppWidgetInfo(id) else null }
-        if (info == null) fallback()
+        val version = controller.providersVersion
+        val info = remember(id, version) { if (id >= 0) controller.info(id) else null }
+        if (info == null) {
+            // A provider being updated returns shortly; one Android has let go is connected again.
+            if (id >= 0) LaunchedEffect(id, version) {
+                controller.recover(slot, id)
+                repeat(40) {
+                    delay(3_000)
+                    if (controller.info(id) != null) { controller.refreshProviders(); return@LaunchedEffect }
+                }
+            }
+            fallback()
+        }
         else {
             key(id) {
                 AndroidView(factory = { context -> controller.host.createView(context, id, info) },

@@ -38,4 +38,28 @@ class StatusSignalMappingTest {
         assertEquals(CellularSignalVisual.Airplane, cellularSignalVisual(level = 4, airplane = true))
         assertTrue(cellularSignalVisual(level = null, airplane = true) is CellularSignalVisual.Airplane)
     }
+
+    @Test fun networkGenerationsReadLikeAPhone() {
+        assertEquals("5G", cellularNetworkLabel(networkType = 13, overrideType = 3))
+        assertEquals("5G", cellularNetworkLabel(networkType = 20, overrideType = 0))
+        assertEquals("4G+", cellularNetworkLabel(networkType = 13, overrideType = 1))
+        assertEquals("4G", cellularNetworkLabel(networkType = 13, overrideType = 0))
+        assertEquals("3G", cellularNetworkLabel(networkType = 15, overrideType = 0))
+        assertEquals(null, cellularNetworkLabel(networkType = 0, overrideType = 0))
+    }
+
+    @Test fun ringMiddleShowsTheMostImportantThing() {
+        val wifiAndAirplane = DeviceStatus(battery = 50, wifiConnected = true, airplane = true)
+        assertEquals(RingCentre.WIFI, ringCentre(wifiAndAirplane, percent = true))
+        assertTrue(airplaneOutside(wifiAndAirplane, RingCentre.WIFI))
+        val mobile = DeviceStatus(battery = 50, cellularData = true, cellularNetwork = "5G")
+        assertEquals(RingCentre.CELLULAR, ringCentre(mobile, percent = false))
+        // Above the dock the generation sits among the signal dots instead.
+        assertEquals(RingCentre.BATTERY, ringCentre(mobile, percent = true))
+        assertEquals(RingCentre.AIRPLANE, ringCentre(DeviceStatus(battery = 50, airplane = true), percent = true))
+        assertEquals(RingCentre.BATTERY, ringCentre(DeviceStatus(battery = 50), percent = true))
+        assertEquals(RingCentre.NONE, ringCentre(DeviceStatus(battery = 50), percent = false))
+        // Mobile data without a known generation leaves the middle to the battery level.
+        assertEquals(RingCentre.BATTERY, ringCentre(DeviceStatus(battery = 50, cellularData = true), percent = true))
+    }
 }

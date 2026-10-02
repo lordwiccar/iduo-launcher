@@ -4,7 +4,7 @@ title: iDuo Launcher – Privacy Policy
 
 # iDuo Launcher – Privacy Policy
 
-**Effective date:** 1 October 2026 · **App:** iDuo Launcher (`media.whitewhale.iduo`) for Android
+**Effective date:** 2 October 2026 · **App:** iDuo Launcher (`media.whitewhale.iduo`) for Android
 **Developer:** Danny, whitewhale.media · **Contact:** [studio@whitewhale.media](mailto:studio@whitewhale.media)
 
 [Česká verze níže](#zásady-ochrany-soukromí--česky)
@@ -30,7 +30,7 @@ The following information is used only on your device and is never sent to the d
 
 When you open Home's left news page, the app downloads headlines **directly over HTTPS**:
 
-- With **Google News**, from Google's public news feeds at news.google.com for the edition and sections you chose. Google receives your IP address and a request identifying "iDuo Launcher", without any account or identifier from the app. [Google's privacy policy](https://policies.google.com/privacy) applies.
+- With **Google News**, from Google's public news feeds at news.google.com for the edition and sections you chose. Google receives your IP address and a request identifying "iDuo Launcher", without any account or identifier from the app. [Google's privacy policy](https://policies.google.com/privacy) applies. To show an article's picture, the app asks Google for the article's address once and reads the beginning of the article's page on the publisher's website, which sees your IP address as if you had opened the article; the picture's address is kept on the device.
 - With **My RSS feeds**, from the websites you added, and the article pictures they link to. Their own privacy policies apply.
 
 Nothing passes through a server of the developer, and no personal data from the app is sent. Opening an article hands its link to your browser.
@@ -84,7 +84,7 @@ Changes to this policy will be published on this page with a new effective date.
 
 # Zásady ochrany soukromí – česky
 
-**Účinnost od:** 1. října 2026 · **Aplikace:** iDuo Launcher (`media.whitewhale.iduo`) pro Android
+**Účinnost od:** 2. října 2026 · **Aplikace:** iDuo Launcher (`media.whitewhale.iduo`) pro Android
 **Vývojář:** Danny, whitewhale.media · **Kontakt:** [studio@whitewhale.media](mailto:studio@whitewhale.media)
 
 ## Shrnutí
@@ -108,7 +108,7 @@ Následující informace se používají jen ve vašem zařízení a nikdy se ne
 
 Když otevřete levou stránku plochy se zprávami, aplikace stáhne titulky **přímo přes HTTPS**:
 
-- U **Google News** z veřejných kanálů Googlu na news.google.com pro zvolenou edici a rubriky. Google vidí vaši IP adresu a požadavek označený „iDuo Launcher“, bez jakéhokoli účtu nebo identifikátoru z aplikace. Platí [zásady ochrany soukromí Googlu](https://policies.google.com/privacy).
+- U **Google News** z veřejných kanálů Googlu na news.google.com pro zvolenou edici a rubriky. Google vidí vaši IP adresu a požadavek označený „iDuo Launcher“, bez jakéhokoli účtu nebo identifikátoru z aplikace. Platí [zásady ochrany soukromí Googlu](https://policies.google.com/privacy). Kvůli obrázku k článku se aplikace jednou zeptá Googlu na adresu článku a načte začátek jeho stránky na webu vydavatele, který tak vidí vaši IP adresu jako při otevření článku; adresa obrázku zůstane uložená v zařízení.
 - U **Vlastního RSS** z webů, které jste přidali, a z obrázků článků, na které odkazují. Platí jejich zásady ochrany soukromí.
 
 Nic neprochází serverem vývojáře a z aplikace se neodesílají žádné osobní údaje. Otevření článku předá odkaz vašemu prohlížeči.

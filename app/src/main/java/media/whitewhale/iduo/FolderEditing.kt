@@ -61,6 +61,33 @@ fun addAppToFolder(layout: HomeLayout, folderId: String, appId: String, index: I
     return cleared.copy(folders = cleared.folders.map { if (it.id == folderId) it.copy(appIds = members) else it })
 }
 
+/**
+ * Makes [appIds] the folder's apps, as ticked in its app list. New apps join at the end and leave
+ * their place on Home, in the dock or in another folder; apps no longer ticked go to the first free
+ * Home cells, from the folder's own page. A folder left with one app turns back into that app.
+ */
+fun setFolderApps(layout: HomeLayout, folderId: String, appIds: List<String>): HomeLayout {
+    val folder = layout.folder(folderId) ?: return layout
+    val wanted = appIds.filterNot { it.isBlank() || isReservedFolderId(it) }.distinct()
+    if (wanted.toSet() == folder.appIds.toSet()) return layout
+    var next = wanted.filterNot(folder.appIds::contains).fold(layout) { current, appId -> addAppToFolder(current, folderId, appId) }
+    val page = (layout.indexOfShortcut(folderId)?.let(::homeCellPage) ?: 0).coerceAtLeast(0)
+    folder.appIds.filterNot(wanted::contains).forEach { appId ->
+        // Once the folder has turned back into its last app, that app keeps the folder's place.
+        if (next.folder(folderId)?.appIds?.contains(appId) != true) return@forEach
+        next = removeAppFromFolder(next, folderId, appId, DropTarget.Remove)
+        if (next.indexOfShortcut(appId) == null && appId !in next.dock) next = next.withSlot(firstFreeCell(next, page), appId)
+    }
+    return next
+}
+
+/** The first free, visible Home cell from [page] on. */
+private fun firstFreeCell(layout: HomeLayout, page: Int): Int {
+    val blocked = layout.unavailableCells()
+    return generateSequence(homeCellIndex(page, 0)) { it + 1 }
+        .first { it !in blocked && layout.cellVisible(it) && layout.slotAt(it) == null }
+}
+
 fun moveFolderApp(layout: HomeLayout, folderId: String, appId: String, index: Int): HomeLayout {
     val folder = layout.folder(folderId) ?: return layout
     val from = folder.appIds.indexOf(appId)

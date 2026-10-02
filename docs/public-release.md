@@ -57,7 +57,7 @@ under `docs/images`. Internal working notes, research, device captures, artifact
 configuration and other working-tree tools are excluded.
 
 The [user guide](user-guide.md), [troubleshooting](troubleshooting.md), [contributor code map](architecture.md),
-[privacy policy](privacy-policy.md), [1.1.1 notes](releases/1.1.1.md), [1.1.0 notes](releases/1.1.0.md), [1.0.0 notes](releases/1.0.0.md) and [beta notes](releases/0.15.0-beta01.md) are part of the explicit public allowlist.
+[privacy policy](privacy-policy.md), [1.1.2 notes](releases/1.1.2.md), [1.1.1 notes](releases/1.1.1.md), [1.1.0 notes](releases/1.1.0.md), [1.0.0 notes](releases/1.0.0.md) and [beta notes](releases/0.15.0-beta01.md) are part of the explicit public allowlist.
 
 ## GitHub publication
 

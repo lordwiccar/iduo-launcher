@@ -175,6 +175,17 @@
     <string name="close_folder">Zamknij folder</string>
     <string name="folder_options">Opcje folderu</string>
     <string name="disband_folder">Rozgrupuj folder</string>
+    <string name="folder_add_apps">Dodaj aplikacje</string>
+    <string name="folder_add_apps_to">Dodaj aplikacje do folderu %1$s</string>
+    <plurals name="folder_add_count">
+        <item quantity="one">Dodaj %1$d aplikację</item>
+        <item quantity="few">Dodaj %1$d aplikacje</item>
+        <item quantity="many">Dodaj %1$d aplikacji</item>
+        <item quantity="other">Dodaj %1$d aplikacji</item>
+    </plurals>
+    <string name="folder_choose_apps">Wybierz aplikacje</string>
+    <string name="folder_app_in">W folderze %1$s</string>
+    <string name="folder_no_apps_match">Brak pasujących aplikacji</string>
     <string name="folder_transparency">Przezroczystość tła folderu</string>
     <string name="all_apps_view">Widok wszystkich aplikacji</string>
     <string name="all_apps_view_list">Lista</string>
@@ -397,6 +408,8 @@
     <string name="status_airplane_short">Samolot</string>
     <string name="status_cellular">Sygnał komórkowy %1$d z 4</string>
     <string name="status_cellular_unavailable">Sygnał komórkowy niedostępny</string>
+    <string name="status_battery_saver">Oszczędzanie baterii włączone</string>
+    <string name="status_mobile_data">Dane komórkowe %1$s</string>
     <string name="customize_about">O aplikacji</string>
     <string name="customize_about_detail">Wersja, deweloper i licencje</string>
     <string name="customize_changelog">Lista zmian</string>

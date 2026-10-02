@@ -78,4 +78,28 @@ class FolderEditingTest {
         assertEquals(widget, after.widgetPlacements.single())
         assertEquals("other", after.slots[4])
     }
+
+    @Test fun tickingAppsMovesThemInAndUntickedOnesBackToHome() {
+        val folder = FolderEntry(folderId, "Group", listOf("a", "b", "c"))
+        val before = HomeLayout(listOf(folderId, "d"), listOf("e", null), folders = listOf(folder))
+        val next = setFolderApps(before, folderId, listOf("a", "c", "d", "e"))
+        assertEquals(listOf("a", "c", "d", "e"), next.folder(folderId)?.appIds)
+        assertEquals(listOf(null, null), next.dock)
+        assertEquals(listOf(folderId, "b"), next.slots)
+    }
+
+    @Test fun tickingOneAppTurnsTheFolderBackIntoIt() {
+        val folder = FolderEntry(folderId, "Group", listOf("a", "b", "c"))
+        val before = HomeLayout(listOf("x", folderId), emptyList(), folders = listOf(folder))
+        val next = setFolderApps(before, folderId, listOf("b"))
+        assertEquals(null, next.folder(folderId))
+        assertEquals("b", next.slotAt(1))
+        assertEquals(setOf("x", "a", "b", "c"), next.slots.filterNotNull().toSet())
+    }
+
+    @Test fun unchangedTicksLeaveTheLayout() {
+        val folder = FolderEntry(folderId, "Group", listOf("a", "b"))
+        val before = HomeLayout(listOf(folderId), emptyList(), folders = listOf(folder))
+        assertSame(before, setFolderApps(before, folderId, listOf("b", "a")))
+    }
 }

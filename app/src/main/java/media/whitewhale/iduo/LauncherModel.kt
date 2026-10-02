@@ -467,6 +467,10 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
     }
     fun removeAppFromFolder(folderId: String, appId: String, target: DropTarget) =
         commitLayout(media.whitewhale.iduo.removeAppFromFolder(mutable.value.layout, folderId, appId, target))
+    fun setFolderApps(folderId: String, appIds: List<String>): Boolean {
+        val known = mutable.value.apps.mapTo(HashSet()) { it.id }
+        return commitLayout(media.whitewhale.iduo.setFolderApps(mutable.value.layout, folderId, appIds.filter(known::contains)))
+    }
     fun disbandFolder(folderId: String) = commitLayout(media.whitewhale.iduo.disbandFolder(mutable.value.layout, folderId))
     fun moveFolderApp(folderId: String, appId: String, index: Int) =
         commitLayout(media.whitewhale.iduo.moveFolderApp(mutable.value.layout, folderId, appId, index))
@@ -750,6 +754,20 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         undoLayout = null
         undoImportSettings = null
         persist()
+    }
+
+    /** Turns the widget [id] in [slot] into a placeholder that reconnects [restore]'s provider. */
+    fun markWidgetNeedsBinding(slot: Int, id: Int, restore: WidgetRestore): Boolean {
+        if (statePayloadInvalid) return false
+        val old = mutable.value
+        if (old.layout.placement(slot)?.id != id) return false
+        mutable.update { it.copy(widgetPlacements = old.widgetPlacements.map { p -> if (p.slot == slot) p.copy(id = NEEDS_BINDING_WIDGET) else p },
+            widgetRestores = old.widgetRestores.filterNot { it.slot == slot } + restore.copy(slot = slot),
+            canUndoEdit = false, editRevision = it.editRevision + 1) }
+        undoLayout = null
+        undoImportSettings = null
+        persist()
+        return true
     }
 
     internal fun restoreLayout(layout: HomeLayout) {

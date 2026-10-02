@@ -127,7 +127,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onStart() {
-        super.onStart(); widgets.host.startListening()
+        super.onStart(); widgets.host.startListening(); widgets.refreshProviders()
         if (!timeReceiverRegistered) {
             ContextCompat.registerReceiver(this, timeReceiver, IntentFilter().apply {
                 addAction(Intent.ACTION_TIME_TICK); addAction(Intent.ACTION_TIME_CHANGED)

@@ -26,6 +26,7 @@ docs/releases/*
 !docs/releases/1.0.0.md
 !docs/releases/1.1.0.md
 !docs/releases/1.1.1.md
+!docs/releases/1.1.2.md
 !docs/images/
 docs/images/*
 !docs/images/*.png

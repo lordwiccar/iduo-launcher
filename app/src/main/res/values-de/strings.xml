@@ -173,6 +173,15 @@
     <string name="close_folder">Ordner schließen</string>
     <string name="folder_options">Ordneroptionen</string>
     <string name="disband_folder">Ordner auflösen</string>
+    <string name="folder_add_apps">Apps hinzufügen</string>
+    <string name="folder_add_apps_to">Apps zu %1$s hinzufügen</string>
+    <plurals name="folder_add_count">
+        <item quantity="one">%1$d App hinzufügen</item>
+        <item quantity="other">%1$d Apps hinzufügen</item>
+    </plurals>
+    <string name="folder_choose_apps">Apps auswählen</string>
+    <string name="folder_app_in">In %1$s</string>
+    <string name="folder_no_apps_match">Keine passenden Apps</string>
     <string name="folder_transparency">Transparenz des Ordnerhintergrunds</string>
     <string name="all_apps_view">Ansicht aller Apps</string>
     <string name="all_apps_view_list">Liste</string>
@@ -381,6 +390,8 @@
     <string name="status_airplane_short">Flugmodus</string>
     <string name="status_cellular">Mobilfunksignal %1$d von 4</string>
     <string name="status_cellular_unavailable">Mobilfunksignal nicht verfügbar</string>
+    <string name="status_battery_saver">Energiesparmodus an</string>
+    <string name="status_mobile_data">Mobile Daten %1$s</string>
     <string name="customize_about">Über die App</string>
     <string name="customize_about_detail">Version, Entwickler und Lizenzen</string>
     <string name="customize_changelog">Änderungsprotokoll</string>

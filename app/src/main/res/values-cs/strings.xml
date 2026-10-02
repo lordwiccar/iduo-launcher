@@ -175,6 +175,17 @@
     <string name="close_folder">Zavřít složku</string>
     <string name="folder_options">Možnosti složky</string>
     <string name="disband_folder">Zrušit složku</string>
+    <string name="folder_add_apps">Přidat aplikace</string>
+    <string name="folder_add_apps_to">Přidat aplikace do složky %1$s</string>
+    <plurals name="folder_add_count">
+        <item quantity="one">Přidat %1$d aplikaci</item>
+        <item quantity="few">Přidat %1$d aplikace</item>
+        <item quantity="many">Přidat %1$d aplikace</item>
+        <item quantity="other">Přidat %1$d aplikací</item>
+    </plurals>
+    <string name="folder_choose_apps">Vybrat aplikace</string>
+    <string name="folder_app_in">Ve složce %1$s</string>
+    <string name="folder_no_apps_match">Žádná aplikace neodpovídá</string>
     <string name="folder_transparency">Průhlednost pozadí složky</string>
     <string name="all_apps_view">Zobrazení všech aplikací</string>
     <string name="all_apps_view_list">Seznam</string>
@@ -397,6 +408,8 @@
     <string name="status_airplane_short">Letadlo</string>
     <string name="status_cellular">Mobilní signál %1$d ze 4</string>
     <string name="status_cellular_unavailable">Mobilní signál není dostupný</string>
+    <string name="status_battery_saver">Spořič baterie zapnutý</string>
+    <string name="status_mobile_data">Mobilní data %1$s</string>
     <string name="customize_about">O aplikaci</string>
     <string name="customize_about_detail">Verze, vývojář a licence</string>
     <string name="customize_changelog">Changelog</string>

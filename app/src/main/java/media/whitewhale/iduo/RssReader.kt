@@ -184,41 +184,54 @@ internal object FeedImages {
     }
 }
 
-/** Reads at most [limit] bytes over https, following redirects that stay on https. */
-private fun download(address: String, limit: Int): ByteArray {
+/**
+ * Reads at most [limit] bytes over https, following redirects that stay on https; with [stopAfter],
+ * stops once that text has arrived. A [form] is posted instead of fetched.
+ */
+internal fun download(address: String, limit: Int, stopAfter: String? = null, form: String? = null): ByteArray {
     var url = URL(address)
-    repeat(5) {
+    repeat(6) {
         if (url.protocol != "https") throw IOException("Only https is allowed")
         val connection = (url.openConnection() as HttpURLConnection).apply {
             connectTimeout = 10_000; readTimeout = 15_000
             instanceFollowRedirects = false
             setRequestProperty("User-Agent", "iDuo Launcher RSS")
             setRequestProperty("Accept", "application/rss+xml, application/atom+xml, application/xml, text/xml, text/html;q=0.8, */*;q=0.5")
+            if (form != null) {
+                requestMethod = "POST"; doOutput = true
+                setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
+            }
         }
         try {
+            if (form != null) connection.outputStream.use { it.write(form.toByteArray()) }
             val code = connection.responseCode
             if (code in 300..399) {
                 url = URL(url, connection.getHeaderField("Location") ?: throw IOException("Redirect without location"))
                 return@repeat
             }
             if (code !in 200..299) throw IOException("HTTP $code")
-            return connection.inputStream.use { it.readLimited(limit) }
+            return connection.inputStream.use { it.readLimited(limit, stopAfter?.toByteArray()) }
         } finally { connection.disconnect() }
     }
     throw IOException("Too many redirects")
 }
 
-private fun InputStream.readLimited(limit: Int): ByteArray {
+private fun InputStream.readLimited(limit: Int, stopAfter: ByteArray? = null): ByteArray {
     val out = ByteArrayOutputStream()
     val buffer = ByteArray(16 * 1024)
     while (true) {
         val read = read(buffer)
         if (read < 0) break
+        val start = maxOf(0, out.size() - (stopAfter?.size ?: 0))
         out.write(buffer, 0, read)
+        if (stopAfter != null && out.toByteArray().contains(stopAfter, start)) break
         if (out.size() > limit) throw IOException("Response too large")
     }
     return out.toByteArray()
 }
+
+private fun ByteArray.contains(part: ByteArray, from: Int): Boolean =
+    (from..size - part.size).any { at -> part.indices.all { this[at + it] == part[it] } }
 
 internal fun encodeSources(sources: List<RssSource>): String = JSONArray().apply {
     sources.forEach { put(JSONObject().put("url", it.url).put("title", it.title)) }

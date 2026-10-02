@@ -5,6 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -14,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,6 +45,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -98,7 +102,12 @@ internal fun FolderPanel(
     onMoveFolder: (Int) -> Unit, onDisband: () -> Unit, transparency: Float = DEFAULT_FOLDER_TRANSPARENCY,
     /** Centre of the folder's Home icon in root coordinates; the panel grows out of it. */
     origin: Offset? = null,
+    /** Every app and folder, for ticking the folder's apps in a list. */
+    allApps: List<AppEntry> = emptyList(), folders: List<FolderEntry> = emptyList(),
+    onSetApps: (List<String>) -> Unit = {},
 ) {
+    var choosingApps by rememberSaveable(folder.id) { mutableStateOf(false) }
+    var addingApps by rememberSaveable(folder.id) { mutableStateOf(false) }
     val opening = remember(folder.id) { Animatable(0f) }
     LaunchedEffect(folder.id) { opening.animateTo(1f, spring(dampingRatio = .82f, stiffness = Spring.StiffnessMediumLow)) }
     var panelBounds by remember { mutableStateOf(Rect.Zero) }
@@ -181,7 +190,8 @@ internal fun FolderPanel(
                         Icon(Icons.Rounded.Edit, stringResource(R.string.rename_folder), Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .6f))
                     }
-                    FolderMenu(folderDestinations, onMoveFolder, onDisband)
+                    FolderMenu(folderDestinations, onMoveFolder, onDisband, onChooseApps = { choosingApps = true },
+                        onAddApps = { addingApps = true })
                 }
                 HorizontalPager(pager, Modifier.padding(top = 12.dp).size(gridWidth, gridHeight).testTag("folder-pages"),
                     pageSpacing = FolderPadding, key = { it }) { folderPage ->
@@ -200,17 +210,90 @@ internal fun FolderPanel(
         }
       }
     }
+    if (choosingApps) FolderAppsDialog(folder, allApps, folders, onDismiss = { choosingApps = false }) {
+        choosingApps = false; onSetApps(it)
+    }
+    if (addingApps) FolderAppsDialog(folder, allApps, folders, adding = true, onDismiss = { addingApps = false }) {
+        addingApps = false; onSetApps(folder.appIds + it)
+    }
+}
+
+/**
+ * Every app with a tick for those in [folder]. Apps from another folder or from Home move in; apps
+ * unticked go back to Home. While [adding], only apps outside the folder show, none ticked, and
+ * [onSave] receives just those ticked.
+ */
+@Composable
+private fun FolderAppsDialog(folder: FolderEntry, apps: List<AppEntry>, folders: List<FolderEntry>,
+    adding: Boolean = false, onDismiss: () -> Unit, onSave: (List<String>) -> Unit) {
+    var chosen by rememberSaveable(folder.id, adding) { mutableStateOf(if (adding) emptyList() else folder.appIds) }
+    var query by rememberSaveable { mutableStateOf("") }
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
+    // The folder's apps first, in its order, then the rest by name.
+    val sorted = remember(apps, folder.appIds, locale) {
+        val collator = java.text.Collator.getInstance(locale)
+        val members = folder.appIds.withIndex().associate { (index, id) -> id to index }
+        apps.filterNot { adding && it.id in members }
+            .sortedWith(compareBy<AppEntry> { members[it.id] ?: Int.MAX_VALUE }.thenComparator { a, b -> collator.compare(a.label, b.label) })
+    }
+    val shown = remember(sorted, query) { sorted.filter { it.label.contains(query.trim(), ignoreCase = true) } }
+    val folderOf = remember(folders) { folders.flatMap { other -> other.appIds.map { it to other } }.toMap() }
+    AlertDialog(onDismissRequest = onDismiss, modifier = Modifier.testTag("folder-apps-dialog"),
+        title = { Text(if (adding) stringResource(R.string.folder_add_apps_to, folder.title) else folder.title,
+            maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        text = {
+            Column {
+                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().testTag("folder-apps-search"), singleLine = true,
+                    placeholder = { Text(stringResource(R.string.search_apps)) }, leadingIcon = { Icon(Icons.Rounded.Search, null) })
+                if (shown.isEmpty()) Text(stringResource(R.string.folder_no_apps_match), Modifier.padding(top = 16.dp),
+                    style = MaterialTheme.typography.bodyMedium)
+                LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp).padding(top = 8.dp)) {
+                    items(shown, key = { it.id }) { app ->
+                        val ticked = app.id in chosen
+                        val toggle = { chosen = if (ticked) chosen - app.id else chosen + app.id }
+                        Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(12.dp))
+                            .clickable(onClick = toggle).testTag("folder-apps-${app.id}"),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(ticked, { toggle() })
+                            Image(app.icon.asImageBitmap(), null, Modifier.size(36.dp).clip(RoundedCornerShape(9.dp)))
+                            Column(Modifier.padding(start = 12.dp).weight(1f)) {
+                                Text(app.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                val other = folderOf[app.id]?.takeIf { it.id != folder.id }
+                                val detail = listOfNotNull(other?.let { stringResource(R.string.folder_app_in, it.title) },
+                                    if (app.isWork) profileName(app.profileLabel) else null).joinToString(" · ")
+                                if (detail.isNotEmpty()) Text(detail, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { onSave(chosen) }, Modifier.testTag("folder-apps-save"),
+            enabled = !adding || chosen.isNotEmpty()) {
+            Text(when {
+                !adding -> stringResource(R.string.save)
+                chosen.isEmpty() -> stringResource(R.string.folder_add_apps)
+                else -> pluralStringResource(R.plurals.folder_add_count, chosen.size, chosen.size)
+            })
+        } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } })
 }
 
 /** Actions for the whole folder; single apps move out by dragging them. */
 @Composable
-private fun FolderMenu(destinations: List<Int>, onMove: (Int) -> Unit, onDisband: () -> Unit) {
+private fun FolderMenu(destinations: List<Int>, onMove: (Int) -> Unit, onDisband: () -> Unit, onChooseApps: () -> Unit,
+    onAddApps: () -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { open = true }, Modifier.testTag("folder-options")) {
             Icon(Icons.Rounded.MoreVert, stringResource(R.string.folder_options))
         }
         DropdownMenu(open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(text = { Text(stringResource(R.string.folder_add_apps)) },
+                onClick = { open = false; onAddApps() }, modifier = Modifier.testTag("folder-add-apps"))
+            DropdownMenuItem(text = { Text(stringResource(R.string.folder_choose_apps)) },
+                onClick = { open = false; onChooseApps() }, modifier = Modifier.testTag("folder-choose-apps"))
             destinations.distinctBy(::homeCellPage).forEach { destination ->
                 val destinationPage = homeCellPage(destination)
                 DropdownMenuItem(text = { Text(if (destinationPage == -1) stringResource(R.string.move_to_leading_page)

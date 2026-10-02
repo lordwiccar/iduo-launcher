@@ -173,6 +173,15 @@
     <string name="close_folder">Close folder</string>
     <string name="folder_options">Folder options</string>
     <string name="disband_folder">Ungroup folder</string>
+    <string name="folder_add_apps">Add apps</string>
+    <string name="folder_add_apps_to">Add apps to %1$s</string>
+    <plurals name="folder_add_count">
+        <item quantity="one">Add %1$d app</item>
+        <item quantity="other">Add %1$d apps</item>
+    </plurals>
+    <string name="folder_choose_apps">Choose apps</string>
+    <string name="folder_app_in">In %1$s</string>
+    <string name="folder_no_apps_match">No apps match</string>
     <string name="folder_transparency">Folder background transparency</string>
     <string name="all_apps_view">All apps view</string>
     <string name="all_apps_view_list">List</string>
@@ -382,6 +391,8 @@
     <string name="status_airplane_short">Airplane</string>
     <string name="status_cellular">Cellular signal %1$d of 4</string>
     <string name="status_cellular_unavailable">Cellular signal unavailable</string>
+    <string name="status_battery_saver">Battery saver on</string>
+    <string name="status_mobile_data">Mobile data %1$s</string>
     <string name="customize_about">About</string>
     <string name="customize_about_detail">Version, developer and licences</string>
     <string name="customize_changelog">Changelog</string>

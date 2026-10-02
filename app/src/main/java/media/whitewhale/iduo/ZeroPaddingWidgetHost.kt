@@ -10,7 +10,11 @@ import android.util.SizeF
 import android.view.MotionEvent
 import androidx.compose.ui.geometry.Offset
 
-internal class ZeroPaddingWidgetHost(context: Context, hostId: Int) : AppWidgetHost(context, hostId) {
+internal class ZeroPaddingWidgetHost(context: Context, hostId: Int, private val providersChanged: () -> Unit = {}) :
+    AppWidgetHost(context, hostId) {
+    /** Android reports installed, updated or removed widget providers here. */
+    override fun onProvidersChanged() = providersChanged()
+
     override fun onCreateView(context: Context, appWidgetId: Int,
         appWidget: AppWidgetProviderInfo): AppWidgetHostView =
         ZeroPaddingWidgetHostView(context)

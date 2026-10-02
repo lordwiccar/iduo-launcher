@@ -175,6 +175,17 @@
     <string name="close_folder">Zavrieť priečinok</string>
     <string name="folder_options">Možnosti priečinka</string>
     <string name="disband_folder">Zrušiť priečinok</string>
+    <string name="folder_add_apps">Pridať aplikácie</string>
+    <string name="folder_add_apps_to">Pridať aplikácie do priečinka %1$s</string>
+    <plurals name="folder_add_count">
+        <item quantity="one">Pridať %1$d aplikáciu</item>
+        <item quantity="few">Pridať %1$d aplikácie</item>
+        <item quantity="many">Pridať %1$d aplikácie</item>
+        <item quantity="other">Pridať %1$d aplikácií</item>
+    </plurals>
+    <string name="folder_choose_apps">Vybrať aplikácie</string>
+    <string name="folder_app_in">V priečinku %1$s</string>
+    <string name="folder_no_apps_match">Žiadna aplikácia nezodpovedá</string>
     <string name="folder_transparency">Priehľadnosť pozadia priečinka</string>
     <string name="all_apps_view">Zobrazenie všetkých aplikácií</string>
     <string name="all_apps_view_list">Zoznam</string>
@@ -397,6 +408,8 @@
     <string name="status_airplane_short">Lietadlo</string>
     <string name="status_cellular">Mobilný signál %1$d zo 4</string>
     <string name="status_cellular_unavailable">Mobilný signál nie je dostupný</string>
+    <string name="status_battery_saver">Šetrič batérie je zapnutý</string>
+    <string name="status_mobile_data">Mobilné dáta %1$s</string>
     <string name="customize_about">O aplikácii</string>
     <string name="customize_about_detail">Verzia, vývojár a licencie</string>
     <string name="customize_changelog">Changelog</string>
