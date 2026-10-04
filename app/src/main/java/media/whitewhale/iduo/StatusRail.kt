@@ -71,7 +71,11 @@ private fun statusDescription(status: DeviceStatus, now: LocalDateTime, formats:
         if (status.powerSave) stringResource(R.string.status_battery_saver) else null,
         if (status.wifiConnected) status.wifiLevel?.let { stringResource(R.string.status_wifi_level, it) } ?: stringResource(R.string.status_wifi)
         else stringResource(R.string.status_wifi_off),
-        if (status.airplane) stringResource(R.string.status_airplane) else status.cellularLevel?.let { stringResource(R.string.status_cellular, it) }
+        if (status.airplane) stringResource(R.string.status_airplane)
+        else if (status.simLevels.size >= 2) status.simLevels.mapIndexed { index, level ->
+            level?.let { stringResource(R.string.status_sim_signal, index + 1, it) } ?: stringResource(R.string.status_cellular_unavailable)
+        }.joinToString(". ")
+        else status.cellularLevel?.let { stringResource(R.string.status_cellular, it) }
             ?: stringResource(R.string.status_cellular_unavailable),
         status.cellularNetwork?.takeIf { status.cellularData && !status.wifiConnected && !status.airplane }
             ?.let { stringResource(R.string.status_mobile_data, it) },
@@ -136,8 +140,10 @@ fun StatusRail(
                 maxLines = 1, softWrap = false, overflow = TextOverflow.Clip, style = labelStyle)
             if (!compact) Text(now.format(dateFormatter), color = Color.White.copy(alpha = .94f), fontSize = detailSize,
                 fontWeight = FontWeight.Medium, maxLines = 1, softWrap = false, overflow = TextOverflow.Clip, style = labelStyle)
-            // Above the dock, the battery level sits in the ring's top opening.
-            StatusRing(status, Modifier.padding(top = 4.dp).size(visualSize), percent = true)
+            // Above the dock, the battery level sits in the ring's top opening; a second SIM's
+            // signal takes a row of dots below the ring.
+            StatusRing(status, Modifier.padding(top = 4.dp).width(visualSize)
+                .height(if (status.simLevels.size >= 2 && !status.airplane) visualSize * 1.13f else visualSize), percent = true)
         }
     }
 }
@@ -146,14 +152,13 @@ fun StatusRail(
 private const val RING_TOP_GAP = 84f
 /** Where the ring opens at the bottom, for the signal dots, in degrees. */
 private const val RING_BOTTOM_GAP = 112f
-/** The wider bottom opening above the dock, room for the network's generation between the dots. */
-private const val RING_BOTTOM_GAP_LABELLED = 144f
 
 /**
  * Battery as a thick ring open at the top and bottom, filling clockwise from its lower left end,
- * green while charging and yellow in battery saver; cellular signal as dots across the bottom
+ * green while charging and yellow in battery saver; cellular signal as four dots across the bottom
  * opening. Inside it Wi-Fi, or without Wi-Fi mobile data's generation or airplane mode. With
- * [percent], the battery level sits in the top opening, or in the middle when nothing else is there.
+ * [percent], the battery level sits in the top opening, or in the middle when nothing else is there,
+ * and a second SIM's signal is a second row of dots below the ring, in either place.
  */
 @Composable
 private fun StatusRing(status: DeviceStatus, modifier: Modifier, percent: Boolean = false) {
@@ -180,7 +185,7 @@ private fun StatusRing(status: DeviceStatus, modifier: Modifier, percent: Boolea
         // left edge, up and over the top opening, down to the bottom opening's right edge.
         // Without the battery level in it, the ring closes at the top.
         val topGap = if (percent && centre != RingCentre.BATTERY) RING_TOP_GAP else 0f
-        val bottomGap = if (percent) RING_BOTTOM_GAP_LABELLED else RING_BOTTOM_GAP
+        val bottomGap = RING_BOTTOM_GAP
         val start = 90f + bottomGap / 2
         val leftSweep = 270f - topGap / 2 - start
         val rightStart = 270f + topGap / 2
@@ -221,33 +226,23 @@ private fun StatusRing(status: DeviceStatus, modifier: Modifier, percent: Boolea
                 shadow = Shadow(Color.Black.copy(alpha = .3f), Offset(0f, 1f), 3f)))
             drawText(text, topLeft = Offset(center.x - text.size.width / 2f, center.y + w * .03f - text.size.height / 2f))
         }
+        // Cellular signal: four dots across the bottom opening, lit left to right; with two SIMs the
+        // first SIM's, and the second's in the same curve just below.
         val dotRadius = w * .042f
-        if (percent) {
-            // Above the dock: four dots for the signal, two each side of the network's generation.
-            val network = status.cellularNetwork?.takeUnless { status.airplane }
-            val activeDots = if (cellularVisual is CellularSignalVisual.Available) status.cellularLevel?.coerceIn(0, 4) ?: 0 else 0
-            val spread = bottomGap / 2 * .76
-            val places = if (network != null) listOf(-1.0, -.7, .7, 1.0) else listOf(-.75, -.25, .25, .75)
-            places.forEachIndexed { i, place ->
-                val angle = Math.toRadians(90.0 - place * spread)
-                val dotCenter = Offset(center.x + radius * cos(angle).toFloat(), center.y + radius * sin(angle).toFloat())
-                drawCircle(Color.White.copy(alpha = if (i < activeDots) 1f else .3f), dotRadius, dotCenter)
-            }
-            if (network != null) {
-                val text = measurer.measure(network, TextStyle(color = Color.White, fontSize = (w * .2f).toSp(),
-                    fontWeight = FontWeight.Bold, shadow = Shadow(Color.Black.copy(alpha = .3f), Offset(0f, 1f), 3f)))
-                drawText(text, topLeft = Offset(center.x - text.size.width / 2f, center.y + radius - w * .04f - text.size.height / 2f))
-            }
-        } else {
-            // Cellular signal: five dots across the bottom opening, lit left to right.
-            val activeDots = (cellularVisual as? CellularSignalVisual.Available)?.activeDots ?: 0
-            for (i in 0..4) {
+        fun signalDots(lit: Int, below: Float) {
+            for (i in 0..3) {
                 // The dots stay clear of the ring's rounded ends.
-                val angle = Math.toRadians((90.0 + RING_BOTTOM_GAP / 2 * .62) - i * (RING_BOTTOM_GAP * .62 / 4))
-                val dotCenter = Offset(center.x + radius * cos(angle).toFloat(), center.y + radius * sin(angle).toFloat())
-                drawCircle(Color.White.copy(alpha = if (i < activeDots) 1f else .3f), dotRadius, dotCenter)
+                val angle = Math.toRadians((90.0 + RING_BOTTOM_GAP / 2 * .62) - i * (RING_BOTTOM_GAP * .62 / 3))
+                val dotCenter = Offset(center.x + radius * cos(angle).toFloat(), center.y + below + radius * sin(angle).toFloat())
+                drawCircle(Color.White.copy(alpha = if (i < lit) 1f else .3f), dotRadius, dotCenter)
             }
         }
+        // In the cover's top corner the second row hangs just below the ring, outside its measured size.
+        val dualSim = status.simLevels.size >= 2 && !status.airplane
+        val firstLevel = if (dualSim) status.simLevels[0]?.coerceIn(0, 4) ?: 0
+            else (cellularVisual as? CellularSignalVisual.Available)?.activeDots ?: 0
+        signalDots(firstLevel, 0f)
+        if (dualSim) signalDots(status.simLevels[1]?.coerceIn(0, 4) ?: 0, w * .16f)
     }
 }
 

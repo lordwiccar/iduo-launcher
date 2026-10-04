@@ -390,6 +390,7 @@
     <string name="status_airplane_short">Flugmodus</string>
     <string name="status_cellular">Mobilfunksignal %1$d von 4</string>
     <string name="status_cellular_unavailable">Mobilfunksignal nicht verfügbar</string>
+    <string name="status_sim_signal">SIM %1$d Signal %2$d von 4</string>
     <string name="status_battery_saver">Energiesparmodus an</string>
     <string name="status_mobile_data">Mobile Daten %1$s</string>
     <string name="customize_about">Über die App</string>

@@ -44,7 +44,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -172,7 +174,9 @@ internal fun FolderPanel(
             Column(Modifier.padding(FolderPadding), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (editing) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     val focus = remember { FocusRequester() }
-                    OutlinedTextField(title, { title = it }, Modifier.weight(1f).focusRequester(focus).testTag("folder-name-field"),
+                    // Start with the cursor after the current name, ready to append or delete.
+                    var field by remember { mutableStateOf(TextFieldValue(title, TextRange(title.length))) }
+                    OutlinedTextField(field, { field = it; title = it.text }, Modifier.weight(1f).focusRequester(focus).testTag("folder-name-field"),
                         singleLine = true, label = { Text(stringResource(R.string.folder_name)) },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = { commitTitle() }))

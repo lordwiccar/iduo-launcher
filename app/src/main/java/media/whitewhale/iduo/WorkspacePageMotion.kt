@@ -4,8 +4,8 @@ import kotlin.math.abs
 
 /**
  * Maps the native full-width pager position to the scroll distance shown by the
- * expanded workspace. Home pages advance by one pane while the pages outside
- * Home still enter and leave across the full pager width.
+ * expanded workspace. Home pages advance by one pane; the left page and the page after
+ * Home move by their own strides, a pane when they sit beside Home.
  */
 internal data class WorkspacePageMotion(
     val firstHome: Int,
@@ -14,11 +14,14 @@ internal data class WorkspacePageMotion(
     val homeStride: Float,
     /** How far the page after Home moves in: the full width, or one pane when it sits beside Home. */
     val libraryStride: Float = pageWidth,
+    /** How far the left page moves in: the full width, or one pane when it sits beside Home. */
+    val leftStride: Float = pageWidth,
 ) {
     init {
         require(homePages > 0)
         require(pageWidth.isFinite() && pageWidth > 0f)
         require(homeStride.isFinite() && homeStride > 0f)
+        require(leftStride.isFinite() && leftStride > 0f)
     }
 
     private val lastHome = homePages - 1
@@ -28,7 +31,7 @@ internal data class WorkspacePageMotion(
     fun offset(position: Float): Float {
         val logical = position - firstHome
         return when {
-            logical < 0f -> logical * pageWidth
+            logical < 0f -> logical * leftStride
             logical <= lastHome -> logical * homeStride
             else -> lastHomeOffset + (logical - lastHome) * libraryStride
         }
@@ -37,7 +40,7 @@ internal data class WorkspacePageMotion(
     /** Physical pager position for a visual scroll offset. */
     fun position(offset: Float): Float {
         val logical = when {
-            offset < 0f -> offset / pageWidth
+            offset < 0f -> offset / leftStride
             offset <= lastHomeOffset && lastHome > 0 -> offset / homeStride
             else -> lastHome + (offset - lastHomeOffset) / libraryStride
         }

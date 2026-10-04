@@ -27,8 +27,8 @@ class StatusSignalMappingTest {
         assertEquals(WifiSignalVisual.Disconnected, wifiSignalVisual(connected = false, level = 4))
     }
 
-    @Test fun cellularKeepsFiveDotConversionForLevelsZeroThroughFour() {
-        assertEquals(listOf(0, 2, 3, 4, 5), (0..4).map { level ->
+    @Test fun cellularLightsOneOfFourDotsPerLevel() {
+        assertEquals(listOf(0, 1, 2, 3, 4), (0..4).map { level ->
             (cellularSignalVisual(level, airplane = false) as CellularSignalVisual.Available).activeDots
         })
     }
@@ -54,8 +54,7 @@ class StatusSignalMappingTest {
         assertTrue(airplaneOutside(wifiAndAirplane, RingCentre.WIFI))
         val mobile = DeviceStatus(battery = 50, cellularData = true, cellularNetwork = "5G")
         assertEquals(RingCentre.CELLULAR, ringCentre(mobile, percent = false))
-        // Above the dock the generation sits among the signal dots instead.
-        assertEquals(RingCentre.BATTERY, ringCentre(mobile, percent = true))
+        assertEquals(RingCentre.CELLULAR, ringCentre(mobile, percent = true))
         assertEquals(RingCentre.AIRPLANE, ringCentre(DeviceStatus(battery = 50, airplane = true), percent = true))
         assertEquals(RingCentre.BATTERY, ringCentre(DeviceStatus(battery = 50), percent = true))
         assertEquals(RingCentre.NONE, ringCentre(DeviceStatus(battery = 50), percent = false))

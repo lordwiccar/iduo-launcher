@@ -12,9 +12,11 @@ import android.net.wifi.SupplicantState
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
+import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import android.telephony.SignalStrength
+import android.telephony.SubscriptionManager
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyDisplayInfo
 import android.telephony.TelephonyManager
@@ -35,6 +37,8 @@ data class DeviceStatus(
     /** Whether mobile data carries the connection, and its generation, such as 5G, when Android tells it. */
     val cellularData: Boolean = false,
     val cellularNetwork: String? = null,
+    /** Each SIM's signal, 0 to 4, by slot, on a phone with two SIMs in use; empty otherwise. */
+    val simLevels: List<Int?> = emptyList(),
 )
 
 /** Observe only while visible. No location, phone-state, or notification access required. */
@@ -48,6 +52,7 @@ class DeviceStatusMonitor(private val context: Context) : DefaultLifecycleObserv
     private var networkRegistered = false
     private var phoneRegistered = false
     private var displayInfoRegistered = false
+    private val simCallbacks = mutableListOf<Pair<TelephonyManager, TelephonyCallback>>()
     private var receiverRegistered = false
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) = updateConnection()
@@ -89,6 +94,7 @@ class DeviceStatusMonitor(private val context: Context) : DefaultLifecycleObserv
         phoneRegistered = runCatching { phone.registerTelephonyCallback(context.mainExecutor, phoneCallback); true }.getOrDefault(false)
         displayInfoRegistered = runCatching { phone.registerTelephonyCallback(context.mainExecutor, displayInfoCallback); true }.getOrDefault(false)
         mutable.update { it.copy(cellularLevel = runCatching { phone.signalStrength?.level }.getOrNull()) }
+        observeSims()
         updateConnection()
     }
 
@@ -107,7 +113,35 @@ class DeviceStatusMonitor(private val context: Context) : DefaultLifecycleObserv
             cellularData = cellular) }
     }
 
+    /**
+     * With two SIMs in use, follows each one's signal. Android names a slot's subscription without
+     * phone-state access only from Android 14; earlier versions keep the single signal.
+     */
+    private fun observeSims() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
+        val slots = runCatching { phone.activeModemCount }.getOrDefault(1)
+        if (slots < 2) return
+        val sims = (0 until slots).mapNotNull { slot ->
+            if (runCatching { phone.getSimState(slot) }.getOrNull() != TelephonyManager.SIM_STATE_READY) return@mapNotNull null
+            val id = SubscriptionManager.getSubscriptionId(slot)
+            if (!SubscriptionManager.isValidSubscriptionId(id)) null else runCatching { phone.createForSubscriptionId(id) }.getOrNull()
+        }
+        if (sims.size < 2) { mutable.update { it.copy(simLevels = emptyList()) }; return }
+        mutable.update { it.copy(simLevels = sims.map { sim -> runCatching { sim.signalStrength?.level }.getOrNull() }) }
+        sims.forEachIndexed { index, sim ->
+            val callback = object : TelephonyCallback(), TelephonyCallback.SignalStrengthsListener {
+                override fun onSignalStrengthsChanged(signalStrength: SignalStrength) {
+                    mutable.update { state -> state.copy(simLevels = state.simLevels.toMutableList()
+                        .also { if (index < it.size) it[index] = signalStrength.level.coerceIn(0, 4) }) }
+                }
+            }
+            if (runCatching { sim.registerTelephonyCallback(context.mainExecutor, callback) }.isSuccess) simCallbacks += sim to callback
+        }
+    }
+
     override fun onStop(owner: LifecycleOwner) {
+        simCallbacks.forEach { (sim, callback) -> runCatching { sim.unregisterTelephonyCallback(callback) } }
+        simCallbacks.clear()
         if (networkRegistered) runCatching { connection.unregisterNetworkCallback(networkCallback) }
         if (phoneRegistered) runCatching { phone.unregisterTelephonyCallback(phoneCallback) }
         if (displayInfoRegistered) runCatching { phone.unregisterTelephonyCallback(displayInfoCallback) }

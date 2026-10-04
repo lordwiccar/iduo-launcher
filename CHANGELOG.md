@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.3
+
+Fifth release on Google Play (version code 6).
+
+### New features
+- With two SIMs in use, the second SIM's signal shows as a second row of dots, below the status ring above the dock and in the cover screen's top corner (Android 14 and later).
+
+### Look and feel
+- Without Wi-Fi, the mobile network (5G, 4G) is back in the middle of the status ring, with four signal dots below.
+- Menus, text fields and dialogs have rounded corners and iDuo's blue-grey colours instead of Material's lilac.
+- On the inner screen the news page takes one half, beside Home 1, and pages sliding out to the left fade away smoothly.
+
+### Fixes
+- Home no longer stays stuck between two pages when the phone is folded, unfolded or rotated while a swipe is settling.
+- Renaming a folder puts the cursor after its name.
+
 ## 1.1.2
 
 Fourth release on Google Play (version code 5).

@@ -30,7 +30,7 @@ internal sealed interface CellularSignalVisual {
 internal fun cellularSignalVisual(level: Int?, airplane: Boolean): CellularSignalVisual = when {
     airplane -> CellularSignalVisual.Airplane
     level == null -> CellularSignalVisual.Unavailable
-    else -> CellularSignalVisual.Available((level.coerceIn(0, 4) * 5 + 3) / 4)
+    else -> CellularSignalVisual.Available(level.coerceIn(0, 4))
 }
 
 /** The mobile network's generation as phones show it, such as 5G or 4G+, or null when unknown. */
@@ -54,12 +54,11 @@ internal enum class RingCentre { WIFI, CELLULAR, AIRPLANE, BATTERY, NONE }
 
 /**
  * Wi-Fi while connected; otherwise mobile data's generation, then airplane mode, and in a ring
- * that holds the battery level ([percent]), the level itself. That ring always shows the network's
- * generation among its signal dots, so its middle leaves it out.
+ * that holds the battery level ([percent]), the level itself.
  */
 internal fun ringCentre(status: DeviceStatus, percent: Boolean): RingCentre = when {
     status.wifiConnected -> RingCentre.WIFI
-    !percent && status.cellularData && status.cellularNetwork != null && !status.airplane -> RingCentre.CELLULAR
+    status.cellularData && status.cellularNetwork != null && !status.airplane -> RingCentre.CELLULAR
     status.airplane -> RingCentre.AIRPLANE
     percent -> RingCentre.BATTERY
     else -> RingCentre.NONE

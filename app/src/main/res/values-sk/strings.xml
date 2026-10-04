@@ -408,6 +408,7 @@
     <string name="status_airplane_short">Lietadlo</string>
     <string name="status_cellular">Mobilný signál %1$d zo 4</string>
     <string name="status_cellular_unavailable">Mobilný signál nie je dostupný</string>
+    <string name="status_sim_signal">SIM %1$d signál %2$d zo 4</string>
     <string name="status_battery_saver">Šetrič batérie je zapnutý</string>
     <string name="status_mobile_data">Mobilné dáta %1$s</string>
     <string name="customize_about">O aplikácii</string>

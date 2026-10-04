@@ -87,6 +87,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -116,10 +117,21 @@ fun DuoTheme(dark: Boolean = false, content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalDuoPalette provides palette) {
         MaterialTheme(colorScheme = if (dark) darkColorScheme(primary = Color(0xFF9BC5D7), onPrimary = Color(0xFF12303D),
             surface = Color(0xFF17272E), onSurface = palette.ink, secondary = Color(0xFFD1BE98),
-            secondaryContainer = Color(0xFF314852), onSecondaryContainer = palette.ink)
+            secondaryContainer = Color(0xFF314852), onSecondaryContainer = palette.ink,
+            // Menus and dialogs draw on these; Material's defaults would tint them lilac.
+            surfaceContainerLowest = Color(0xFF101C21), surfaceContainerLow = Color(0xFF1A2B32),
+            surfaceContainer = Color(0xFF1E3038), surfaceContainerHigh = Color(0xFF23363E),
+            surfaceContainerHighest = Color(0xFF283C45))
         else lightColorScheme(primary = Color(0xFF30596D), onPrimary = Color.White,
             surface = Color(0xFFF4F7F8), onSurface = palette.ink, secondary = Color(0xFF84775F),
-            secondaryContainer = Color(0xFFDCE8ED), onSecondaryContainer = palette.ink), content = content)
+            secondaryContainer = Color(0xFFDCE8ED), onSecondaryContainer = palette.ink,
+            surfaceContainerLowest = Color.White, surfaceContainerLow = Color(0xFFF7FAFB),
+            surfaceContainer = Color(0xFFF0F4F5), surfaceContainerHigh = Color(0xFFEBF0F2),
+            surfaceContainerHighest = Color(0xFFE5ECEE)),
+            // Every menu, field and dialog follows the rounded glass of Home.
+            shapes = Shapes(extraSmall = RoundedCornerShape(16.dp), small = RoundedCornerShape(16.dp),
+                medium = RoundedCornerShape(20.dp), large = RoundedCornerShape(24.dp), extraLarge = RoundedCornerShape(28.dp)),
+            content = content)
     }
 }
 
@@ -224,6 +236,19 @@ fun LauncherScreen(
     val pageGestures = remember(nativePager) { PageGestureLimits(nativePager) }
     SideEffect { pageGestures.editing = drag.active || widgetSession != null || resizeSlot != null }
     val pageFling = androidx.compose.foundation.pager.PagerDefaults.flingBehavior(nativePager, pagerSnapDistance = pageGestures)
+    // A settle that is cut short, by a window resize restarting the gesture handler or an
+    // animation cancelled while Home pauses, must not leave Home resting between two pages.
+    LaunchedEffect(nativePager) {
+        snapshotFlow { !nativePager.isScrollInProgress && kotlin.math.abs(nativePager.currentPageOffsetFraction) > .0001f }
+            .distinctUntilChanged().collect { stranded ->
+                if (stranded) try {
+                    nativePager.animateScrollToPage(nativePager.currentPage)
+                } catch (interrupted: kotlinx.coroutines.CancellationException) {
+                    // A new swipe took over; it settles on its own.
+                    if (!kotlinx.coroutines.currentCoroutineContext().isActive) throw interrupted
+                }
+            }
+    }
     val scope = rememberCoroutineScope()
     var previousHomePages by remember { mutableIntStateOf(homePages) }
     var previousEditRevision by remember { mutableIntStateOf(state.editRevision) }
@@ -547,9 +572,11 @@ fun LauncherScreen(
             val homeStride = panelWidth - leftColumnOrigin
             val bottomSpace = if (isDefaultHome) 44.dp else 88.dp
             val workspaceMotion = if (geometry.expanded) remember(firstHome, visibleHomePages, pagerWidth, homeStride, density, state.libraryFolders) {
-                // The library's folders fill one pane beside the last Home page, like another page.
+                // The library's folders fill one pane beside the last Home page, like another page;
+                // the left page always takes one pane beside the first.
                 WorkspacePageMotion(firstHome, visibleHomePages, with(density) { pagerWidth.toPx() }, with(density) { homeStride.toPx() },
-                    libraryStride = with(density) { (if (state.libraryFolders) homeStride else pagerWidth).toPx() })
+                    libraryStride = with(density) { (if (state.libraryFolders) homeStride else pagerWidth).toPx() },
+                    leftStride = with(density) { homeStride.toPx() })
             } else null
             val dockScroll = rememberScrollState()
             val dockShown = dockMode == DockMode.SHOWN || (dockMode == DockMode.SLIDE && (dockOpen || drag.active))
@@ -1471,6 +1498,15 @@ private fun ExpandedWorkspace(
             IntOffset((x - motion.offset(physicalPosition)).roundToInt(), 0)
         }
     }
+    // A pane leaving on the left fades out over the last half of its way, so it never cuts off
+    // while part of it still shows, and one parked just past the edge stays invisible.
+    val fadeFloor = initialHomeOrigin - 2f * stride
+    val placeFading: Modifier.(Float) -> Modifier = { x ->
+        place(x).graphicsLayer {
+            val physicalPosition = nativePager.currentPage + nativePager.currentPageOffsetFraction
+            alpha = ((x - motion.offset(physicalPosition) - fadeFloor) / (stride * .5f)).coerceIn(0f, 1f)
+        }
+    }
     val showLeftPage by remember(nativePager, firstHome) {
         derivedStateOf(structuralEqualityPolicy()) {
             firstHome > 0 && nativePager.currentPage + nativePager.currentPageOffsetFraction <= firstHome + .25f
@@ -1495,7 +1531,8 @@ private fun ExpandedWorkspace(
     Box(Modifier.fillMaxSize().clipToBounds().testTag("expanded-workspace")) {
         if (showLeftPage) {
             key("left-page-pane") {
-                Box(Modifier.place(-viewportWidth).fillMaxSize()) {
+                // One pane wide, so the leading Home page stays in view beside it.
+                Box(Modifier.placeFading(-stride).width(with(density) { stride.toDp() }).fillMaxHeight()) {
                     NewsPage(Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = bottomSpace),
                         active = nativePager.currentPage < firstHome, mode = state.leftPage)
                 }
@@ -1504,7 +1541,7 @@ private fun ExpandedWorkspace(
 
         if (showLeading) {
             key("expanded-leading-home") {
-                Box(Modifier.place(leadingX).width((geometry.gridWidth + 16f).dp).fillMaxHeight()
+                Box(Modifier.placeFading(leadingX).width((geometry.gridWidth + 16f).dp).fillMaxHeight()
                     .testTag("expanded-leading-home")) {
                     HomePagePane(
                         -1, state, previewSlots, previewLeadingSlots, previewWidgetPlacements, appsById, geometry, contentHeight, bottomSpace,
@@ -1520,7 +1557,7 @@ private fun ExpandedWorkspace(
         visibleHomes.forEach { page ->
             key("expanded-home-$page") {
                 stateHolder.SaveableStateProvider("expanded-home-$page") {
-                    Box(Modifier.place(initialHomeOrigin + page * stride)
+                    Box(Modifier.placeFading(initialHomeOrigin + page * stride)
                         .width((geometry.gridWidth + 16f).dp).fillMaxHeight()) {
                         HomePagePane(
                             page, state, previewSlots, previewLeadingSlots, previewWidgetPlacements, appsById, geometry, contentHeight, bottomSpace,

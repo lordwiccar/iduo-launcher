@@ -408,6 +408,7 @@
     <string name="status_airplane_short">Samolot</string>
     <string name="status_cellular">Sygnał komórkowy %1$d z 4</string>
     <string name="status_cellular_unavailable">Sygnał komórkowy niedostępny</string>
+    <string name="status_sim_signal">SIM %1$d sygnał %2$d z 4</string>
     <string name="status_battery_saver">Oszczędzanie baterii włączone</string>
     <string name="status_mobile_data">Dane komórkowe %1$s</string>
     <string name="customize_about">O aplikacji</string>

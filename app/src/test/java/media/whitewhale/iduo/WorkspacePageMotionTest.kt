@@ -56,6 +56,19 @@ class WorkspacePageMotionTest {
         assertEquals(3f, noDiscover.position(2000f), 0f)
     }
 
+    @Test fun `a one pane left page moves by the home stride`() {
+        val paned = WorkspacePageMotion(1, 3, 1000f, 500f, leftStride = 500f)
+        assertEquals(-500f, paned.offset(0f), 0f)
+        assertEquals(-250f, paned.offset(.5f), 0f)
+        assertEquals(0f, paned.offset(1f), 0f)
+        assertEquals(0f, paned.position(-500f), 0f)
+        assertEquals(500f, paned.stride(0, 1), 0f)
+        for (step in -500..1000) {
+            val position = step / 500f
+            assertEquals(position, paned.position(paned.offset(position)), .00001f)
+        }
+    }
+
     @Test fun `half width home panes preserve one to one visual input`() {
         val startingPositions = listOf(.25f, 1f, 1.5f, 2.75f, 3.25f)
         val deltas = listOf(-120f, -10f, 0f, 35f, 140f)
