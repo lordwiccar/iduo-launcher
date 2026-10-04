@@ -495,6 +495,8 @@
     <string name="settings_section_screen">Obrazovka</string>
     <string name="settings_cover_rotation">Otáčať vonkajší displej</string>
     <string name="settings_cover_rotation_detail">Plocha na vonkajšom displeji sa otáča s telefónom. Zobrazenie na šírku zatiaľ nemusí fungovať podľa očakávania.</string>
+    <string name="settings_fold_animation">Animácia skladania</string>
+    <string name="settings_fold_animation_detail">Plocha sa pri skladaní a rozkladaní telefónu rozostrí a nakloní a na druhej obrazovke sa potom zaostrí.</string>
     <string name="settings_experimental">Experimentálne</string>
     <string name="all_apps_view_home">Na plochách</string>
     <string name="settings_all_apps_detail">Všetky aplikácie sú za poslednou plochou, ako zoznam alebo strany ikon.</string>

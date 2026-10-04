@@ -807,6 +807,12 @@ private fun HomePage(state: LauncherState, wide: Boolean, onWideScreen: Boolean,
         GroupDivider()
         SwitchRow(stringResource(R.string.settings_cover_rotation), stringResource(R.string.settings_cover_rotation_detail),
             state.coverRotation, model::setCoverRotation, "cover-rotation-switch", badge = stringResource(R.string.settings_experimental))
+        // The effect needs runtime shaders, which arrived in Android 13.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            GroupDivider()
+            SwitchRow(stringResource(R.string.settings_fold_animation), stringResource(R.string.settings_fold_animation_detail),
+                state.foldAnimation, model::setFoldAnimation, "fold-animation-switch")
+        }
     }
     SectionCaption(stringResource(R.string.all_apps))
     SettingsGroup {

@@ -477,6 +477,8 @@
     <string name="settings_section_screen">Bildschirm</string>
     <string name="settings_cover_rotation">Außendisplay drehen</string>
     <string name="settings_cover_rotation_detail">Der Startbildschirm auf dem Außendisplay dreht sich mit dem Telefon. Das Querformat funktioniert eventuell noch nicht wie erwartet.</string>
+    <string name="settings_fold_animation">Faltanimation</string>
+    <string name="settings_fold_animation_detail">Der Startbildschirm verschwimmt und neigt sich beim Zu- und Aufklappen und wird auf dem anderen Bildschirm wieder scharf.</string>
     <string name="settings_experimental">Experimentell</string>
     <string name="all_apps_view_home">Startseiten</string>
     <string name="settings_all_apps_detail">Alle Apps folgen nach der letzten Startbildschirmseite, als Liste oder als Symbolseiten.</string>

@@ -90,6 +90,8 @@ data class LauncherState(
     val swipeUpSearch: Boolean = true,
     /** Whether the cover screen follows the device's rotation; it stays upright by default. */
     val coverRotation: Boolean = false,
+    /** Home blurs and tilts while the phone folds or unfolds, and comes into focus on the other screen. */
+    val foldAnimation: Boolean = true,
     /** Package of the chosen third-party icon pack, or null for the apps' own icons. */
     val iconPack: String? = null,
     /** Icons chosen by hand for single apps: app id to an icon pack's package and drawing. */
@@ -716,6 +718,10 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         if (statePayloadInvalid) return
         mutable.update { it.copy(coverRotation = value) }; persist()
     }
+    fun setFoldAnimation(value: Boolean) {
+        if (statePayloadInvalid) return
+        mutable.update { it.copy(foldAnimation = value) }; persist()
+    }
     /** Switches the icon pack and redraws every app icon with it. */
     fun setIconPack(packageName: String?) {
         if (statePayloadInvalid || packageName == mutable.value.iconPack) return
@@ -816,6 +822,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             .put("swipeDownShade", s.swipeDownShade)
             .put("swipeUpSearch", s.swipeUpSearch)
             .put("coverRotation", s.coverRotation)
+            .put("foldAnimation", s.foldAnimation)
             .put("iconPack", s.iconPack ?: "")
             .put("iconOverrides", JSONObject().also { all -> s.iconOverrides.forEach { (id, choice) ->
                 all.put(id, JSONObject().put("pack", choice.pack).put("drawable", choice.drawable)) } })
@@ -994,6 +1001,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             swipeDownShade = j.optBoolean("swipeDownShade", true),
             swipeUpSearch = j.optBoolean("swipeUpSearch", true),
             coverRotation = j.optBoolean("coverRotation", false),
+            foldAnimation = j.optBoolean("foldAnimation", true),
             iconPack = j.optString("iconPack").takeIf { it.isNotEmpty() },
             iconOverrides = j.optJSONObject("iconOverrides")?.let { all -> all.keys().asSequence().mapNotNull { id ->
                 all.optJSONObject(id)?.let { item -> IconChoice(item.optString("pack"), item.optString("drawable"))

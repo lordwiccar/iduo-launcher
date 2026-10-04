@@ -478,6 +478,8 @@
     <string name="settings_section_screen">Screen</string>
     <string name="settings_cover_rotation">Rotate the cover screen</string>
     <string name="settings_cover_rotation_detail">Home on the cover screen turns with the phone. Landscape may not work as expected yet.</string>
+    <string name="settings_fold_animation">Folding animation</string>
+    <string name="settings_fold_animation_detail">Home blurs and tilts as you fold or unfold the phone, then comes into focus on the other screen.</string>
     <string name="settings_experimental">Experimental</string>
     <string name="all_apps_view_home">On Home</string>
     <string name="settings_all_apps_detail">All apps sits after the last Home page, as a list or as pages of icons.</string>

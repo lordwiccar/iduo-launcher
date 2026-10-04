@@ -5,6 +5,7 @@
 Fifth release on Google Play (version code 6).
 
 ### New features
+- A folding animation: as you fold or unfold the phone, the half that swings tilts away, blurs and darkens, and Home comes into focus on the other screen. Switch it off under Settings → Home → Screen (Android 13 and later).
 - With two SIMs in use, the second SIM's signal shows as a second row of dots, below the status ring above the dock and in the cover screen's top corner (Android 14 and later).
 
 ### Look and feel
