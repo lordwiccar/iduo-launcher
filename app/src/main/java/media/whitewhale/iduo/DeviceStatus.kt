@@ -56,7 +56,9 @@ class DeviceStatusMonitor(private val context: Context) : DefaultLifecycleObserv
     private var receiverRegistered = false
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) = updateConnection()
-        override fun onLost(network: Network) = updateConnection()
+        // While this runs Android may still name the lost network as active; with nothing to take its
+        // place no further callback follows, so it must not count.
+        override fun onLost(network: Network) = updateConnection(lost = network)
         override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) = updateConnection()
     }
     private val phoneCallback = object : TelephonyCallback(), TelephonyCallback.SignalStrengthsListener {
@@ -99,8 +101,8 @@ class DeviceStatusMonitor(private val context: Context) : DefaultLifecycleObserv
     }
 
     @Suppress("DEPRECATION")
-    private fun updateConnection() {
-        val caps = runCatching { connection.getNetworkCapabilities(connection.activeNetwork) }.getOrNull()
+    private fun updateConnection(lost: Network? = null) {
+        val caps = runCatching { connection.activeNetwork?.takeUnless { it == lost }?.let { connection.getNetworkCapabilities(it) } }.getOrNull()
         // Only the network Android uses counts: Wi-Fi turned off can leave a stale connection behind.
         val connected = caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
         val info = if (!connected) null else (caps?.transportInfo as? WifiInfo)

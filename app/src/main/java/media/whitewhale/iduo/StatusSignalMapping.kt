@@ -50,18 +50,17 @@ internal fun cellularNetworkLabel(networkType: Int, overrideType: Int): String? 
 }
 
 /** What the middle of the status ring shows, from the most to the least important. */
-internal enum class RingCentre { WIFI, CELLULAR, AIRPLANE, BATTERY, NONE }
+internal enum class RingCentre { WIFI, CELLULAR, AIRPLANE, SIGNAL }
 
 /**
- * Wi-Fi while connected; otherwise mobile data's generation, then airplane mode, and in a ring
- * that holds the battery level ([percent]), the level itself.
+ * Wi-Fi while connected; otherwise mobile data's generation, then airplane mode, and with neither
+ * Wi-Fi nor mobile data a cell tower.
  */
-internal fun ringCentre(status: DeviceStatus, percent: Boolean): RingCentre = when {
+internal fun ringCentre(status: DeviceStatus): RingCentre = when {
     status.wifiConnected -> RingCentre.WIFI
     status.cellularData && status.cellularNetwork != null && !status.airplane -> RingCentre.CELLULAR
     status.airplane -> RingCentre.AIRPLANE
-    percent -> RingCentre.BATTERY
-    else -> RingCentre.NONE
+    else -> RingCentre.SIGNAL
 }
 
 /** Airplane mode shows beside or above the ring while something more important fills its middle. */

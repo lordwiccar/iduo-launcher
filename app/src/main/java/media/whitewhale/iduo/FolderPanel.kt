@@ -329,7 +329,10 @@ private fun FolderChild(app: AppEntry, folderId: String, drag: HomeDragState, pa
         .dropRegion(drag, DropTarget.Library(app.id), app.id, page, folderId = folderId, scope = folderId)
         .clip(RoundedCornerShape(18.dp)).clickable(enabled = app.available) { onLaunch(app, null) }
         .padding(horizontal = 4.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Image(app.icon.asImageBitmap(), null, Modifier.size(52.dp).clip(RoundedCornerShape(13.dp)))
+        Box(Modifier.size(52.dp)) {
+            Image(app.icon.asImageBitmap(), null, Modifier.fillMaxSize().clip(RoundedCornerShape(13.dp)))
+            NotificationBadge(badgeCount(app), 52.dp, Modifier.align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp))
+        }
         Text(app.label, Modifier.padding(top = 6.dp), maxLines = 2, overflow = TextOverflow.Ellipsis,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             style = MaterialTheme.typography.labelMedium)

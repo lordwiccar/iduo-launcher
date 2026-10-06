@@ -581,4 +581,18 @@
     <string name="wallpaper_crop_hint_cover">Tažením posunete, roztažením prstů přiblížíte. Toto je výřez vnějšího displeje; vnitřní má vlastní.</string>
     <string name="wallpaper_crop_hint_inner">Tažením posunete, roztažením prstů přiblížíte. Toto je výřez vnitřního displeje; vnější má vlastní.</string>
     <string name="wallpaper_crop_reset">Obnovit</string>
+    <string name="home_add_apps">Přidat aplikace</string>
+    <string name="home_add_apps_title">Přidat aplikace na plochu</string>
+    <string name="home_add_apps_none">Všechny aplikace už jsou na ploše, v docku nebo ve složce.</string>
+    <plurals name="home_pages_added">
+        <item quantity="one">+%1$d plocha</item>
+        <item quantity="few">+%1$d plochy</item>
+        <item quantity="many">+%1$d plochy</item>
+        <item quantity="other">+%1$d ploch</item>
+    </plurals>
+    <string name="notification_badges">Odznaky oznámení</string>
+    <string name="notification_badges_detail">Červený odznak u každé aplikace ukazuje počet jejích nevyřízených oznámení.</string>
+    <string name="notification_badges_needs_access">Vyžaduje přístup k oznámením: iDuo počítá oznámení každé aplikace a nic jiného si neukládá.</string>
+    <string name="notification_badges_allow">Povolit přístup k oznámením</string>
+    <string name="notification_badges_service">Odznaky oznámení iDuo</string>
 </resources>

@@ -4,7 +4,7 @@ title: iDuo Launcher – Privacy Policy
 
 # iDuo Launcher – Privacy Policy
 
-**Effective date:** 2 October 2026 · **App:** iDuo Launcher (`media.whitewhale.iduo`) for Android
+**Effective date:** 6 October 2026 · **App:** iDuo Launcher (`media.whitewhale.iduo`) for Android
 **Developer:** Danny, whitewhale.media · **Contact:** [studio@whitewhale.media](mailto:studio@whitewhale.media)
 
 [Česká verze níže](#zásady-ochrany-soukromí--česky)
@@ -47,6 +47,10 @@ Google search, the apps you open, and **widgets** are provided by their own apps
 
 The optional "Home gestures" accessibility service lets a downward swipe on Home open the notification panel or Quick Settings, and a double tap on empty Home space lock the screen. It uses only the system actions that open those panels and lock the screen. It **cannot read screen content**, does not observe other apps, does not perform gestures on your behalf and collects no data. The app explains this before you turn the service on, and you can turn it off at any time in Android's Accessibility settings.
 
+## Notification access (optional)
+
+The optional "Notification badges" setting shows on Home how many notifications each app has waiting. For that, Android asks you to give iDuo notification access. iDuo then counts, for each app, its notifications that are not ongoing; it does not read, store or show their titles, text or senders, keeps the counts only in memory while it runs, and sends nothing anywhere. Turning the setting off hides the badges; you can withdraw the access at any time in Android's notification access settings.
+
 ## Permissions
 
 | Permission | Why |
@@ -59,6 +63,7 @@ The optional "Home gestures" accessibility service lets a downward swipe on Home
 | Approximate location | Optional, on request, to calculate sunrise and sunset times on the device. |
 | Set wallpaper | Set a photo or the bundled dunes as your Android wallpaper when you ask. |
 | Accessibility service | Optional, see above. |
+| Notification access | Optional, see above: count each app's waiting notifications for the badges on Home. |
 
 ## Backups and sharing
 
@@ -84,7 +89,7 @@ Changes to this policy will be published on this page with a new effective date.
 
 # Zásady ochrany soukromí – česky
 
-**Účinnost od:** 2. října 2026 · **Aplikace:** iDuo Launcher (`media.whitewhale.iduo`) pro Android
+**Účinnost od:** 6. října 2026 · **Aplikace:** iDuo Launcher (`media.whitewhale.iduo`) pro Android
 **Vývojář:** Danny, whitewhale.media · **Kontakt:** [studio@whitewhale.media](mailto:studio@whitewhale.media)
 
 ## Shrnutí
@@ -125,6 +130,10 @@ Vyhledávání Google, spouštěné aplikace a **widgety** poskytují jejich vla
 
 Volitelná služba „gesta plochy“ umožňuje přejetím dolů na ploše otevřít oznámení nebo Rychlé nastavení a dvojím klepnutím na volné místo plochy zamknout obrazovku. Používá jen systémové akce, které tyto panely otevírají a zamykají obrazovku. **Nemůže číst obsah obrazovky**, nesleduje jiné aplikace, neprovádí gesta za vás a nesbírá žádná data. Aplikace to vysvětlí před zapnutím služby a službu můžete kdykoli vypnout v nastavení Usnadnění přístupu.
 
+## Přístup k oznámením (volitelný)
+
+Volitelné nastavení „Odznaky oznámení“ ukazuje na ploše, kolik oznámení má každá aplikace nevyřízených. Android vás k tomu požádá o udělení přístupu k oznámením pro iDuo. iDuo pak u každé aplikace počítá její oznámení, která nejsou trvalá; jejich názvy, text ani odesílatele nečte, neukládá ani nezobrazuje, počty drží jen v paměti, dokud běží, a nikam nic neposílá. Vypnutím nastavení odznaky zmizí; přístup můžete kdykoli odebrat v nastavení přístupu k oznámením v Androidu.
+
 ## Oprávnění
 
 | Oprávnění | Účel |
@@ -137,6 +146,7 @@ Volitelná služba „gesta plochy“ umožňuje přejetím dolů na ploše otev
 | Přibližná poloha | Volitelně, na vyžádání, pro výpočet východu a západu slunce v zařízení. |
 | Nastavení tapety | Nastavení fotky nebo dun jako tapety Androidu, když o to požádáte. |
 | Služba usnadnění | Volitelná, viz výše. |
+| Přístup k oznámením | Volitelný, viz výše: počítání nevyřízených oznámení každé aplikace pro odznaky na ploše. |
 
 ## Zálohy a sdílení
 

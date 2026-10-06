@@ -354,6 +354,35 @@ fun appendHomeApps(layout: HomeLayout, ids: List<String>, onNewPage: Boolean): H
     return layout.copy(slots = slots)
 }
 
+/**
+ * Cells for [count] new apps chosen from the empty cell [from]: the free cells of its page from
+ * there on, then its page's free cells before it, then whole new pages after the last one in use.
+ */
+fun homeCellsForApps(layout: HomeLayout, from: Int, count: Int): List<Int> {
+    if (count <= 0) return emptyList()
+    val covered = layout.widgetPlacements.flatMap { it.coveredIndices() }.toSet()
+    val pageStart = homeCellIndex(homeCellPage(from), 0)
+    val pageCells = (pageStart until pageStart + HOME_CELLS).let { cells -> cells.filter { it >= from } + cells.filter { it < from } }
+    val cells = pageCells.filter { layout.cellVisible(it) && it !in covered && layout.slotAt(it) == null }.take(count).toMutableList()
+    var next = layout.pageCount * HOME_CELLS
+    while (cells.size < count) {
+        if (layout.cellVisible(next)) cells += next
+        next++
+    }
+    return cells
+}
+
+/** How many pages Home gains when [count] apps are added from the empty cell [from]. */
+fun homePagesAddedForApps(layout: HomeLayout, from: Int, count: Int): Int =
+    homeCellsForApps(layout, from, count).map(::homeCellPage).filter { it >= layout.pageCount }.distinct().size
+
+/** Puts [ids] on Home from the empty cell [from], adding pages after the last one when its page is full. */
+fun addHomeAppsAt(layout: HomeLayout, ids: List<String>, from: Int): HomeLayout {
+    val placed = (layout.slots + layout.leadingSlots + layout.dock).filterNotNull().toSet() + layout.folders.flatMap { it.appIds }
+    val adding = ids.filter { it !in placed }.distinct()
+    return homeCellsForApps(layout, from, adding.size).zip(adding).fold(layout) { next, (cell, id) -> next.withSlot(cell, id) }
+}
+
 /** Takes [ids] off Home's pages, leaving folders, the dock and the unfolded-only page as they are. */
 fun removeHomeApps(layout: HomeLayout, ids: Set<String>): HomeLayout {
     if (ids.isEmpty() || layout.slots.none { it in ids }) return layout

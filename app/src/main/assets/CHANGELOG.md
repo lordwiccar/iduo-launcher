@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.1.4
+
+Sixth release on Google Play (version code 7).
+
+### New features
+- Notification badges: an optional red badge with the number of waiting notifications on apps on Home, in the dock and inside folders, and a red dot on a folder's small icons. Turn it on under Settings → Home; it needs notification access.
+- Add apps to Home from the empty-space menu: tick any number of apps, they fill the page from the place you held, and the list shows how many new pages that adds.
+- A letter index along the All apps list: touch or slide along it to jump to a letter.
+
+### Look and feel
+- The status ring keeps the battery level in its top opening; without Wi-Fi or mobile data its middle shows a cell tower.
+- With two SIMs, the first SIM's dots keep their usual place and the second SIM's signal is a smaller curve of dots inside the ring.
+- Dragging an app past the last page waits a little over a second before opening a new Home page, so pages are not added by accident.
+
+### Fixes
+- On a Galaxy Z Fold 8 cover set to a smaller display size, Home keeps the cover's one-page layout instead of the inner screen's two panes, and the folding animation no longer stays frosted.
+- Turning Wi-Fi off with no other network removes its symbol from the status ring at once.
+
 ## 1.1.3
 
 Fifth release on Google Play (version code 6).

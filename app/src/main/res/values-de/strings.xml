@@ -563,4 +563,16 @@
     <string name="wallpaper_crop_hint_cover">Ziehen zum Verschieben, spreizen zum Zoomen. Das ist der Ausschnitt des äußeren Displays; das innere hat einen eigenen.</string>
     <string name="wallpaper_crop_hint_inner">Ziehen zum Verschieben, spreizen zum Zoomen. Das ist der Ausschnitt des inneren Displays; das äußere hat einen eigenen.</string>
     <string name="wallpaper_crop_reset">Zurücksetzen</string>
+    <string name="home_add_apps">Apps hinzufügen</string>
+    <string name="home_add_apps_title">Apps zum Startbildschirm hinzufügen</string>
+    <string name="home_add_apps_none">Alle Apps sind schon auf dem Startbildschirm, im Dock oder in einem Ordner.</string>
+    <plurals name="home_pages_added">
+        <item quantity="one">+%1$d Seite</item>
+        <item quantity="other">+%1$d Seiten</item>
+    </plurals>
+    <string name="notification_badges">Benachrichtigungs-Badges</string>
+    <string name="notification_badges_detail">Ein rotes Badge an jeder App zählt ihre offenen Benachrichtigungen.</string>
+    <string name="notification_badges_needs_access">Benötigt Zugriff auf Benachrichtigungen: iDuo zählt Benachrichtigungen je App und speichert sonst nichts.</string>
+    <string name="notification_badges_allow">Zugriff auf Benachrichtigungen erlauben</string>
+    <string name="notification_badges_service">iDuo Benachrichtigungs-Badges</string>
 </resources>

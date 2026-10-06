@@ -91,7 +91,7 @@ internal fun LauncherAppActionSheet(app: AppEntry, placed: Boolean, homePages: I
 }
 
 @Composable
-internal fun EmptySpaceActionSheet(onWidgets: () -> Unit, onWallpaper: () -> Unit,
+internal fun EmptySpaceActionSheet(onAddApps: () -> Unit, onWidgets: () -> Unit, onWallpaper: () -> Unit,
     onCustomize: () -> Unit, onClose: () -> Unit) {
     val maxHeight = with(LocalDensity.current) { (LocalWindowInfo.current.containerSize.height * .75f).toDp() }
     Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).verticalScroll(rememberScrollState())
@@ -102,6 +102,7 @@ internal fun EmptySpaceActionSheet(onWidgets: () -> Unit, onWallpaper: () -> Uni
         }
         Text(stringResource(R.string.empty_space_detail), style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
+        ActionRow(Icons.Rounded.Apps, stringResource(R.string.home_add_apps), onAddApps, Modifier.testTag("empty-space-apps"))
         ActionRow(Icons.Rounded.Widgets, stringResource(R.string.widgets), onWidgets, Modifier.testTag("empty-space-widgets"))
         ActionRow(Icons.Rounded.Wallpaper, stringResource(R.string.wallpaper), onWallpaper, Modifier.testTag("empty-space-wallpaper"))
         ActionRow(Icons.Rounded.Tune, stringResource(R.string.customize_launcher), onCustomize, Modifier.testTag("empty-space-customize"))

@@ -581,4 +581,18 @@
     <string name="wallpaper_crop_hint_cover">Przeciągnij, aby przesunąć, rozsuń palce, aby powiększyć. To kadr ekranu zewnętrznego; wewnętrzny ma własny.</string>
     <string name="wallpaper_crop_hint_inner">Przeciągnij, aby przesunąć, rozsuń palce, aby powiększyć. To kadr ekranu wewnętrznego; zewnętrzny ma własny.</string>
     <string name="wallpaper_crop_reset">Przywróć</string>
+    <string name="home_add_apps">Dodaj aplikacje</string>
+    <string name="home_add_apps_title">Dodaj aplikacje do ekranu głównego</string>
+    <string name="home_add_apps_none">Wszystkie aplikacje są już na ekranie głównym, w docku lub w folderze.</string>
+    <plurals name="home_pages_added">
+        <item quantity="one">+%1$d strona</item>
+        <item quantity="few">+%1$d strony</item>
+        <item quantity="many">+%1$d stron</item>
+        <item quantity="other">+%1$d strony</item>
+    </plurals>
+    <string name="notification_badges">Plakietki powiadomień</string>
+    <string name="notification_badges_detail">Czerwona plakietka przy każdej aplikacji pokazuje liczbę jej oczekujących powiadomień.</string>
+    <string name="notification_badges_needs_access">Wymaga dostępu do powiadomień: iDuo liczy powiadomienia każdej aplikacji i niczego więcej nie zachowuje.</string>
+    <string name="notification_badges_allow">Zezwól na dostęp do powiadomień</string>
+    <string name="notification_badges_service">Plakietki powiadomień iDuo</string>
 </resources>

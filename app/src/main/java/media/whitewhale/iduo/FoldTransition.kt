@@ -65,6 +65,17 @@ internal object FoldHandoff {
 }
 
 /**
+ * Whether a window whose short side is [shortSidePx] lies on a foldable's cover screen. Measured
+ * in inches, because a smaller display size setting stretches the dp width of a wide cover, such
+ * as the Fold 8's, past any dp threshold: covers are under 4 inches across, inner screens over
+ * 4.5. Falls back to dp when the screen reports an implausible density.
+ */
+internal fun isCoverWindow(shortSidePx: Int, xdpi: Float, density: Float): Boolean =
+    if (xdpi in 120f..800f) shortSidePx / xdpi < COVER_MAX_INCHES else shortSidePx / density < 600f
+
+private const val COVER_MAX_INCHES = 4f
+
+/**
  * The hinge angle in degrees, 0 shut to 180 flat, or null until Android reports it. Samsung's
  * public hinge sensor only ever reports 0, 90 and 180, so on a Galaxy Fold this says shut, half
  * open or flat; other foldables and the emulator report every angle. Listens only while Home is

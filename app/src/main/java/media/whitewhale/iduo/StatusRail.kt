@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -96,7 +97,7 @@ fun CoverStatusBar(status: DeviceStatus, modifier: Modifier = Modifier, ringSize
         verticalAlignment = Alignment.CenterVertically) {
         StatusRing(status, Modifier.size(ringSize))
         Spacer(Modifier.width(6.dp))
-        Text(if (airplaneOutside(status, ringCentre(status, percent = false))) stringResource(R.string.status_airplane_short) else status.battery?.let { "$it%${if (status.charging) " +" else ""}" } ?: "—",
+        Text(if (airplaneOutside(status, ringCentre(status))) stringResource(R.string.status_airplane_short) else status.battery?.let { "$it%${if (status.charging) " +" else ""}" } ?: "—",
             color = Color.White.copy(alpha = .94f), fontSize = 13.sp, fontWeight = FontWeight.Medium,
             maxLines = 1, softWrap = false, style = statusTextStyle)
         Spacer(Modifier.weight(1f))
@@ -140,10 +141,8 @@ fun StatusRail(
                 maxLines = 1, softWrap = false, overflow = TextOverflow.Clip, style = labelStyle)
             if (!compact) Text(now.format(dateFormatter), color = Color.White.copy(alpha = .94f), fontSize = detailSize,
                 fontWeight = FontWeight.Medium, maxLines = 1, softWrap = false, overflow = TextOverflow.Clip, style = labelStyle)
-            // Above the dock, the battery level sits in the ring's top opening; a second SIM's
-            // signal takes a row of dots below the ring.
-            StatusRing(status, Modifier.padding(top = 4.dp).width(visualSize)
-                .height(if (status.simLevels.size >= 2 && !status.airplane) visualSize * 1.13f else visualSize), percent = true)
+            // Above the dock, the battery level sits in the ring's top opening.
+            StatusRing(status, Modifier.padding(top = 4.dp).size(visualSize), percent = true)
         }
     }
 }
@@ -156,22 +155,23 @@ private const val RING_BOTTOM_GAP = 112f
 /**
  * Battery as a thick ring open at the top and bottom, filling clockwise from its lower left end,
  * green while charging and yellow in battery saver; cellular signal as four dots across the bottom
- * opening. Inside it Wi-Fi, or without Wi-Fi mobile data's generation or airplane mode. With
- * [percent], the battery level sits in the top opening, or in the middle when nothing else is there,
- * and a second SIM's signal is a second row of dots below the ring, in either place.
+ * opening. Inside it Wi-Fi, or without Wi-Fi mobile data's generation, airplane mode or, with
+ * neither, a cell tower. With [percent], the battery level always sits in the top
+ * opening. With two SIMs the first SIM's dots stay in the bottom opening and the second's form a
+ * smaller curve inside the ring, under the symbol, which moves up to make room.
  */
 @Composable
 private fun StatusRing(status: DeviceStatus, modifier: Modifier, percent: Boolean = false) {
     val wifiVisual = wifiSignalVisual(status.wifiConnected, status.wifiLevel)
     val cellularVisual = cellularSignalVisual(status.cellularLevel, status.airplane)
     val measurer = rememberTextMeasurer()
-    val centre = ringCentre(status, percent)
+    val centre = ringCentre(status)
+    val cellTower = androidx.compose.ui.graphics.vector.rememberVectorPainter(CellTowerIcon)
     val battery = status.battery?.toString() ?: "—"
     val level = if (airplaneOutside(status, centre)) AIRPLANE_GLYPH else battery
     val centreText = when (centre) {
         RingCentre.CELLULAR -> status.cellularNetwork
         RingCentre.AIRPLANE -> AIRPLANE_GLYPH
-        RingCentre.BATTERY -> battery
         else -> null
     }
     Canvas(modifier) {
@@ -184,7 +184,7 @@ private fun StatusRing(status: DeviceStatus, modifier: Modifier, percent: Boolea
         // Canvas angles run clockwise from three o'clock; the ring runs from the bottom opening's
         // left edge, up and over the top opening, down to the bottom opening's right edge.
         // Without the battery level in it, the ring closes at the top.
-        val topGap = if (percent && centre != RingCentre.BATTERY) RING_TOP_GAP else 0f
+        val topGap = if (percent) RING_TOP_GAP else 0f
         val bottomGap = RING_BOTTOM_GAP
         val start = 90f + bottomGap / 2
         val leftSweep = 270f - topGap / 2 - start
@@ -204,13 +204,16 @@ private fun StatusRing(status: DeviceStatus, modifier: Modifier, percent: Boolea
             drawArc(color, start, minOf(filled, leftSweep), false, topLeft, arcSize, style = stroke)
             if (filled > leftSweep) drawArc(color, rightStart, filled - leftSweep, false, topLeft, arcSize, style = stroke)
         }
-        if (percent && centre != RingCentre.BATTERY) {
+        if (percent) {
             val text = measurer.measure(level, TextStyle(color = Color.White, fontSize = (w * .2f).toSp(),
                 fontWeight = FontWeight.Bold, shadow = Shadow(Color.Black.copy(alpha = .3f), Offset(0f, 1f), 3f)))
             drawText(text, topLeft = Offset(center.x - text.size.width / 2f, center.y - radius - text.size.height / 2f))
         }
+        val dualSim = status.simLevels.size >= 2 && !status.airplane
+        // With two SIMs the middle's symbol rises to leave room for the second SIM's dots below it.
+        val lift = if (dualSim) w * DUAL_SIM_LIFT else 0f
         // Wi-Fi: three rounded arcs over a dot, centred a little low in the ring.
-        val wifiBase = Offset(center.x, w * .6f)
+        val wifiBase = Offset(center.x, w * .6f - lift)
         if (centre == RingCentre.WIFI && wifiVisual is WifiSignalVisual.Connected) {
             val arcStroke = w * .068f
             for (i in 1..3) {
@@ -219,34 +222,59 @@ private fun StatusRing(status: DeviceStatus, modifier: Modifier, percent: Boolea
                     Offset(wifiBase.x - r, wifiBase.y - r), Size(r * 2, r * 2), style = Stroke(arcStroke, cap = StrokeCap.Round))
             }
             drawCircle(Color.White.copy(alpha = signalAlpha(wifiVisual.elements[0])), w * .052f, wifiBase)
+        } else if (centre == RingCentre.SIGNAL) {
+            // A cell tower, faint while there is no mobile signal at all.
+            val side = w * if (dualSim) .36f else .44f
+            translate(center.x - side / 2, center.y + w * .02f - lift - side / 2) {
+                with(cellTower) {
+                    draw(Size(side, side), alpha = if (cellularVisual is CellularSignalVisual.Available) 1f else .45f,
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White))
+                }
+            }
         } else if (centreText != null) {
             // Text in the middle, a little low like the Wi-Fi symbol; longer labels get smaller.
             val text = measurer.measure(centreText, TextStyle(color = Color.White,
                 fontSize = (w * if (centreText.length > 2) .22f else .27f).toSp(), fontWeight = FontWeight.Bold,
                 shadow = Shadow(Color.Black.copy(alpha = .3f), Offset(0f, 1f), 3f)))
-            drawText(text, topLeft = Offset(center.x - text.size.width / 2f, center.y + w * .03f - text.size.height / 2f))
+            drawText(text, topLeft = Offset(center.x - text.size.width / 2f, center.y + w * .03f - lift - text.size.height / 2f))
         }
-        // Cellular signal: four dots across the bottom opening, lit left to right; with two SIMs the
-        // first SIM's, and the second's in the same curve just below.
-        val dotRadius = w * .042f
-        fun signalDots(lit: Int, below: Float) {
+        // Cellular signal: four dots across the bottom opening, lit left to right. With two SIMs these
+        // are the first SIM's, and the second's follow a smaller curve inside the ring.
+        fun signalDots(lit: Int, along: Float, dot: Float) {
             for (i in 0..3) {
                 // The dots stay clear of the ring's rounded ends.
                 val angle = Math.toRadians((90.0 + RING_BOTTOM_GAP / 2 * .62) - i * (RING_BOTTOM_GAP * .62 / 3))
-                val dotCenter = Offset(center.x + radius * cos(angle).toFloat(), center.y + below + radius * sin(angle).toFloat())
-                drawCircle(Color.White.copy(alpha = if (i < lit) 1f else .3f), dotRadius, dotCenter)
+                val dotCenter = Offset(center.x + along * cos(angle).toFloat(), center.y + along * sin(angle).toFloat())
+                drawCircle(Color.White.copy(alpha = if (i < lit) 1f else .3f), dot, dotCenter)
             }
         }
-        // In the cover's top corner the second row hangs just below the ring, outside its measured size.
-        val dualSim = status.simLevels.size >= 2 && !status.airplane
         val firstLevel = if (dualSim) status.simLevels[0]?.coerceIn(0, 4) ?: 0
             else (cellularVisual as? CellularSignalVisual.Available)?.activeDots ?: 0
-        signalDots(firstLevel, 0f)
-        if (dualSim) signalDots(status.simLevels[1]?.coerceIn(0, 4) ?: 0, w * .16f)
+        signalDots(firstLevel, radius, w * SIM_DOT)
+        if (dualSim) signalDots(status.simLevels[1]?.coerceIn(0, 4) ?: 0, radius * SECOND_SIM_CURVE, w * SECOND_SIM_DOT)
     }
 }
 
 private const val AIRPLANE_GLYPH = "✈"
+
+/** Material's cell tower symbol, which the bundled icon set predates. */
+private val CellTowerIcon: androidx.compose.ui.graphics.vector.ImageVector by lazy {
+    androidx.compose.ui.graphics.vector.ImageVector.Builder("CellTower", 24.dp, 24.dp, 24f, 24f).addPath(
+        androidx.compose.ui.graphics.vector.addPathNodes("M7.3,14.7l1.2,-1.2c-1,-1 -1,-2.5 0,-3.5L7.3,8.8c-1.6,1.6 -1.6,4.3 0,5.9z" +
+            "M6.1,6.1L4.9,4.9c-3.9,3.9 -3.9,10.2 0,14.1l1.2,-1.2c-3.2,-3.2 -3.2,-8.4 0,-11.7z" +
+            "M19.1,4.9l-1.2,1.2c3.2,3.2 3.2,8.5 0,11.7l1.2,1.2c3.9,-3.9 3.9,-10.2 0,-14.1z" +
+            "M16.7,8.5l-1.2,1.2c1,1 1,2.5 0,3.5l1.2,1.2c1.6,-1.6 1.6,-4.3 0,-5.9z" +
+            "M14.5,12c0,-1.38 -1.12,-2.5 -2.5,-2.5S9.5,10.62 9.5,12c0,0.76 0.34,1.42 0.87,1.88L7,22h2l0.67,-2h4.67L15,22h2" +
+            "l-3.37,-8.12c0.53,-0.46 0.87,-1.12 0.87,-1.88zM10.33,18L12,13l1.67,5h-3.34z"),
+        fill = androidx.compose.ui.graphics.SolidColor(Color.White)).build()
+}
+/** Signal dot radius, as a share of the ring's width: the first SIM's, and the smaller second SIM's. */
+private const val SIM_DOT = .042f
+private const val SECOND_SIM_DOT = .028f
+/** The second SIM's curve, as a share of the ring's radius. */
+private const val SECOND_SIM_CURVE = .66f
+/** How far the middle's symbol rises with two SIMs, as a share of the ring's width. */
+private const val DUAL_SIM_LIFT = .07f
 
 private fun signalAlpha(emphasis: SignalElementEmphasis): Float = when (emphasis) {
     SignalElementEmphasis.DIM -> .3f

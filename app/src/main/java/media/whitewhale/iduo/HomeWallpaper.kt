@@ -135,9 +135,18 @@ internal fun DrawScope.drawWallpaper(image: ImageBitmap, crop: WallpaperCrop, or
         filterQuality = FilterQuality.Medium)
 }
 
-/** True on the cover screen: the narrow one. */
+/**
+ * True on the cover screen: one under 4 inches across, or any window narrower than 650dp. Inches
+ * keep a wide cover, such as the Fold 8's with a smaller display size, from passing for the inner
+ * screen.
+ */
 @Composable
-internal fun onCoverScreen() = LocalConfiguration.current.screenWidthDp < 650
+internal fun onCoverScreen(): Boolean {
+    val config = LocalConfiguration.current
+    val metrics = androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics
+    return config.screenWidthDp < 650 || isCoverWindow(
+        (minOf(config.screenWidthDp, config.screenHeightDp) * metrics.density).toInt(), metrics.xdpi, metrics.density)
+}
 
 /** Home's wallpaper layer: the wallpaper iDuo set, drawn with this screen's crop, and blurred by [blur] from 0 to 1. */
 @Composable

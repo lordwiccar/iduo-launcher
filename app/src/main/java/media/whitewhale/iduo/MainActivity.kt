@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
         // Pick the cover's or the inner screen's Home before the first frame, so folding never shows the other one.
-        model.showDisplay(resources.configuration.screenWidthDp < 650)
+        model.showDisplay(onCover() || resources.configuration.screenWidthDp < 650)
         widgets = WidgetController(this, model) { }.also { it.restore(savedInstanceState) }
         backups = BackupController(this, model, widgets) { }.also { it.restore() }
         backgrounds = LauncherBackgroundController(this) { }
@@ -101,23 +101,26 @@ class MainActivity : ComponentActivity() {
         intent.removeExtra("duo_destination")
         if (savedInstanceState == null && UpdateNotice.shouldAskAfterUpdate(this))
             notificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        applyCoverRotation(model.state.value.coverRotation, resources.configuration.smallestScreenWidthDp)
+        applyCoverRotation(model.state.value.coverRotation, onCover())
         setContent {
             val state = model.state.collectAsStateWithLifecycle().value
             val smallestWidth = androidx.compose.ui.platform.LocalConfiguration.current.smallestScreenWidthDp
             androidx.compose.runtime.LaunchedEffect(state.coverRotation, smallestWidth) {
-                applyCoverRotation(state.coverRotation, smallestWidth)
+                applyCoverRotation(state.coverRotation, onCover())
             }
             val deviceStatus = status.state.collectAsStateWithLifecycle().value
             // The window's real size, which follows Samsung moving this window between screens.
             val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-            val onCover = if (window.width <= 0) smallestWidth < 600
-                else minOf(window.width, window.height) / androidx.compose.ui.platform.LocalDensity.current.density < 600f
+            val onCover = if (window.width <= 0) onCover()
+                else isCoverWindow(minOf(window.width, window.height), resources.displayMetrics.xdpi,
+                    androidx.compose.ui.platform.LocalDensity.current.density)
             val foldFrost = rememberFoldFrost(onCover, arrivedByFold, hinge)
             DuoTheme(appearance.state.dark) { androidx.compose.foundation.layout.Box {
                 if (state.foldAnimation) FoldWallpaperBlur(foldFrost, onCover)
                 androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()
                     .then(if (state.foldAnimation) androidx.compose.ui.Modifier.foldFrost(foldFrost, onCover) else androidx.compose.ui.Modifier)) {
+                androidx.compose.runtime.CompositionLocalProvider(LocalBadgeCounts provides
+                    if (state.notificationBadges && NotificationBadges.accessGranted) NotificationBadges.counts else emptyMap()) {
                 LauncherScreen(state, model, widgets, homeRequests.intValue,
                     onLaunch = { launchApp(it) }, onMakeDefault = ::makeDefault, onAppInfo = ::appInfo,
                     isDefaultHome = defaultHome.value, deviceStatus = deviceStatus, onStatusMode = ::setStatusMode, onWallpaperSettings = ::openWallpaperSettings,
@@ -132,7 +135,7 @@ class MainActivity : ComponentActivity() {
                     showFirstRun = showFirstRun.value,
                     onFinishFirstRun = ::finishFirstRun,
                     onShadeSetup = ::showShadeSetup)
-            } } }
+            } } } }
         }
         FoldRenderExperiment.attach(this)
         if (restoreShadeDialog) window.decorView.post { if (!isFinishing && !isDestroyed) showShadeSetup() }
@@ -165,14 +168,15 @@ class MainActivity : ComponentActivity() {
         returningFromShadeSettings = false
         model.refresh(); appearance.refresh(systemDark()); updateDefaultHome()
         homeGesturesEnabled = SystemShadeAccessibilityService.isEnabled(this)
+        NotificationBadges.refreshAccess(this)
     }
 
     /**
-     * The cover screen stays upright unless the user allows rotation; the inner screen, 600dp and
-     * wider in every orientation, always follows the device.
+     * The cover screen stays upright unless the user allows rotation; the inner screen always
+     * follows the device.
      */
-    private fun applyCoverRotation(allowed: Boolean, smallestWidthDp: Int) {
-        val wanted = if (smallestWidthDp < 600 && !allowed) android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+    private fun applyCoverRotation(allowed: Boolean, cover: Boolean) {
+        val wanted = if (cover && !allowed) android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             else android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         if (requestedOrientation != wanted) requestedOrientation = wanted
     }
@@ -289,7 +293,9 @@ class MainActivity : ComponentActivity() {
     }
 
     /** Whether Home is on the cover screen now; Samsung may move this window between screens. */
-    private fun onCover() = resources.configuration.smallestScreenWidthDp < 600
+    private fun onCover() = resources.displayMetrics.let {
+        isCoverWindow(minOf(it.widthPixels, it.heightPixels), it.xdpi, it.density)
+    }
 
     private fun systemDark() = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
         android.content.res.Configuration.UI_MODE_NIGHT_YES

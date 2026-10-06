@@ -2,7 +2,7 @@
 
 A native Android launcher built around a right-side dock and a home screen that makes room when you unfold your phone.
 
-**Version 1.1.3 · Android 12 or later.** Built and tested on the Galaxy Z Fold 7 (cover and inner displays) and a matching emulator. The left page shows Google News headlines or your own RSS feeds.
+**Version 1.1.4 · Android 12 or later.** Built and tested on the Galaxy Z Fold 7 (cover and inner displays) and a matching emulator. The left page shows Google News headlines or your own RSS feeds.
 
 <p>
   <img src="docs/images/iduo-home.png" width="300" alt="iDuo Home with widgets and the right-side dock">
@@ -11,7 +11,7 @@ A native Android launcher built around a right-side dock and a home screen that 
   <img src="docs/images/iduo-settings.png" width="300" alt="Settings on the inner screen, with the section list beside Home settings and a live preview">
 </p>
 
-**Start here:** [User guide](docs/user-guide.md) · [Troubleshooting](docs/troubleshooting.md) · [Release notes](docs/releases/1.1.3.md) · [Privacy policy](docs/privacy-policy.md)
+**Start here:** [User guide](docs/user-guide.md) · [Troubleshooting](docs/troubleshooting.md) · [Release notes](docs/releases/1.1.4.md) · [Privacy policy](docs/privacy-policy.md)
 
 ## Features
 

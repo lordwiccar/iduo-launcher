@@ -71,6 +71,8 @@ class LayoutModelTest {
     @Test fun `expanded pane appears from actual window width`() {
         assertFalse(homeGeometry(475f, 700f, LayoutPreset(), true).expanded)
         assertTrue(homeGeometry(933f, 650f, LayoutPreset(), true).expanded)
+        // A Fold 8 cover with a smaller display size is over 650dp wide yet keeps one page.
+        assertFalse(homeGeometry(665f, 1050f, LayoutPreset(), true, cover = true).expanded)
         assertTrue(homeGeometry(933f, 650f, LayoutPreset(), true).homeWidth <= 460f)
     }
     @Test fun `raising dock cannot overlap measured status or lower controls`() {

@@ -28,6 +28,18 @@ class FoldTransitionTest {
     }
 
     @Test
+    fun coverIsToldApartByInchesNotDp() {
+        // Galaxy Z Fold 7: cover 1080 px at 422 dpi, inner 1968 px at 368 dpi.
+        assertEquals(true, isCoverWindow(1080, 422f, 2.625f))
+        assertEquals(false, isCoverWindow(1968, 368f, 2.625f))
+        // Galaxy Z Fold 8 with a small display size: the cover is over 600 dp wide yet still the cover.
+        assertEquals(true, isCoverWindow(1248, 359f, 2f))
+        assertEquals(false, isCoverWindow(1848, 383f, 2f))
+        // A screen reporting no real density falls back to dp.
+        assertEquals(true, isCoverWindow(1080, 0f, 2.625f))
+    }
+
+    @Test
     fun freeEdgeFollowsTheScreenRotation() {
         // Upright, the inner screen's swinging half is on the left and the cover's free edge on the right.
         assertEquals(-1f to 0f, freeEdgeDirection(cover = false, Surface.ROTATION_0))

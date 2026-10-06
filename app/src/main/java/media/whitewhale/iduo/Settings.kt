@@ -389,6 +389,7 @@ private fun settingsEntries(): List<SettingsEntry> {
             R.string.android_wallpaper, R.string.settings_color_mode, R.string.appearance_dark, R.string.appearance_sun,
             R.string.folder_transparency, R.string.settings_icon_pack) +
         entries(SettingsPage.HOME, R.string.grid_layout, R.string.icon_size, R.string.row_spacing, R.string.show_app_names,
+            R.string.notification_badges, R.string.settings_fold_animation,
             R.string.choose_home_apps, R.string.widgets, R.string.show_status, R.string.all_apps_view, R.string.reset_layout,
             R.string.settings_cover_rotation, R.string.all_apps_view_home, R.string.all_apps_view_folders, R.string.settings_display_layout,
             R.string.display_layout_separate, R.string.cover_columns) +
@@ -753,6 +754,19 @@ private fun HomePage(state: LauncherState, wide: Boolean, onWideScreen: Boolean,
         GroupDivider()
         SwitchRow(stringResource(R.string.show_app_names), stringResource(R.string.settings_names_detail), state.labels,
             model::setLabels, "label-switch")
+        GroupDivider()
+        val context = LocalContext.current
+        val needsAccess = state.notificationBadges && !NotificationBadges.accessGranted
+        val openAccess = { runCatching { context.startActivity(NotificationBadges.accessSettings(context)) } }
+        SwitchRow(stringResource(R.string.notification_badges),
+            stringResource(if (needsAccess) R.string.notification_badges_needs_access else R.string.notification_badges_detail),
+            state.notificationBadges, { on ->
+                model.setNotificationBadges(on)
+                if (on && !NotificationBadges.accessGranted) openAccess()
+            }, "badges-switch")
+        if (needsAccess) TextButton(onClick = { openAccess() }, Modifier.padding(start = 8.dp, bottom = 6.dp).testTag("badges-allow")) {
+            Text(stringResource(R.string.notification_badges_allow))
+        }
     }
     if (choosingRows) GridLayoutDialog(shown.rows, shown.columns, if (wide == onWideScreen) maxRowsFit else GRID_ROWS,
         onDismiss = { choosingRows = false }) { rows ->

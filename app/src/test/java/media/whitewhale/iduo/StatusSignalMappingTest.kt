@@ -50,15 +50,14 @@ class StatusSignalMappingTest {
 
     @Test fun ringMiddleShowsTheMostImportantThing() {
         val wifiAndAirplane = DeviceStatus(battery = 50, wifiConnected = true, airplane = true)
-        assertEquals(RingCentre.WIFI, ringCentre(wifiAndAirplane, percent = true))
+        assertEquals(RingCentre.WIFI, ringCentre(wifiAndAirplane))
         assertTrue(airplaneOutside(wifiAndAirplane, RingCentre.WIFI))
         val mobile = DeviceStatus(battery = 50, cellularData = true, cellularNetwork = "5G")
-        assertEquals(RingCentre.CELLULAR, ringCentre(mobile, percent = false))
-        assertEquals(RingCentre.CELLULAR, ringCentre(mobile, percent = true))
-        assertEquals(RingCentre.AIRPLANE, ringCentre(DeviceStatus(battery = 50, airplane = true), percent = true))
-        assertEquals(RingCentre.BATTERY, ringCentre(DeviceStatus(battery = 50), percent = true))
-        assertEquals(RingCentre.NONE, ringCentre(DeviceStatus(battery = 50), percent = false))
-        // Mobile data without a known generation leaves the middle to the battery level.
-        assertEquals(RingCentre.BATTERY, ringCentre(DeviceStatus(battery = 50, cellularData = true), percent = true))
+        assertEquals(RingCentre.CELLULAR, ringCentre(mobile))
+        assertEquals(RingCentre.AIRPLANE, ringCentre(DeviceStatus(battery = 50, airplane = true)))
+        assertEquals(RingCentre.SIGNAL, ringCentre(DeviceStatus(battery = 50)))
+        assertEquals(RingCentre.SIGNAL, ringCentre(DeviceStatus(battery = 50, cellularLevel = 3)))
+        // Without Wi-Fi or a known mobile data generation the middle shows the mobile signal.
+        assertEquals(RingCentre.SIGNAL, ringCentre(DeviceStatus(battery = 50, cellularData = true)))
     }
 }

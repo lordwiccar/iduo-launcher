@@ -92,6 +92,8 @@ data class LauncherState(
     val coverRotation: Boolean = false,
     /** Home blurs and tilts while the phone folds or unfolds, and comes into focus on the other screen. */
     val foldAnimation: Boolean = true,
+    /** A red badge on Home's icons counts each app's waiting notifications, given notification access. */
+    val notificationBadges: Boolean = false,
     /** Package of the chosen third-party icon pack, or null for the apps' own icons. */
     val iconPack: String? = null,
     /** Icons chosen by hand for single apps: app id to an icon pack's package and drawing. */
@@ -473,6 +475,11 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         val known = mutable.value.apps.mapTo(HashSet()) { it.id }
         return commitLayout(media.whitewhale.iduo.setFolderApps(mutable.value.layout, folderId, appIds.filter(known::contains)))
     }
+    /** Puts the chosen apps on Home from the empty cell [from], adding pages when they outgrow its page. */
+    fun addAppsToHome(ids: List<String>, from: Int): Boolean {
+        val known = mutable.value.apps.mapTo(HashSet()) { it.id }
+        return commitLayout(addHomeAppsAt(mutable.value.layout, ids.filter(known::contains), from))
+    }
     fun disbandFolder(folderId: String) = commitLayout(media.whitewhale.iduo.disbandFolder(mutable.value.layout, folderId))
     fun moveFolderApp(folderId: String, appId: String, index: Int) =
         commitLayout(media.whitewhale.iduo.moveFolderApp(mutable.value.layout, folderId, appId, index))
@@ -718,6 +725,10 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         if (statePayloadInvalid) return
         mutable.update { it.copy(coverRotation = value) }; persist()
     }
+    fun setNotificationBadges(value: Boolean) {
+        if (statePayloadInvalid) return
+        mutable.update { it.copy(notificationBadges = value) }; persist()
+    }
     fun setFoldAnimation(value: Boolean) {
         if (statePayloadInvalid) return
         mutable.update { it.copy(foldAnimation = value) }; persist()
@@ -823,6 +834,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             .put("swipeUpSearch", s.swipeUpSearch)
             .put("coverRotation", s.coverRotation)
             .put("foldAnimation", s.foldAnimation)
+            .put("notificationBadges", s.notificationBadges)
             .put("iconPack", s.iconPack ?: "")
             .put("iconOverrides", JSONObject().also { all -> s.iconOverrides.forEach { (id, choice) ->
                 all.put(id, JSONObject().put("pack", choice.pack).put("drawable", choice.drawable)) } })
@@ -1002,6 +1014,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             swipeUpSearch = j.optBoolean("swipeUpSearch", true),
             coverRotation = j.optBoolean("coverRotation", false),
             foldAnimation = j.optBoolean("foldAnimation", true),
+            notificationBadges = j.optBoolean("notificationBadges", false),
             iconPack = j.optString("iconPack").takeIf { it.isNotEmpty() },
             iconOverrides = j.optJSONObject("iconOverrides")?.let { all -> all.keys().asSequence().mapNotNull { id ->
                 all.optJSONObject(id)?.let { item -> IconChoice(item.optString("pack"), item.optString("drawable"))

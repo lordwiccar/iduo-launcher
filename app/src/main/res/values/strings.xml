@@ -564,4 +564,16 @@
     <string name="wallpaper_crop_hint_cover">Drag to move, pinch to zoom. This is the cover screen\'s part; the inner screen keeps its own.</string>
     <string name="wallpaper_crop_hint_inner">Drag to move, pinch to zoom. This is the inner screen\'s part; the cover screen keeps its own.</string>
     <string name="wallpaper_crop_reset">Reset</string>
+    <string name="home_add_apps">Add apps</string>
+    <string name="home_add_apps_title">Add apps to Home</string>
+    <string name="home_add_apps_none">Every app is already on Home, in the dock or in a folder.</string>
+    <plurals name="home_pages_added">
+        <item quantity="one">+%1$d page</item>
+        <item quantity="other">+%1$d pages</item>
+    </plurals>
+    <string name="notification_badges">Notification badges</string>
+    <string name="notification_badges_detail">A red badge on each app counts its waiting notifications.</string>
+    <string name="notification_badges_needs_access">Needs notification access: iDuo counts notifications per app and keeps nothing else.</string>
+    <string name="notification_badges_allow">Allow notification access</string>
+    <string name="notification_badges_service">iDuo notification badges</string>
 </resources>

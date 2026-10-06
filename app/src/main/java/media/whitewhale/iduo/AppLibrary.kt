@@ -2,6 +2,10 @@
 
 package media.whitewhale.iduo
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -60,6 +64,7 @@ internal fun AppLibrary(
     val hasWork = state.profiles.any { it.isWork } || state.apps.any { it.isWork }
     var showWork by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val listScope = rememberCoroutineScope()
     val selectedProfile = if (showWork) state.profiles.firstOrNull { it.isWork } else state.profiles.firstOrNull { it.isPersonal }
     LaunchedEffect(showWork, selectedProfile?.available, selectedProfile?.quiet) {
         listState.scrollToItem(0)
@@ -115,9 +120,17 @@ internal fun AppLibrary(
                             textAlign = TextAlign.Center, fontSize = 12.sp, lineHeight = 14.sp)
                     }
                 }
-            } else LazyColumn(Modifier.weight(1f).testTag("all-apps-list"), state = listState,
+            } else Box(Modifier.weight(1f)) {
+            val workPaused = showWork && selectedProfile?.available == false
+            // Where each letter's heading sits in the list, for the index along its edge.
+            val headings = remember(groups, workPaused) {
+                var at = if (workPaused) 1 else 0
+                groups.map { (letter, entries) -> (letter to at).also { at += 1 + entries.size } }
+            }
+            val showIndex = headings.size > 1
+            LazyColumn(Modifier.fillMaxSize().padding(end = if (showIndex) 24.dp else 0.dp).testTag("all-apps-list"), state = listState,
                 contentPadding = PaddingValues(bottom = 12.dp)) {
-                if (showWork && selectedProfile?.available == false) item("work-paused") {
+                if (workPaused) item("work-paused") {
                     Column(Modifier.fillMaxWidth().padding(vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(stringResource(if (selectedProfile.quiet) R.string.work_paused else R.string.work_unavailable))
                         if (selectedProfile.quiet) Button(onClick = { onTurnOnWork(selectedProfile.userSerial) },
@@ -158,6 +171,49 @@ internal fun AppLibrary(
                     }
                 }
             }
+            if (showIndex) AlphabetIndex(headings, ink, Modifier.align(Alignment.CenterEnd).fillMaxHeight()) { index ->
+                listScope.launch { listState.scrollToItem(index) }
+            }
+            }
+        }
+    }
+}
+
+/**
+ * The list's letters down its right edge: touching or sliding along them jumps the list to the
+ * apps starting with that letter.
+ */
+@Composable
+private fun AlphabetIndex(headings: List<Pair<String, Int>>, ink: Color, modifier: Modifier, onJump: (Int) -> Unit) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    var current by remember { mutableStateOf<String?>(null) }
+    val jump by rememberUpdatedState(onJump)
+    Column(modifier.width(22.dp).padding(vertical = 4.dp).testTag("all-apps-index")
+        .pointerInput(headings) {
+            fun pick(y: Float) {
+                val (letter, index) = headings[((y / size.height) * headings.size).toInt().coerceIn(0, headings.lastIndex)]
+                if (letter != current) {
+                    current = letter
+                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                    jump(index)
+                }
+            }
+            awaitEachGesture {
+                val down = awaitFirstDown()
+                down.consume()
+                pick(down.position.y)
+                do {
+                    val event = awaitPointerEvent()
+                    event.changes.forEach { if (it.pressed) { pick(it.position.y); it.consume() } }
+                } while (event.changes.any { it.pressed })
+                current = null
+            }
+        },
+        verticalArrangement = Arrangement.SpaceEvenly, horizontalAlignment = Alignment.CenterHorizontally) {
+        headings.forEach { (letter, _) ->
+            Text(letter, color = if (letter == current) MaterialTheme.colorScheme.primary else ink,
+                fontSize = 11.sp, fontWeight = if (letter == current) FontWeight.Bold else FontWeight.SemiBold,
+                maxLines = 1, lineHeight = 12.sp)
         }
     }
 }

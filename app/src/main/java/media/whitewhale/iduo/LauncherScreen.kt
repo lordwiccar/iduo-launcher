@@ -165,6 +165,7 @@ fun LauncherScreen(
     var widgetSession by remember { mutableStateOf<WidgetPickerSession?>(null) }
     var widgetPlacementMessage by remember { mutableStateOf<String?>(null) }
     var emptyCellIndex by rememberSaveable { mutableStateOf<Int?>(null) }
+    var addAppsAt by rememberSaveable { mutableStateOf<Int?>(null) }
     var resizeSlot by remember { mutableStateOf<Int?>(null) }
     var resizeWidth by rememberSaveable { mutableIntStateOf(1) }
     var resizeHeight by rememberSaveable { mutableIntStateOf(1) }
@@ -182,7 +183,8 @@ fun LauncherScreen(
     var spotlight by rememberSaveable { mutableStateOf(false) }
     // A sliding dock opens from the right edge and closes when Home is touched or left.
     var dockOpen by rememberSaveable { mutableStateOf(false) }
-    val startsWide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= 650
+    val coverScreen = onCoverScreen()
+    val startsWide = !coverScreen
     val dockReveal = remember { androidx.compose.animation.core.Animatable(if (startsWide || state.dockMode == DockMode.SHOWN) 1f else 0f) }
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_PAUSE) { dockOpen = false }
     var createFolderFirstId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -360,7 +362,8 @@ fun LauncherScreen(
     val edge = if (!edgeActive) 0 else dragEdgeDirection(edgePointer, drag.rootBounds, edgeWidth)
     LaunchedEffect(edgeActive, edge) {
         if (edge != 0) while (drag.active || widgetSession?.dragging == true) {
-            delay(650)
+            // Opening the empty page after the last one makes a new page, so it asks for a longer hold.
+            delay(if (edge > 0 && pager.currentPage + 1 >= homePages) NEW_PAGE_HOLD_MS else PAGE_TURN_HOLD_MS)
             val next = (pager.currentPage + edge).coerceIn(0, homePages)
             if ((!drag.active && widgetSession?.dragging != true) || next == pager.currentPage) break
             // Do not key this effect on currentPage: it changes halfway through the
@@ -505,7 +508,7 @@ fun LauncherScreen(
             .blur(WALLPAPER_BACKDROP_BLUR, androidx.compose.ui.draw.BlurredEdgeTreatment.Rectangle)
             .testTag("wallpaper-blur"))
         BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-            val wide = maxWidth.value >= 650f
+            val wide = !coverScreen && maxWidth.value >= 650f
             val preset = if (wide) state.expanded else state.compact
             // The activity picks the screen's layout before drawing; this follows window resizes.
             LaunchedEffect(wide) { model.showDisplay(!wide) }
@@ -527,13 +530,13 @@ fun LauncherScreen(
                 statusRailHeight = if (statusRail) statusHeight + 22f else 0f,
                 labelHeight = with(density) { 14.sp.toDp().value } + 6f, inLibrary = inLibrary,
                 homeBottomSpace = if (isDefaultHome) 44f else 88f, dockSlots = state.dock.size, homeRows = state.homeRows,
-                columns = state.homeColumns, dockColumn = dockColumn, topBar = topBar)
+                columns = state.homeColumns, dockColumn = dockColumn, topBar = topBar, cover = !wide)
             // The most Home rows this screen can show in full, measured like the page itself.
             val maxRowsFit = (GRID_ROWS downTo DEFAULT_HOME_ROWS + 1).firstOrNull { rows ->
                 homeGeometry(maxWidth.value, maxHeight.value, preset, state.labels,
                     labelHeight = with(density) { 14.sp.toDp().value } + 6f,
                     homeBottomSpace = if (isDefaultHome) 44f else 88f, homeRows = rows,
-                    columns = state.homeColumns, dockColumn = dockColumn, topBar = topBar).gridFits
+                    columns = state.homeColumns, dockColumn = dockColumn, topBar = topBar, cover = !wide).gridFits
             } ?: DEFAULT_HOME_ROWS
             SideEffect {
                 resizePitchX = with(density) { (geometry.gridWidth / state.homeColumns).dp.toPx() }
@@ -1335,12 +1338,18 @@ fun LauncherScreen(
         }
         emptyCellIndex?.let { index ->
             ModalBottomSheet(onDismissRequest = { emptyCellIndex = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-                EmptySpaceActionSheet(onWidgets = {
+                EmptySpaceActionSheet(onAddApps = { emptyCellIndex = null; addAppsAt = index }, onWidgets = {
                         widgetTargetIndex = index; widgetExactTarget = true; widgetSlot = model.nextWidgetSlot(); widgetPackage = null; widgetProfileSerial = null
                         emptyCellIndex = null; sheet = "widgets"
                     }, onWallpaper = { emptyCellIndex = null; sheet = "settings:wallpaper" },
                     onCustomize = { emptyCellIndex = null; sheet = "settings" }, onClose = { emptyCellIndex = null })
             }
+        }
+        addAppsAt?.let { from ->
+            HomeAppsDialog(state.layout, state.apps, from, onDismiss = { addAppsAt = null }, onAdd = { ids ->
+                addAppsAt = null
+                model.addAppsToHome(ids, from)
+            })
         }
         createFolderFirstId?.let { firstId ->
             val first = appsById[firstId]
@@ -1595,6 +1604,11 @@ private fun firstEmptyHomeCell(state: LauncherState, page: Int): Int {
         state.layout.slotAt(index) == null && state.layout.cellVisible(index) && state.widgetPlacements.none { index in it.coveredIndices() }
     } ?: pageStart
 }
+
+/** How long a dragged item rests at a screen edge before the page turns. */
+private const val PAGE_TURN_HOLD_MS = 650L
+/** The longer rest before the turn onto the empty page after the last, which adds a page. */
+private const val NEW_PAGE_HOLD_MS = 1_200L
 
 @Composable
 private fun HomePagePane(
@@ -1938,12 +1952,17 @@ private fun DockAppColumn(
                 )
                 Box(Modifier.offset { animatedOffset }.fillMaxWidth().height(rowHeight.dp).alpha(opacity)
                     .testTag("dock-app-$id"), contentAlignment = Alignment.Center) {
-                    if (app != null) Image(app.icon.asImageBitmap(), null, Modifier.size(iconSize.dp).testTag("dock-icon-$id")
-                        .onGloballyPositioned { if (savedIndex >= 0) launchBounds[savedIndex].set(it.boundsInWindow().toAndroidBounds()) }
-                        .graphicsLayer { scaleX = slotScales[renderIndex]; scaleY = slotScales[renderIndex] }
-                        .clip(RoundedCornerShape(11.dp)))
-                    else if (folder != null) DockFolderIcon(folder, appsById, iconSize, drag,
-                        Modifier.graphicsLayer { scaleX = slotScales[renderIndex]; scaleY = slotScales[renderIndex] })
+                    if (app != null) Box(Modifier.size(iconSize.dp).graphicsLayer { scaleX = slotScales[renderIndex]; scaleY = slotScales[renderIndex] }) {
+                        Image(app.icon.asImageBitmap(), null, Modifier.fillMaxSize().testTag("dock-icon-$id")
+                            .onGloballyPositioned { if (savedIndex >= 0) launchBounds[savedIndex].set(it.boundsInWindow().toAndroidBounds()) }
+                            .clip(RoundedCornerShape(11.dp)))
+                        NotificationBadge(badgeCount(app), iconSize.dp, Modifier.align(Alignment.TopEnd).offset(x = iconSize.dp * .12f, y = -iconSize.dp * .12f))
+                    }
+                    else if (folder != null) Box(Modifier.graphicsLayer { scaleX = slotScales[renderIndex]; scaleY = slotScales[renderIndex] }) {
+                        DockFolderIcon(folder, appsById, iconSize, drag)
+                        NotificationBadge(badgeCount(folder.appIds, appsById), iconSize.dp,
+                            Modifier.align(Alignment.TopEnd).offset(x = iconSize.dp * .12f, y = -iconSize.dp * .12f))
+                    }
                 }
             }
         }
@@ -1961,9 +1980,12 @@ private fun DockFolderIcon(folder: FolderEntry, apps: Map<String, AppEntry>, siz
         .dropRegion(drag, DropTarget.Folder(folder.id), folderId = folder.id).testTag("dock-folder-${folder.id}")) {
         folder.appIds.take(4).forEachIndexed { index, id ->
             apps[id]?.let { app ->
-                Image(app.icon.asImageBitmap(), null, Modifier.align(when (index) {
+                Box(Modifier.align(when (index) {
                     0 -> Alignment.TopStart; 1 -> Alignment.TopEnd; 2 -> Alignment.BottomStart; else -> Alignment.BottomEnd
-                }).padding((size * .07f).dp).size((size * .36f).dp).clip(RoundedCornerShape(5.dp)))
+                }).padding((size * .07f).dp).size((size * .36f).dp)) {
+                    Image(app.icon.asImageBitmap(), null, Modifier.fillMaxSize().clip(RoundedCornerShape(5.dp)))
+                    NotificationDot(badgeCount(app), (size * .36f).dp, Modifier.align(Alignment.TopEnd))
+                }
             }
         }
     }
@@ -1976,17 +1998,24 @@ private fun FolderTile(folder: FolderEntry, apps: Map<String, AppEntry>, size: F
     Column(modifier.clickable(onClick = onClick).semantics(mergeDescendants = true) {
         contentDescription = description
     }, horizontalAlignment = Alignment.CenterHorizontally) {
+        Box {
         Box(Modifier.size(size.dp).clip(RoundedCornerShape((size * .24f).dp))
             .background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), RoundedCornerShape((size * .24f).dp))
             .dropRegion(drag, DropTarget.Folder(folder.id), page = page, folderId = folder.id)
             .testTag("folder-drop-${folder.id}")) {
             folder.appIds.take(4).forEachIndexed { index, id ->
                 apps[id]?.let { app ->
-                    Image(app.icon.asImageBitmap(), null, Modifier.align(when (index) {
+                    Box(Modifier.align(when (index) {
                         0 -> Alignment.TopStart; 1 -> Alignment.TopEnd; 2 -> Alignment.BottomStart; else -> Alignment.BottomEnd
-                    }).padding(5.dp).size((size * .38f).dp).clip(RoundedCornerShape(6.dp)))
+                    }).padding(5.dp).size((size * .38f).dp)) {
+                        Image(app.icon.asImageBitmap(), null, Modifier.fillMaxSize().clip(RoundedCornerShape(6.dp)))
+                        NotificationDot(badgeCount(app), (size * .38f).dp, Modifier.align(Alignment.TopEnd))
+                    }
                 }
             }
+        }
+        NotificationBadge(badgeCount(folder.appIds, apps), size.dp,
+            Modifier.align(Alignment.TopEnd).offset(x = size.dp * .12f, y = -size.dp * .12f))
         }
         if (labels) Text(folder.title, color = Color.White, fontSize = 11.sp, maxLines = 1,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
@@ -2006,8 +2035,11 @@ private fun AppTile(app: AppEntry, size: Float, labels: Boolean, modifier: Modif
             role = Role.Button, onClick = { onClick(bounds) })
         .semantics { onLongClick(appOptions) { onLongClick(); true } }.padding(horizontal = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally) {
-        Image(app.icon.asImageBitmap(), null, Modifier.size(iconSize).onGloballyPositioned { bounds.set(it.boundsInWindow().toAndroidBounds()) }
-            .graphicsLayer { scaleX = scale; scaleY = scale }.clip(RoundedCornerShape((size * .24f).dp)))
+        Box(Modifier.size(iconSize)) {
+            Image(app.icon.asImageBitmap(), null, Modifier.fillMaxSize().onGloballyPositioned { bounds.set(it.boundsInWindow().toAndroidBounds()) }
+                .graphicsLayer { scaleX = scale; scaleY = scale }.clip(RoundedCornerShape((size * .24f).dp)))
+            NotificationBadge(badgeCount(app), iconSize, Modifier.align(Alignment.TopEnd).offset(x = iconSize * .12f, y = -iconSize * .12f))
+        }
         if (labels) Text(app.label, color = Color.White, fontSize = 11.sp, lineHeight = 14.sp, maxLines = 1,
             overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
             style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = .55f), Offset(0f, 1f), 3f)), modifier = Modifier.padding(top = 4.dp))

@@ -47,12 +47,12 @@ fun upgradePreset(preset: LayoutPreset, schema: Int, expanded: Boolean): LayoutP
 /**
  * Home's measurements for a [width] by [height] window. Without a [dockColumn] the grid takes the
  * dock's place and spreads its [columns] across the whole width; [topBar] reserves a status band
- * above everything else.
+ * above everything else. The [cover] screen keeps one page however wide it is.
  */
 fun homeGeometry(width: Float, fullHeight: Float, preset: LayoutPreset, labels: Boolean, statusHeight: Float = 0f, labelHeight: Float = 20f, inLibrary: Boolean = false, homeBottomSpace: Float = 44f, dockSlots: Int = MIN_DOCK_SLOTS, statusRailHeight: Float = 0f, homeRows: Int = DEFAULT_HOME_ROWS,
-    columns: Int = DEFAULT_HOME_COLUMNS, dockColumn: Boolean = true, topBar: Float = 0f): HomeGeometry {
+    columns: Int = DEFAULT_HOME_COLUMNS, dockColumn: Boolean = true, topBar: Float = 0f, cover: Boolean = false): HomeGeometry {
     val p = preset.sanitized()
-    val expanded = width >= 650f
+    val expanded = !cover && width >= 650f
     val height = fullHeight - topBar
     val homeWidth = if (expanded) minOf(460f, width * 0.56f) else width
     val gridWidth = (if (dockColumn) homeWidth - p.dockWidth - 44f else homeWidth - 32f).coerceAtLeast(192f)
