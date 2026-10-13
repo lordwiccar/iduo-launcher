@@ -74,7 +74,8 @@ fun encodeLayoutBackup(state: LauncherState, widgetDescriptors: List<BackupWidge
 }
 
 private fun encodeBackupFolders(layout: HomeLayout) = JSONArray().also { array -> layout.folders.forEach { folder ->
-    array.put(JSONObject().put("id", folder.id).put("title", folder.title).put("apps", JSONArray(folder.appIds))) } }
+    array.put(JSONObject().put("id", folder.id).put("title", folder.title).put("apps", JSONArray(folder.appIds))
+        .apply { if (folder.large) put("large", true) }) } }
 
 private fun encodeBackupWidgets(layout: HomeLayout, widgetDescriptors: List<BackupWidgetDescriptor>, sourceScope: String): JSONArray {
     val descriptorBySlot = widgetDescriptors.associateBy(BackupWidgetDescriptor::slot)
@@ -130,7 +131,7 @@ fun decodeLayoutBackup(raw: String, currentApps: List<AppEntry>, currentProfiles
         val folders = List(array.length()) { index ->
             val item = array.getJSONObject(index)
             val children = item.getJSONArray("apps")
-            FolderEntry(item.getString("id"), item.getString("title"), List(children.length()) { children.getString(it) })
+            FolderEntry(item.getString("id"), item.getString("title"), List(children.length()) { children.getString(it) }, large = item.optBoolean("large"))
         }
         require(folders.map(FolderEntry::id).distinct().size == folders.size)
         require(folders.flatMap(FolderEntry::appIds).distinct().size == folders.sumOf { it.appIds.size })

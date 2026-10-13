@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.1.5
+
+Seventh release on Google Play (version code 8).
+
+### New features
+- Large folders: any folder on Home can be made large from its menu. It takes four places, its first three apps open with one tap, and the small icons in its corner open the whole folder.
+- Folder shape: square, squircle or circle, under Settings → Wallpaper & appearance.
+
+### Look and feel
+- The Wi-Fi symbol in the status ring is drawn with thinner lines.
+
+### Fixes
+- Home keeps its place when the phone is folded, unfolded or rotated, or the display size changes, so All apps no longer stays cut off between two pages, as seen on the Galaxy Z Fold 8.
+
 ## 1.1.4
 
 Sixth release on Google Play (version code 7).

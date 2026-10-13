@@ -187,6 +187,15 @@
     <string name="folder_app_in">W folderze %1$s</string>
     <string name="folder_no_apps_match">Brak pasujących aplikacji</string>
     <string name="folder_transparency">Przezroczystość tła folderu</string>
+    <string name="folder_shape">Kształt folderów</string>
+    <string name="folder_shape_square">Kwadrat</string>
+    <string name="folder_shape_squircle">Squircle</string>
+    <string name="folder_shape_circle">Koło</string>
+    <string name="folder_shape_detail">Każdy folder na ekranie głównym można też powiększyć z jego menu. Zajmuje wtedy cztery miejsca, a jego pierwsze aplikacje otwierają się jednym dotknięciem.</string>
+    <string name="folder_make_large">Powiększ folder</string>
+    <string name="folder_make_small">Pomniejsz folder</string>
+    <string name="folder_no_room_large">Na tej stronie nie ma miejsca na duży folder</string>
+    <string name="folder_open">Otwórz %1$s</string>
     <string name="all_apps_view">Widok wszystkich aplikacji</string>
     <string name="all_apps_view_list">Lista</string>
     <string name="all_apps_view_grid">Siatka</string>

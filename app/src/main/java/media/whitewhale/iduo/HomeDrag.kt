@@ -60,7 +60,9 @@ internal class HomeDragState {
                 is DropTarget.Widget -> false
                 is DropTarget.Home -> source?.appId != null || source?.target is DropTarget.Widget
                 is DropTarget.Dock -> source?.appId != null
-                is DropTarget.Folder -> source?.appId != null && source?.target !is DropTarget.Folder
+                // A folder is never dropped into itself; a large one moves over its own cells.
+                is DropTarget.Folder -> source?.appId != null && source?.target !is DropTarget.Folder &&
+                    source?.appId != (it.target as DropTarget.Folder).id
                 DropTarget.Remove -> source?.target !is DropTarget.Library
                 is DropTarget.Library -> false
             }

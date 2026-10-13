@@ -107,6 +107,8 @@ internal fun FolderPanel(
     /** Every app and folder, for ticking the folder's apps in a list. */
     allApps: List<AppEntry> = emptyList(), folders: List<FolderEntry> = emptyList(),
     onSetApps: (List<String>) -> Unit = {},
+    /** Makes the folder large or small again; null for a folder in the dock. */
+    onToggleLarge: (() -> Unit)? = null,
 ) {
     var choosingApps by rememberSaveable(folder.id) { mutableStateOf(false) }
     var addingApps by rememberSaveable(folder.id) { mutableStateOf(false) }
@@ -195,7 +197,7 @@ internal fun FolderPanel(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .6f))
                     }
                     FolderMenu(folderDestinations, onMoveFolder, onDisband, onChooseApps = { choosingApps = true },
-                        onAddApps = { addingApps = true })
+                        onAddApps = { addingApps = true }, large = folder.large, onToggleLarge = onToggleLarge)
                 }
                 HorizontalPager(pager, Modifier.padding(top = 12.dp).size(gridWidth, gridHeight).testTag("folder-pages"),
                     pageSpacing = FolderPadding, key = { it }) { folderPage ->
@@ -287,7 +289,7 @@ private fun FolderAppsDialog(folder: FolderEntry, apps: List<AppEntry>, folders:
 /** Actions for the whole folder; single apps move out by dragging them. */
 @Composable
 private fun FolderMenu(destinations: List<Int>, onMove: (Int) -> Unit, onDisband: () -> Unit, onChooseApps: () -> Unit,
-    onAddApps: () -> Unit) {
+    onAddApps: () -> Unit, large: Boolean, onToggleLarge: (() -> Unit)?) {
     var open by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { open = true }, Modifier.testTag("folder-options")) {
@@ -298,6 +300,9 @@ private fun FolderMenu(destinations: List<Int>, onMove: (Int) -> Unit, onDisband
                 onClick = { open = false; onAddApps() }, modifier = Modifier.testTag("folder-add-apps"))
             DropdownMenuItem(text = { Text(stringResource(R.string.folder_choose_apps)) },
                 onClick = { open = false; onChooseApps() }, modifier = Modifier.testTag("folder-choose-apps"))
+            if (onToggleLarge != null) DropdownMenuItem(
+                text = { Text(stringResource(if (large) R.string.folder_make_small else R.string.folder_make_large)) },
+                onClick = { open = false; onToggleLarge() }, modifier = Modifier.testTag("folder-size"))
             destinations.distinctBy(::homeCellPage).forEach { destination ->
                 val destinationPage = homeCellPage(destination)
                 DropdownMenuItem(text = { Text(if (destinationPage == -1) stringResource(R.string.move_to_leading_page)

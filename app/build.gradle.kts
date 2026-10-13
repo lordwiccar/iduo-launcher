@@ -38,8 +38,8 @@ android {
         applicationId = "media.whitewhale.iduo"
         minSdk = 31
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.1.4"
+        versionCode = 8
+        versionName = "1.1.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Returns to Home when a test leaves another app, such as a Google sign-in screen, in front.
         testInstrumentationRunnerArguments["listener"] = "media.whitewhale.iduo.ForeignAppGuard"

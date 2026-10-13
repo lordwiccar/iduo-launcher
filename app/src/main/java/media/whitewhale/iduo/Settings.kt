@@ -387,7 +387,7 @@ private fun settingsEntries(): List<SettingsEntry> {
     fun entries(page: SettingsPage, vararg titles: Int) = titles.map { page to it }
     val all = entries(SettingsPage.APPEARANCE, R.string.wallpaper, R.string.use_iduo_dunes, R.string.choose_photo,
             R.string.android_wallpaper, R.string.settings_color_mode, R.string.appearance_dark, R.string.appearance_sun,
-            R.string.folder_transparency, R.string.settings_icon_pack) +
+            R.string.folder_transparency, R.string.folder_shape, R.string.settings_icon_pack) +
         entries(SettingsPage.HOME, R.string.grid_layout, R.string.icon_size, R.string.row_spacing, R.string.show_app_names,
             R.string.notification_badges, R.string.settings_fold_animation,
             R.string.choose_home_apps, R.string.widgets, R.string.show_status, R.string.all_apps_view, R.string.reset_layout,
@@ -620,6 +620,13 @@ private fun AppearancePage(model: LauncherModel, state: LauncherState, appearanc
     }
     IconPackSettings(state.iconPack, model::setIconPack)
     SettingsGroup {
+        GroupBody {
+            GroupTitle(stringResource(R.string.folder_shape))
+            val shapes = FolderShape.entries
+            Choice(shapes.map { stringResource(it.label) to "folder-shape-${it.name.lowercase()}" },
+                shapes.indexOf(state.folderShape), { model.setFolderShape(shapes[it]) })
+            Detail(stringResource(R.string.folder_shape_detail))
+        }
         SliderRow(stringResource(R.string.folder_transparency),
             stringResource(R.string.value_percent, Math.round(state.folderTransparency * 100)),
             state.folderTransparency, 0f..MAX_FOLDER_TRANSPARENCY) { model.setFolderTransparency(it) }

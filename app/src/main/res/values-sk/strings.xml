@@ -187,6 +187,15 @@
     <string name="folder_app_in">V priečinku %1$s</string>
     <string name="folder_no_apps_match">Žiadna aplikácia nezodpovedá</string>
     <string name="folder_transparency">Priehľadnosť pozadia priečinka</string>
+    <string name="folder_shape">Tvar priečinkov</string>
+    <string name="folder_shape_square">Štvorec</string>
+    <string name="folder_shape_squircle">Oblý štvorec</string>
+    <string name="folder_shape_circle">Kruh</string>
+    <string name="folder_shape_detail">Každý priečinok na ploche môžete v jeho ponuke aj zväčšiť. Zaberie potom štyri miesta a prvé aplikácie v ňom otvoríte jedným ťuknutím.</string>
+    <string name="folder_make_large">Zväčšiť priečinok</string>
+    <string name="folder_make_small">Zmenšiť priečinok</string>
+    <string name="folder_no_room_large">Na tejto strane nie je miesto pre veľký priečinok</string>
+    <string name="folder_open">Otvoriť %1$s</string>
     <string name="all_apps_view">Zobrazenie všetkých aplikácií</string>
     <string name="all_apps_view_list">Zoznam</string>
     <string name="all_apps_view_grid">Mriežka</string>

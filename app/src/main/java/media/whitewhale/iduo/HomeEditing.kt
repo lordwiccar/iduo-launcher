@@ -65,9 +65,13 @@ data class HomeLayout(
     val columns: Int = DEFAULT_HOME_COLUMNS,
 ) {
     fun cellVisible(index: Int) = homeCellLocal(index).let { it / GRID_COLUMNS < rows && it % GRID_COLUMNS < columns }
-    /** Cells that cannot take a shortcut: widget footprints plus hidden rows and columns on every reachable page. */
-    fun unavailableCells(exceptSlot: Int? = null): Set<Int> = buildSet {
+    /**
+     * Cells that cannot take a shortcut: widget and large folder footprints plus hidden rows and
+     * columns on every reachable page.
+     */
+    fun unavailableCells(exceptSlot: Int? = null, exceptFolder: String? = null): Set<Int> = buildSet {
         widgetPlacements.filter { it.slot != exceptSlot }.forEach { addAll(it.coveredIndices()) }
+        addAll(largeFolderFootprints(exceptFolder))
         for (page in -1..pageCount + 1) for (row in 0 until GRID_ROWS) repeat(GRID_COLUMNS) { column ->
             if (row >= rows || column >= columns) add(homeCellIndex(page, row * GRID_COLUMNS + column))
         }
@@ -146,13 +150,19 @@ fun widgetCandidate(layout: HomeLayout, slot: Int, targetIndex: Int, spanX: Int,
     if (spanX !in 1..layout.columns || spanY !in 1..layout.rows ||
         candidate.column + spanX > layout.columns || candidate.row + spanY > layout.rows) return null
     if (layout.widgetPlacements.any { it.slot != slot && overlaps(it, candidate) }) return null
-    if (candidate.coveredIndices().any { layout.slotAt(it) != null }) return null
+    if (candidate.coveredIndices().any { layout.slotAt(it) != null || it in layout.largeFolderFootprints() }) return null
     return candidate
 }
 
 /** Moves use insertion order and transfer shortcuts between Home and the dock. */
 fun dropApp(layout: HomeLayout, id: String, target: DropTarget): HomeLayout {
     if (id.isBlank() || layout.folders.any { id in it.appIds }) return layout
+    // A large folder moves whole, like a widget, and goes into the dock as an ordinary one.
+    if (layout.folder(id)?.large == true) return when (target) {
+        is DropTarget.Home -> moveLargeFolder(layout, id, target.index)
+        is DropTarget.Dock -> dropApp(setFolderLarge(layout, id, false), id, target)
+        else -> layout
+    }
     return when (target) {
         is DropTarget.Home -> {
             val blocked = layout.unavailableCells()
@@ -282,7 +292,8 @@ fun placeWidget(layout: HomeLayout, placement: WidgetPlacement): HomeLayout {
     if (placement.id == NEEDS_BINDING_WIDGET && layout.widgetRestore(placement.slot) == null) return layout
     val without = layout.widgetPlacements.filterNot { it.slot == placement.slot }
     if (without.any { overlaps(it, placement) }) return layout
-    if (placement.coveredIndices().any { layout.slotAt(it) != null || !layout.cellVisible(it) }) return layout
+    val largeFolders = layout.largeFolderFootprints()
+    if (placement.coveredIndices().any { layout.slotAt(it) != null || !layout.cellVisible(it) || it in largeFolders }) return layout
     return layout.copy(widgetPlacements = (without + placement).sortedBy { it.slot },
         widgetRestores = if (placement.id == NEEDS_BINDING_WIDGET) layout.widgetRestores
             else layout.widgetRestores.filterNot { it.slot == placement.slot })
@@ -337,7 +348,7 @@ fun appendHomeApps(layout: HomeLayout, ids: List<String>, onNewPage: Boolean): H
     val placed = (layout.slots + layout.leadingSlots + layout.dock).filterNotNull().toSet() + layout.folders.flatMap { it.appIds }
     val adding = ids.filter { it !in placed }.distinct()
     if (adding.isEmpty()) return layout
-    val covered = layout.widgetPlacements.flatMap { it.coveredIndices() }.filter { it >= 0 }.toSet()
+    val covered = (layout.widgetPlacements.flatMap { it.coveredIndices() } + layout.largeFolderFootprints()).filter { it >= 0 }.toSet()
     val lastUsed = maxOf(layout.slots.indexOfLast { it != null }, covered.maxOrNull() ?: -1)
     var index = when {
         lastUsed < 0 -> 0
@@ -360,7 +371,7 @@ fun appendHomeApps(layout: HomeLayout, ids: List<String>, onNewPage: Boolean): H
  */
 fun homeCellsForApps(layout: HomeLayout, from: Int, count: Int): List<Int> {
     if (count <= 0) return emptyList()
-    val covered = layout.widgetPlacements.flatMap { it.coveredIndices() }.toSet()
+    val covered = layout.widgetPlacements.flatMap { it.coveredIndices() }.toSet() + layout.largeFolderFootprints()
     val pageStart = homeCellIndex(homeCellPage(from), 0)
     val pageCells = (pageStart until pageStart + HOME_CELLS).let { cells -> cells.filter { it >= from } + cells.filter { it < from } }
     val cells = pageCells.filter { layout.cellVisible(it) && it !in covered && layout.slotAt(it) == null }.take(count).toMutableList()

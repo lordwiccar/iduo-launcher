@@ -89,6 +89,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -240,16 +241,22 @@ fun LauncherScreen(
     val pageFling = androidx.compose.foundation.pager.PagerDefaults.flingBehavior(nativePager, pagerSnapDistance = pageGestures)
     // A settle that is cut short, by a window resize restarting the gesture handler or an
     // animation cancelled while Home pauses, must not leave Home resting between two pages.
+    // Checked afresh after every attempt: a settle that is itself cut short is retried.
     LaunchedEffect(nativePager) {
-        snapshotFlow { !nativePager.isScrollInProgress && kotlin.math.abs(nativePager.currentPageOffsetFraction) > .0001f }
-            .distinctUntilChanged().collect { stranded ->
-                if (stranded) try {
-                    nativePager.animateScrollToPage(nativePager.currentPage)
-                } catch (interrupted: kotlinx.coroutines.CancellationException) {
-                    // A new swipe took over; it settles on its own.
-                    if (!kotlinx.coroutines.currentCoroutineContext().isActive) throw interrupted
-                }
+        while (true) {
+            snapshotFlow { !nativePager.isScrollInProgress && kotlin.math.abs(nativePager.currentPageOffsetFraction) > .0001f }
+                .first { it }
+            try {
+                nativePager.animateScrollToPage(nativePager.currentPage)
+                // A settle that ends off by a rounding error snaps, so the check cannot spin.
+                if (kotlin.math.abs(nativePager.currentPageOffsetFraction) > .0001f)
+                    nativePager.scrollToPage(nativePager.currentPage)
+            } catch (interrupted: kotlinx.coroutines.CancellationException) {
+                // A new swipe took over; the next check waits for it to finish.
+                if (!kotlinx.coroutines.currentCoroutineContext().isActive) throw interrupted
+                androidx.compose.runtime.withFrameNanos { }
             }
+        }
     }
     val scope = rememberCoroutineScope()
     var previousHomePages by remember { mutableIntStateOf(homePages) }
@@ -313,13 +320,27 @@ fun LauncherScreen(
             setOfNotNull((dragWindowPage - 1).takeIf { it >= -1 }, dragWindowPage)
         } else setOf(dragWindowPage)
     }
+    // A large folder keeps the cell it was picked up by under the finger, as a widget does.
+    fun largeFolderDrop(raw: DropTarget.Home, source: DragRegion): DropTarget.Home {
+        val id = source.appId ?: return raw
+        val anchor = state.layout.takeIf { it.folder(id)?.large == true }?.indexOfShortcut(id) ?: return raw
+        val grabbed = homeCellLocal((source.target as? DropTarget.Home)?.index ?: anchor)
+        val anchorLocal = homeCellLocal(anchor)
+        val local = homeCellLocal(raw.index)
+        val column = (local % GRID_COLUMNS - (grabbed % GRID_COLUMNS - anchorLocal % GRID_COLUMNS))
+            .coerceIn(0, maxOf(0, state.homeColumns - 2))
+        val row = (local / GRID_COLUMNS - (grabbed / GRID_COLUMNS - anchorLocal / GRID_COLUMNS))
+            .coerceIn(0, maxOf(0, state.homeRows - 2))
+        return DropTarget.Home(homeCellIndex(homeCellPage(raw.index), row * GRID_COLUMNS + column))
+    }
     val rawTarget = if (drag.active) drag.destination(drag.pointer, eligibleDragPages)?.target else null
     val target = if (rawTarget is DropTarget.Home && drag.source?.target is DropTarget.Widget) {
         val slot = (drag.source!!.target as DropTarget.Widget).index
         model.placement(slot)?.let {
             DropTarget.Home(adjustedWidgetDropIndex(rawTarget.index, it, drag.source!!.bounds, drag.origin, state.homeColumns))
         } ?: rawTarget
-    } else rawTarget
+    } else if (rawTarget is DropTarget.Home && drag.source != null) largeFolderDrop(rawTarget, drag.source!!)
+    else rawTarget
     val blockedDock = drag.moved && target is DropTarget.Dock &&
         if (drag.source?.folderId != null) state.dock.none { it == null }
         else drag.source?.appId?.let { !canPlaceInDock(state.layout, it) } == true
@@ -382,7 +403,8 @@ fun LauncherScreen(
                 DropTarget.Home(adjustedWidgetDropIndex(rawDestination.index, it, source.bounds, drag.origin, state.homeColumns))
             }
                 ?: rawDestination
-        } else rawDestination
+        } else if (rawDestination is DropTarget.Home) largeFolderDrop(rawDestination, source)
+        else rawDestination
         val merge = drag.mergeCandidate(drag.pointer, eligibleDragPages)
             ?.takeIf { moved && !cancelled && drag.mergeArmed && (it.target as? DropTarget.Home)?.index == drag.mergeIndex }
         val changed = when {
@@ -1378,8 +1400,9 @@ fun LauncherScreen(
                 val blocked = state.layout.unavailableCells()
                 val destinationPages = (if (expandedWorkspace) listOf(-1) else emptyList()) + (0 until homePages)
                 val homeDestinations = destinationPages.mapNotNull { destinationPage ->
-                    (0 until HOME_CELLS).map { homeCellIndex(destinationPage, it) }
-                        .firstOrNull { it !in blocked && state.layout.slotAt(it) == null }
+                    (0 until HOME_CELLS).map { homeCellIndex(destinationPage, it) }.firstOrNull {
+                        if (folder.large) largeFolderFits(state.layout, id, it) else it !in blocked && state.layout.slotAt(it) == null
+                    }
                 }
                 val folderPage = state.layout.indexOfShortcut(id)?.let(::homeCellPage)
                 FolderPanel(folder, appsById, drag, pager.currentPage,
@@ -1394,7 +1417,11 @@ fun LauncherScreen(
                             scope.launch { pager.animateScrollToPage(homeCellPage(destination).coerceIn(0, homePages - 1)) }
                         }
                     },
-                    onDisband = { if (model.disbandFolder(id)) openFolderId = null })
+                    onDisband = { if (model.disbandFolder(id)) openFolderId = null },
+                    onToggleLarge = if (state.layout.indexOfShortcut(id) == null) null else ({
+                        if (!model.setFolderLarge(id, !folder.large) && !folder.large)
+                            android.widget.Toast.makeText(launcherActivity, R.string.folder_no_room_large, android.widget.Toast.LENGTH_SHORT).show()
+                    }))
             } ?: LaunchedEffect(id) { openFolderId = null }
         }
         launcherActivity.backups.preview?.let { preview ->
@@ -1744,6 +1771,13 @@ private fun SharedHomeGrid(
     val renderedRows = maxOf(rows, pageWidgets.maxOfOrNull { it.row + it.spanY } ?: rows)
     val topPitch = (geometry.widgetHeight + 18f) / 2f
     fun rowTop(row: Int) = if (row <= 2) row * topPitch else geometry.widgetHeight + 18f + (row - 2) * rowHeight
+    // Every cell a large folder fills answers for it: a press picks it up, a tap opens it.
+    val largeFolderAt = buildMap {
+        folders.filter { it.large }.forEach { folder ->
+            savedIndexOf(folder.id)?.takeIf { it in pageRange }?.let { anchor -> largeFolderCells(anchor).forEach { put(it, folder.id) } }
+        }
+    }
+    val folderShape = LocalFolderShape.current
     BoxWithConstraints(Modifier.fillMaxWidth().height(rowTop(renderedRows).dp)) {
         val density = LocalDensity.current
         val cellWidth = maxWidth / columns
@@ -1755,7 +1789,7 @@ private fun SharedHomeGrid(
             if (localIndex % GRID_COLUMNS >= columns) return@repeat
             val globalIndex = pageStart + localIndex
             val cell = DropTarget.Home(globalIndex)
-            val savedId = savedAt(globalIndex)
+            val savedId = savedAt(globalIndex) ?: largeFolderAt[globalIndex]
             val savedApp = appsById[savedId]
             val savedFolder = folders.firstOrNull { it.id == savedId }
             val previewId = previewAt(globalIndex)
@@ -1777,8 +1811,8 @@ private fun SharedHomeGrid(
                 contentAlignment = Alignment.TopCenter) {
                 // A folder-shaped backdrop grows behind the resting target to show that dropping groups them.
                 if (merging) Box(Modifier.offset(y = (-iconSize * .1f).dp).size((iconSize * 1.2f).dp).testTag("folder-merge-$globalIndex")
-                    .background(Glass.copy(alpha = .72f), RoundedCornerShape((iconSize * .3f).dp))
-                    .border(2.dp, Color.White.copy(alpha = .85f), RoundedCornerShape((iconSize * .3f).dp)))
+                    .background(Glass.copy(alpha = .72f), folderShape.outline((iconSize * 1.2f).dp))
+                    .border(2.dp, Color.White.copy(alpha = .85f), folderShape.outline((iconSize * 1.2f).dp)))
                 if (drag.active && drag.source?.appId != null && (gap || previewId == null)) Box(
                     Modifier.size(iconSize.dp).testTag(if (gap) "drag-gap-home-$globalIndex" else "empty-home-slot-$globalIndex")
                         .background(Glass.copy(alpha = if (gap) .16f else .08f), RoundedCornerShape(18.dp))
@@ -1818,7 +1852,16 @@ private fun SharedHomeGrid(
             val row = localIndex / GRID_COLUMNS
             val x = cellWidth * (localIndex % GRID_COLUMNS)
             val y = rowTop(row).dp
-            FolderTile(folder, appsById, iconSize, labels, drag, page,
+            if (folder.large) {
+                // Square, at most from the left icon's edge to the right one's and from the top row's
+                // icon top to the bottom row's icon bottom. It sits on the bottom row, so its name
+                // lines up with that row's app names.
+                val iconsBottom = rowTop(row + 1) + iconSize
+                val side = minOf(cellWidth.value + iconSize, iconsBottom - rowTop(row))
+                LargeFolderTile(folder, appsById, side, labels, drag, page,
+                    Modifier.offset(x = x + (cellWidth * 2 - side.dp) / 2, y = (iconsBottom - side).dp).width(side.dp)
+                        .testTag("home-folder-${folder.id}"), onOpen = { onFolder(folder.id) }, onLaunch = onLaunch)
+            } else FolderTile(folder, appsById, iconSize, labels, drag, page,
                 Modifier.offset(x = x, y = y).width(cellWidth).height(rowHeight.dp)
                     .testTag("home-folder-${folder.id}"), onClick = { onFolder(folder.id) })
         }
@@ -1975,19 +2018,77 @@ private fun <T> List<T>.slicePage(range: IntRange): List<T> =
 /** A folder in the dock: its first four apps in a glass square, which apps can be dropped onto. */
 @Composable
 private fun DockFolderIcon(folder: FolderEntry, apps: Map<String, AppEntry>, size: Float, drag: HomeDragState, modifier: Modifier = Modifier) {
-    Box(modifier.size(size.dp).clip(RoundedCornerShape((size * .26f).dp))
-        .background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), RoundedCornerShape((size * .26f).dp))
+    val outline = LocalFolderShape.current.outline(size.dp)
+    Box(modifier.size(size.dp).clip(outline)
+        .background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), outline)
         .dropRegion(drag, DropTarget.Folder(folder.id), folderId = folder.id).testTag("dock-folder-${folder.id}")) {
-        folder.appIds.take(4).forEachIndexed { index, id ->
-            apps[id]?.let { app ->
-                Box(Modifier.align(when (index) {
-                    0 -> Alignment.TopStart; 1 -> Alignment.TopEnd; 2 -> Alignment.BottomStart; else -> Alignment.BottomEnd
-                }).padding((size * .07f).dp).size((size * .36f).dp)) {
-                    Image(app.icon.asImageBitmap(), null, Modifier.fillMaxSize().clip(RoundedCornerShape(5.dp)))
-                    NotificationDot(badgeCount(app), (size * .36f).dp, Modifier.align(Alignment.TopEnd))
+        FolderPreviewIcons(folder, apps, size)
+    }
+}
+
+/** A folder's first four apps, two by two, kept inside the folder's outline. */
+@Composable
+private fun FolderPreviewIcons(folder: FolderEntry, apps: Map<String, AppEntry>, size: Float) {
+    val inset = size * LocalFolderShape.current.contentInset
+    val gap = size * .06f
+    val mini = (size - 2 * inset - gap) / 2
+    folder.appIds.take(4).forEachIndexed { index, id ->
+        apps[id]?.let { app ->
+            Box(Modifier.offset(x = (inset + (mini + gap) * (index % 2)).dp, y = (inset + (mini + gap) * (index / 2)).dp).size(mini.dp)) {
+                Image(app.icon.asImageBitmap(), null, Modifier.fillMaxSize().clip(RoundedCornerShape((mini * .24f).dp)))
+                NotificationDot(badgeCount(app), mini.dp, Modifier.align(Alignment.TopEnd))
+            }
+        }
+    }
+}
+
+/**
+ * A large folder on Home: its first three apps as big icons that open with a tap, and the next ones
+ * small in the last corner, which opens the whole folder. With four apps or fewer all are big.
+ */
+@Composable
+private fun LargeFolderTile(folder: FolderEntry, apps: Map<String, AppEntry>, side: Float, labels: Boolean,
+    drag: HomeDragState, page: Int, modifier: Modifier, onOpen: () -> Unit, onLaunch: (AppEntry, android.graphics.Rect?) -> Unit) {
+    val shape = LocalFolderShape.current
+    val outline = shape.outline(side.dp)
+    val members = folder.appIds.mapNotNull(apps::get)
+    val allBig = members.size <= 4
+    val inset = side * shape.contentInset
+    val gap = side * .06f
+    val cell = (side - 2 * inset - gap) / 2
+    fun place(position: Int) = Modifier.offset(x = (inset + (cell + gap) * (position % 2)).dp, y = (inset + (cell + gap) * (position / 2)).dp)
+    val openLabel = stringResource(R.string.folder_open, folder.title)
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(Modifier.size(side.dp).clip(outline)
+            .background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), outline)
+            .clickable(onClickLabel = openLabel, onClick = onOpen)
+            .dropRegion(drag, DropTarget.Folder(folder.id), page = page, folderId = folder.id)
+            .testTag("folder-drop-${folder.id}")) {
+            members.take(if (allBig) 4 else 3).forEachIndexed { position, app ->
+                val bounds = remember { android.graphics.Rect() }
+                Box(place(position).size(cell.dp)) {
+                    Image(app.icon.asImageBitmap(), app.label, Modifier.fillMaxSize()
+                        .onGloballyPositioned { bounds.set(it.boundsInWindow().toAndroidBounds()) }
+                        .clip(RoundedCornerShape((cell * .24f).dp)).clickable { onLaunch(app, bounds) }
+                        .testTag("large-folder-app-${app.id}"))
+                    NotificationBadge(badgeCount(app), cell.dp, Modifier.align(Alignment.TopEnd))
+                }
+            }
+            if (!allBig) Box(place(3).size(cell.dp).clip(RoundedCornerShape((cell * .24f).dp))
+                .clickable(onClickLabel = openLabel, onClick = onOpen).testTag("large-folder-more-${folder.id}")) {
+                val mini = (cell - gap / 2) / 2
+                members.drop(3).take(4).forEachIndexed { position, app ->
+                    Box(Modifier.offset(x = ((mini + gap / 2) * (position % 2)).dp, y = ((mini + gap / 2) * (position / 2)).dp).size(mini.dp)) {
+                        Image(app.icon.asImageBitmap(), null, Modifier.fillMaxSize().clip(RoundedCornerShape((mini * .24f).dp)))
+                        NotificationDot(badgeCount(app), mini.dp, Modifier.align(Alignment.TopEnd))
+                    }
                 }
             }
         }
+        // Set like the app names beside it, so they share a line.
+        if (labels) Text(folder.title, color = Color.White, fontSize = 11.sp, lineHeight = 14.sp, maxLines = 1,
+            overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
+            style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = .55f), Offset(0f, 1f), 3f)), modifier = Modifier.padding(top = 4.dp))
     }
 }
 
@@ -1999,20 +2100,12 @@ private fun FolderTile(folder: FolderEntry, apps: Map<String, AppEntry>, size: F
         contentDescription = description
     }, horizontalAlignment = Alignment.CenterHorizontally) {
         Box {
-        Box(Modifier.size(size.dp).clip(RoundedCornerShape((size * .24f).dp))
-            .background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), RoundedCornerShape((size * .24f).dp))
+        val outline = LocalFolderShape.current.outline(size.dp)
+        Box(Modifier.size(size.dp).clip(outline)
+            .background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), outline)
             .dropRegion(drag, DropTarget.Folder(folder.id), page = page, folderId = folder.id)
             .testTag("folder-drop-${folder.id}")) {
-            folder.appIds.take(4).forEachIndexed { index, id ->
-                apps[id]?.let { app ->
-                    Box(Modifier.align(when (index) {
-                        0 -> Alignment.TopStart; 1 -> Alignment.TopEnd; 2 -> Alignment.BottomStart; else -> Alignment.BottomEnd
-                    }).padding(5.dp).size((size * .38f).dp)) {
-                        Image(app.icon.asImageBitmap(), null, Modifier.fillMaxSize().clip(RoundedCornerShape(6.dp)))
-                        NotificationDot(badgeCount(app), (size * .38f).dp, Modifier.align(Alignment.TopEnd))
-                    }
-                }
-            }
+            FolderPreviewIcons(folder, apps, size)
         }
         NotificationBadge(badgeCount(folder.appIds, apps), size.dp,
             Modifier.align(Alignment.TopEnd).offset(x = size.dp * .12f, y = -size.dp * .12f))

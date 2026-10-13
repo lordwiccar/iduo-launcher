@@ -187,6 +187,15 @@
     <string name="folder_app_in">Ve složce %1$s</string>
     <string name="folder_no_apps_match">Žádná aplikace neodpovídá</string>
     <string name="folder_transparency">Průhlednost pozadí složky</string>
+    <string name="folder_shape">Tvar složek</string>
+    <string name="folder_shape_square">Čtverec</string>
+    <string name="folder_shape_squircle">Oblý čtverec</string>
+    <string name="folder_shape_circle">Kruh</string>
+    <string name="folder_shape_detail">Každou složku na ploše můžete v její nabídce také zvětšit. Zabere pak čtyři místa a první aplikace v ní otevřete jedním klepnutím.</string>
+    <string name="folder_make_large">Zvětšit složku</string>
+    <string name="folder_make_small">Zmenšit složku</string>
+    <string name="folder_no_room_large">Na této stránce není místo pro velkou složku</string>
+    <string name="folder_open">Otevřít %1$s</string>
     <string name="all_apps_view">Zobrazení všech aplikací</string>
     <string name="all_apps_view_list">Seznam</string>
     <string name="all_apps_view_grid">Mřížka</string>

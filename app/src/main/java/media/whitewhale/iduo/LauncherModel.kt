@@ -76,6 +76,8 @@ data class LauncherState(
     val homeColumns: Int = DEFAULT_HOME_COLUMNS,
     /** How see-through an open folder's background is, from opaque (0) to [MAX_FOLDER_TRANSPARENCY]. */
     val folderTransparency: Float = DEFAULT_FOLDER_TRANSPARENCY,
+    /** The outline of folders on Home and in the dock. */
+    val folderShape: FolderShape = FolderShape.SQUARE,
     /** All apps as horizontal pages of a grid instead of a vertical list. */
     val libraryGrid: Boolean = false,
     /** All apps as folders by purpose, like iOS's App Library; wins over [libraryGrid]. */
@@ -464,6 +466,8 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         return id.takeIf { commitLayout(media.whitewhale.iduo.createFolder(mutable.value.layout, FolderEntry(id, title, emptyList()),
             firstAppId, secondAppId, targetIndex)) }
     }
+    /** False when the folder has no room on its page to grow. */
+    fun setFolderLarge(folderId: String, large: Boolean) = commitLayout(media.whitewhale.iduo.setFolderLarge(mutable.value.layout, folderId, large))
     fun renameFolder(folderId: String, title: String) = commitLayout(media.whitewhale.iduo.renameFolder(mutable.value.layout, folderId, title))
     fun addAppToFolder(folderId: String, appId: String, index: Int? = null): Boolean {
         if (mutable.value.apps.none { it.id == appId }) return false
@@ -529,9 +533,11 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
     fun placement(slot: Int) = mutable.value.layout.placement(slot)
     fun nextWidgetSlot() = (mutable.value.widgetPlacements.maxOfOrNull { it.slot } ?: -1) + 1
     fun removePlacement(source: DropTarget) = commitLayout(removePlacement(mutable.value.layout, source))
-    private fun commitLayout(next: HomeLayout): Boolean {
+    private fun commitLayout(proposed: HomeLayout): Boolean {
         if (statePayloadInvalid) return false
         val old = mutable.value
+        // Whatever changed, a large folder that lost its room becomes small rather than overlap.
+        val next = fitLargeFolders(proposed)
         if (old.layout == next) return false
         undoLayout = old.layout to next
         undoImportSettings = null
@@ -573,6 +579,11 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
     fun setFolderTransparency(value: Float) {
         if (statePayloadInvalid) return
         mutable.update { it.copy(folderTransparency = value.coerceIn(0f, MAX_FOLDER_TRANSPARENCY)) }; persist()
+    }
+    /** A device-local look setting, like folder transparency. */
+    fun setFolderShape(value: FolderShape) {
+        if (statePayloadInvalid) return
+        mutable.update { it.copy(folderShape = value) }; persist()
     }
     /** A device-local view setting, like folder transparency. */
     fun setLibraryFolders(value: Boolean) {
@@ -811,7 +822,8 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             .put("slot", w.slot).put("id", w.id).put("page", w.page).put("column", w.column).put("row", w.row)
             .put("spanX", w.spanX).put("spanY", w.spanY)) } }
         val folders = JSONArray().also { array -> s.folders.forEach { folder -> array.put(JSONObject()
-            .put("id", folder.id).put("title", folder.title).put("apps", JSONArray(folder.appIds))) } }
+            .put("id", folder.id).put("title", folder.title).put("apps", JSONArray(folder.appIds))
+            .apply { if (folder.large) put("large", true) }) } }
         val restores = JSONArray().also { array -> s.widgetRestores.forEach { restore -> array.put(JSONObject()
             .put("slot", restore.slot).put("provider", restore.providerComponent).put("userSerial", restore.userSerial)
             .put("title", restore.title).put("profileLabel", restore.profileLabel).put("work", restore.isWork)
@@ -826,6 +838,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             .put("coverStatusAtTop", s.coverStatusAtTop)
             .put("homeRows", s.homeRows)
             .put("folderTransparency", s.folderTransparency.toDouble())
+            .put("folderShape", s.folderShape.name)
             .put("libraryGrid", s.libraryGrid)
             .put("libraryFolders", s.libraryFolders)
             .put("leftPage", s.leftPage.name)
@@ -944,7 +957,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             List(array.length()) { index ->
                 val item = array.getJSONObject(index)
                 val apps = item.getJSONArray("apps")
-                FolderEntry(item.getString("id"), item.getString("title"), List(apps.length()) { apps.getString(it) })
+                FolderEntry(item.getString("id"), item.getString("title"), List(apps.length()) { apps.getString(it) }, large = item.optBoolean("large"))
             }.also { loaded ->
                 require(loaded.map(FolderEntry::id).distinct().size == loaded.size)
                 require(loaded.flatMap(FolderEntry::appIds).distinct().size == loaded.sumOf { it.appIds.size })
@@ -1005,6 +1018,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             homeRows = j.optInt("homeRows", DEFAULT_HOME_ROWS).coerceIn(DEFAULT_HOME_ROWS, GRID_ROWS),
             folderTransparency = j.optDouble("folderTransparency", DEFAULT_FOLDER_TRANSPARENCY.toDouble()).toFloat()
                 .takeIf { it.isFinite() }?.coerceIn(0f, MAX_FOLDER_TRANSPARENCY) ?: DEFAULT_FOLDER_TRANSPARENCY,
+            folderShape = FolderShape.entries.firstOrNull { it.name == j.optString("folderShape") } ?: FolderShape.SQUARE,
             libraryGrid = j.optBoolean("libraryGrid", false),
             libraryFolders = j.optBoolean("libraryFolders", false),
             // Layouts from before Google News chose "DISCOVER", which now falls back to Google News.

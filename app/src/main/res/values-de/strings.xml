@@ -183,6 +183,15 @@
     <string name="folder_app_in">In %1$s</string>
     <string name="folder_no_apps_match">Keine passenden Apps</string>
     <string name="folder_transparency">Transparenz des Ordnerhintergrunds</string>
+    <string name="folder_shape">Ordnerform</string>
+    <string name="folder_shape_square">Quadrat</string>
+    <string name="folder_shape_squircle">Squircle</string>
+    <string name="folder_shape_circle">Kreis</string>
+    <string name="folder_shape_detail">Jeder Ordner auf dem Startbildschirm lässt sich über sein Menü auch vergrößern. Er belegt dann vier Plätze, und seine ersten Apps öffnen sich mit einem Tippen.</string>
+    <string name="folder_make_large">Ordner vergrößern</string>
+    <string name="folder_make_small">Ordner verkleinern</string>
+    <string name="folder_no_room_large">Auf dieser Seite ist kein Platz für einen großen Ordner</string>
+    <string name="folder_open">%1$s öffnen</string>
     <string name="all_apps_view">Ansicht aller Apps</string>
     <string name="all_apps_view_list">Liste</string>
     <string name="all_apps_view_grid">Raster</string>

@@ -183,6 +183,15 @@
     <string name="folder_app_in">In %1$s</string>
     <string name="folder_no_apps_match">No apps match</string>
     <string name="folder_transparency">Folder background transparency</string>
+    <string name="folder_shape">Folder shape</string>
+    <string name="folder_shape_square">Square</string>
+    <string name="folder_shape_squircle">Squircle</string>
+    <string name="folder_shape_circle">Circle</string>
+    <string name="folder_shape_detail">Any folder on Home can also be made large from its menu. It then takes four places, and its first apps open with one tap.</string>
+    <string name="folder_make_large">Make folder large</string>
+    <string name="folder_make_small">Make folder small</string>
+    <string name="folder_no_room_large">This page has no room for a large folder</string>
+    <string name="folder_open">Open %1$s</string>
     <string name="all_apps_view">All apps view</string>
     <string name="all_apps_view_list">List</string>
     <string name="all_apps_view_grid">Grid</string>

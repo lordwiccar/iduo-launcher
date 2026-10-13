@@ -215,13 +215,13 @@ private fun StatusRing(status: DeviceStatus, modifier: Modifier, percent: Boolea
         // Wi-Fi: three rounded arcs over a dot, centred a little low in the ring.
         val wifiBase = Offset(center.x, w * .6f - lift)
         if (centre == RingCentre.WIFI && wifiVisual is WifiSignalVisual.Connected) {
-            val arcStroke = w * .068f
+            val arcStroke = w * .052f
             for (i in 1..3) {
                 val r = w * (.04f + i * .08f)
                 drawArc(Color.White.copy(alpha = signalAlpha(wifiVisual.elements[i])), 225f, 90f, false,
                     Offset(wifiBase.x - r, wifiBase.y - r), Size(r * 2, r * 2), style = Stroke(arcStroke, cap = StrokeCap.Round))
             }
-            drawCircle(Color.White.copy(alpha = signalAlpha(wifiVisual.elements[0])), w * .052f, wifiBase)
+            drawCircle(Color.White.copy(alpha = signalAlpha(wifiVisual.elements[0])), w * .046f, wifiBase)
         } else if (centre == RingCentre.SIGNAL) {
             // A cell tower, faint while there is no mobile signal at all.
             val side = w * if (dualSim) .36f else .44f

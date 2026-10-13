@@ -4,7 +4,8 @@ import java.util.UUID
 
 private const val FOLDER_PREFIX = "folder:"
 
-data class FolderEntry(val id: String, val title: String, val appIds: List<String>)
+/** A folder of apps; a [large] one fills two by two cells on Home, like an App Library folder. */
+data class FolderEntry(val id: String, val title: String, val appIds: List<String>, val large: Boolean = false)
 
 fun newFolderId(): String = FOLDER_PREFIX + UUID.randomUUID()
 fun isReservedFolderId(id: String) = id.startsWith(FOLDER_PREFIX)
@@ -156,4 +157,80 @@ fun reconcileFolders(layout: HomeLayout, removedAppIds: Set<String>): HomeLayout
     // several children disappear in the same refresh, remove every authoritative ID once
     // more after all folder transitions so iteration order cannot resurrect a shortcut.
     return removedAppIds.fold(next) { current, appId -> current.withoutShortcut(appId) }
+}
+
+/** The cells a large folder at [anchor] fills: its own, the one to its right and the two below them. */
+fun largeFolderCells(anchor: Int): Set<Int> {
+    val page = homeCellPage(anchor)
+    val local = homeCellLocal(anchor)
+    val column = local % GRID_COLUMNS
+    val row = local / GRID_COLUMNS
+    return buildSet {
+        for (y in 0..1) for (x in 0..1)
+            if (column + x < GRID_COLUMNS && row + y < GRID_ROWS) add(homeCellIndex(page, (row + y) * GRID_COLUMNS + column + x))
+    }
+}
+
+/** Every cell Home's large folders fill, other than [exceptFolder]'s. */
+fun HomeLayout.largeFolderFootprints(exceptFolder: String? = null): Set<Int> =
+    folders.filter { it.large && it.id != exceptFolder }
+        .flatMapTo(mutableSetOf()) { folder -> indexOfShortcut(folder.id)?.let(::largeFolderCells).orEmpty() }
+
+/** Whether the folder [folderId] can fill two by two cells from [anchor]: all visible, and free of anything else. */
+fun largeFolderFits(layout: HomeLayout, folderId: String, anchor: Int): Boolean {
+    val local = homeCellLocal(anchor)
+    if (homeCellPage(anchor) !in -1..layout.pageCount ||
+        local % GRID_COLUMNS + 1 >= layout.columns || local / GRID_COLUMNS + 1 >= layout.rows) return false
+    val taken = layout.widgetPlacements.flatMapTo(mutableSetOf()) { it.coveredIndices() } + layout.largeFolderFootprints(folderId)
+    return largeFolderCells(anchor).all { cell ->
+        layout.cellVisible(cell) && cell !in taken && layout.slotAt(cell).let { it == null || it == folderId }
+    }
+}
+
+/**
+ * Makes a folder on Home large or small again. A large folder takes the nearest place on its page
+ * with room; if there is none, it grows where it is, or as near as the grid allows, and the apps in
+ * its way move to the first free cells from its page on. Widgets and other large folders never move.
+ */
+fun setFolderLarge(layout: HomeLayout, folderId: String, large: Boolean): HomeLayout {
+    val folder = layout.folder(folderId) ?: return layout
+    if (folder.large == large) return layout
+    val resized = layout.copy(folders = layout.folders.map { if (it.id == folderId) it.copy(large = large) else it })
+    if (!large) return resized
+    val anchor = layout.indexOfShortcut(folderId) ?: return layout
+    val page = homeCellPage(anchor)
+    val local = homeCellLocal(anchor)
+    val candidates = (0 until HOME_CELLS).map { homeCellIndex(page, it) }.sortedBy { candidate ->
+        val other = homeCellLocal(candidate)
+        kotlin.math.abs(other / GRID_COLUMNS - local / GRID_COLUMNS) + kotlin.math.abs(other % GRID_COLUMNS - local % GRID_COLUMNS)
+    }
+    candidates.firstOrNull { largeFolderFits(layout, folderId, it) }?.let { place ->
+        return if (place == anchor) resized else resized.withSlot(anchor, null).withSlot(place, folderId)
+    }
+    val fixed = layout.widgetPlacements.flatMapTo(mutableSetOf()) { it.coveredIndices() } + layout.largeFolderFootprints(folderId)
+    val place = candidates.firstOrNull { candidate ->
+        val cell = homeCellLocal(candidate)
+        cell % GRID_COLUMNS + 1 < layout.columns && cell / GRID_COLUMNS + 1 < layout.rows &&
+            largeFolderCells(candidate).all { layout.cellVisible(it) && it !in fixed }
+    } ?: return layout
+    var next = resized.withSlot(anchor, null)
+    val displaced = largeFolderCells(place).mapNotNull(next::slotAt)
+    displaced.forEach { id -> next.indexOfShortcut(id)?.let { next = next.withSlot(it, null) } }
+    next = next.withSlot(place, folderId)
+    displaced.forEach { id -> next = next.withSlot(firstFreeCell(next, page), id) }
+    return next
+}
+
+/** Moves a large folder to [anchor] when it has room there; otherwise it stays where it is. */
+fun moveLargeFolder(layout: HomeLayout, folderId: String, anchor: Int): HomeLayout {
+    val from = layout.indexOfShortcut(folderId) ?: return layout
+    if (from == anchor || !largeFolderFits(layout, folderId, anchor)) return layout
+    return layout.withSlot(from, null).withSlot(anchor, folderId)
+}
+
+/** Large folders that no longer have room, or have left Home for the dock, become small again. */
+fun fitLargeFolders(layout: HomeLayout): HomeLayout = layout.folders.filter { it.large }.fold(layout) { next, folder ->
+    val anchor = next.indexOfShortcut(folder.id)
+    if (anchor != null && largeFolderFits(next, folder.id, anchor)) next
+    else next.copy(folders = next.folders.map { if (it.id == folder.id) it.copy(large = false) else it })
 }

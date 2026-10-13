@@ -120,7 +120,8 @@ class MainActivity : ComponentActivity() {
                 androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()
                     .then(if (state.foldAnimation) androidx.compose.ui.Modifier.foldFrost(foldFrost, onCover) else androidx.compose.ui.Modifier)) {
                 androidx.compose.runtime.CompositionLocalProvider(LocalBadgeCounts provides
-                    if (state.notificationBadges && NotificationBadges.accessGranted) NotificationBadges.counts else emptyMap()) {
+                    if (state.notificationBadges && NotificationBadges.accessGranted) NotificationBadges.counts else emptyMap(),
+                    LocalFolderShape provides state.folderShape) {
                 LauncherScreen(state, model, widgets, homeRequests.intValue,
                     onLaunch = { launchApp(it) }, onMakeDefault = ::makeDefault, onAppInfo = ::appInfo,
                     isDefaultHome = defaultHome.value, deviceStatus = deviceStatus, onStatusMode = ::setStatusMode, onWallpaperSettings = ::openWallpaperSettings,
@@ -156,6 +157,15 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         if (timeReceiverRegistered) { unregisterReceiver(timeReceiver); timeReceiverRegistered = false }
         widgets.host.stopListening(); super.onStop()
+    }
+    /**
+     * Folding, rotating and display size changes keep this window rather than start a new one, so
+     * Home's pages carry on where they were instead of coming back from a half-finished swipe.
+     */
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Pick the screen's Home before the next frame, as a new window would in onCreate.
+        model.showDisplay(onCover() || newConfig.screenWidthDp < 650)
     }
     override fun onDestroy() {
         shadeSetupDialog?.dismiss()

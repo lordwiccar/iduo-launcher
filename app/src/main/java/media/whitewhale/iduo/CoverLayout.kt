@@ -36,7 +36,8 @@ fun encodeCoverLayout(layout: HomeLayout): JSONObject {
         .put("slot", w.slot).put("id", w.id).put("page", w.page).put("column", w.column).put("row", w.row)
         .put("spanX", w.spanX).put("spanY", w.spanY)) } }
     val folders = JSONArray().also { array -> layout.folders.forEach { folder -> array.put(JSONObject()
-        .put("id", folder.id).put("title", folder.title).put("apps", JSONArray(folder.appIds))) } }
+        .put("id", folder.id).put("title", folder.title).put("apps", JSONArray(folder.appIds))
+        .apply { if (folder.large) put("large", true) }) } }
     val restores = JSONArray().also { array -> layout.widgetRestores.forEach { restore -> array.put(JSONObject()
         .put("slot", restore.slot).put("provider", restore.providerComponent).put("userSerial", restore.userSerial)
         .put("title", restore.title).put("profileLabel", restore.profileLabel).put("work", restore.isWork)
@@ -55,7 +56,7 @@ fun decodeCoverLayout(json: JSONObject, dock: List<String?>): HomeLayout {
     val folders = List(folderArray.length()) { index ->
         val item = folderArray.getJSONObject(index)
         val apps = item.getJSONArray("apps")
-        FolderEntry(item.getString("id"), item.getString("title"), List(apps.length()) { apps.getString(it) })
+        FolderEntry(item.getString("id"), item.getString("title"), List(apps.length()) { apps.getString(it) }, large = item.optBoolean("large"))
     }
     require(folders.map(FolderEntry::id).distinct().size == folders.size)
     folders.forEach { folder ->
