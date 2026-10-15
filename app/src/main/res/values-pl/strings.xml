@@ -196,6 +196,14 @@
     <string name="folder_make_small">Pomniejsz folder</string>
     <string name="folder_no_room_large">Na tej stronie nie ma miejsca na duży folder</string>
     <string name="folder_open">Otwórz %1$s</string>
+    <string name="icon_shape">Kształt ikon</string>
+    <string name="icon_style">Styl ikon</string>
+    <string name="icon_style_original">Oryginalny</string>
+    <string name="icon_style_dark">Ciemny</string>
+    <string name="icon_style_tinted">Barwiony</string>
+    <string name="icon_style_detail">Ciemny zostawia obraz aplikacji na ciemnym tle, Barwiony rysuje go jednym jasnym kolorem; aplikacje bez jednokolorowej ikony używają Ciemnego. Ikony z pakietów ikon i starsze, nieadaptacyjne ikony pozostają bez zmian.</string>
+    <string name="icon_style_when_dark">Tylko w trybie ciemnym</string>
+    <string name="icon_style_when_dark_detail">Zgodnie z trybem kolorów, także wschodem / zachodem słońca.</string>
     <string name="all_apps_view">Widok wszystkich aplikacji</string>
     <string name="all_apps_view_list">Lista</string>
     <string name="all_apps_view_grid">Siatka</string>

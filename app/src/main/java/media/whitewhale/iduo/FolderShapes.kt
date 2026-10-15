@@ -16,50 +16,71 @@ import kotlin.math.pow
 import kotlin.math.sign
 import kotlin.math.sin
 
-/** How folders are outlined on Home and in the dock. */
-enum class FolderShape { SQUARE, SQUIRCLE, CIRCLE }
+/** An outline for folders, or for app icons, on Home and in the dock. */
+enum class HomeShape { SQUARE, SQUIRCLE, CIRCLE }
+
+/** How app icons are coloured: as their makers drew them, on a dark backdrop, or as one tint on dark. */
+enum class IconStyle { ORIGINAL, DARK, TINTED }
 
 /** The folder shape chosen in Settings. */
-internal val LocalFolderShape = staticCompositionLocalOf { FolderShape.SQUARE }
+internal val LocalFolderShape = staticCompositionLocalOf { HomeShape.SQUARE }
 
 /** The outline of a folder [side] across. */
-internal fun FolderShape.outline(side: Dp): Shape = when (this) {
-    FolderShape.SQUARE -> RoundedCornerShape(side * .24f)
-    FolderShape.SQUIRCLE -> SquircleShape
-    FolderShape.CIRCLE -> CircleShape
+internal fun HomeShape.outline(side: Dp): Shape = when (this) {
+    HomeShape.SQUARE -> RoundedCornerShape(side * .24f)
+    HomeShape.SQUIRCLE -> SquircleShape
+    HomeShape.CIRCLE -> CircleShape
 }
 
 /** How far in from the edge a two by two grid of icons sits so that it stays inside the outline, as part of the side. */
-internal val FolderShape.contentInset: Float get() = when (this) {
-    FolderShape.SQUARE -> .08f
-    FolderShape.SQUIRCLE -> .1f
-    FolderShape.CIRCLE -> .16f
+internal val HomeShape.contentInset: Float get() = when (this) {
+    HomeShape.SQUARE -> .08f
+    HomeShape.SQUIRCLE -> .1f
+    HomeShape.CIRCLE -> .16f
 }
 
-internal val FolderShape.label: Int get() = when (this) {
-    FolderShape.SQUARE -> R.string.folder_shape_square
-    FolderShape.SQUIRCLE -> R.string.folder_shape_squircle
-    FolderShape.CIRCLE -> R.string.folder_shape_circle
+internal val HomeShape.label: Int get() = when (this) {
+    HomeShape.SQUARE -> R.string.folder_shape_square
+    HomeShape.SQUIRCLE -> R.string.folder_shape_squircle
+    HomeShape.CIRCLE -> R.string.folder_shape_circle
 }
 
-/** A superellipse: straighter sides and softer, longer corners than a rounded square. */
+/** The outline as an Android path [side] pixels across, for drawing icons into bitmaps. */
+internal fun HomeShape.path(side: Float): android.graphics.Path = android.graphics.Path().apply {
+    when (this@path) {
+        HomeShape.SQUARE -> addRoundRect(0f, 0f, side, side, side * .236f, side * .236f, android.graphics.Path.Direction.CW)
+        HomeShape.CIRCLE -> addCircle(side / 2f, side / 2f, side / 2f, android.graphics.Path.Direction.CW)
+        HomeShape.SQUIRCLE -> squirclePoints(side, side) { index, x, y -> if (index == 0) moveTo(x, y) else lineTo(x, y) }.also { close() }
+    }
+}
+
+/** Walks a superellipse [width] by [height]: straighter sides and softer, longer corners than a rounded square. */
+private inline fun squirclePoints(width: Float, height: Float, point: (Int, Float, Float) -> Unit) {
+    val rx = width / 2f
+    val ry = height / 2f
+    for (step in 0..SQUIRCLE_STEPS) {
+        val angle = 2 * Math.PI * step / SQUIRCLE_STEPS
+        val c = cos(angle)
+        val s = sin(angle)
+        point(step, rx + rx * (sign(c) * abs(c).pow(2 / SQUIRCLE_EXPONENT)).toFloat(),
+            ry + ry * (sign(s) * abs(s).pow(2 / SQUIRCLE_EXPONENT)).toFloat())
+    }
+}
+
+private const val SQUIRCLE_EXPONENT = 4.0
+private const val SQUIRCLE_STEPS = 96
+
 private object SquircleShape : Shape {
-    private const val EXPONENT = 4.0
-    private const val STEPS = 96
-
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
-        val rx = size.width / 2f
-        val ry = size.height / 2f
         val path = Path()
-        for (step in 0..STEPS) {
-            val angle = 2 * Math.PI * step / STEPS
-            val c = cos(angle)
-            val s = sin(angle)
-            val x = rx + rx * (sign(c) * abs(c).pow(2 / EXPONENT)).toFloat()
-            val y = ry + ry * (sign(s) * abs(s).pow(2 / EXPONENT)).toFloat()
-            if (step == 0) path.moveTo(x, y) else path.lineTo(x, y)
-        }
+        squirclePoints(size.width, size.height) { index, x, y -> if (index == 0) path.moveTo(x, y) else path.lineTo(x, y) }
         path.close()
         return Outline.Generic(path)
     }
+}
+
+internal val IconStyle.label: Int get() = when (this) {
+    IconStyle.ORIGINAL -> R.string.icon_style_original
+    IconStyle.DARK -> R.string.icon_style_dark
+    IconStyle.TINTED -> R.string.icon_style_tinted
 }

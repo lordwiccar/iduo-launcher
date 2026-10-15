@@ -192,6 +192,14 @@
     <string name="folder_make_small">Ordner verkleinern</string>
     <string name="folder_no_room_large">Auf dieser Seite ist kein Platz für einen großen Ordner</string>
     <string name="folder_open">%1$s öffnen</string>
+    <string name="icon_shape">Symbolform</string>
+    <string name="icon_style">Symbolstil</string>
+    <string name="icon_style_original">Original</string>
+    <string name="icon_style_dark">Dunkel</string>
+    <string name="icon_style_tinted">Getönt</string>
+    <string name="icon_style_detail">Dunkel zeigt das Bild jeder App auf dunklem Grund, Getönt zeichnet es in einer hellen Farbe; Apps ohne einfarbiges Symbol nutzen Dunkel. Symbole aus Icon-Paketen und ältere, nicht adaptive Symbole bleiben unverändert.</string>
+    <string name="icon_style_when_dark">Nur im dunklen Modus</string>
+    <string name="icon_style_when_dark_detail">Folgt dem Farbmodus, auch Sonnenaufgang / -untergang.</string>
     <string name="all_apps_view">Ansicht aller Apps</string>
     <string name="all_apps_view_list">Liste</string>
     <string name="all_apps_view_grid">Raster</string>

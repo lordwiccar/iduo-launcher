@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.6
+
+First public release on Google Play (version code 9).
+
+### New features
+- Icon shape: square, squircle or circle for app icons, under Settings → Wallpaper & appearance.
+- Icon style: Dark puts each app's picture on a dark background, Tinted draws it in one light color; either always or only while iDuo is dark.
+
+### Fixes
+- Work apps' icons follow the chosen shape and keep their work badge.
+
 ## 1.1.5
 
 Seventh release on Google Play (version code 8).

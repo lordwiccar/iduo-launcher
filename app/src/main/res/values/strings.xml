@@ -192,6 +192,14 @@
     <string name="folder_make_small">Make folder small</string>
     <string name="folder_no_room_large">This page has no room for a large folder</string>
     <string name="folder_open">Open %1$s</string>
+    <string name="icon_shape">Icon shape</string>
+    <string name="icon_style">Icon style</string>
+    <string name="icon_style_original">Original</string>
+    <string name="icon_style_dark">Dark</string>
+    <string name="icon_style_tinted">Tinted</string>
+    <string name="icon_style_detail">Dark keeps each app\u2019s picture on a dark background; Tinted draws it in one light color, and apps without a single-color icon use Dark. Icons from an icon pack, and older icons that are not adaptive, stay as they are.</string>
+    <string name="icon_style_when_dark">Only in dark mode</string>
+    <string name="icon_style_when_dark_detail">Follows the color mode, including sunrise / sunset.</string>
     <string name="all_apps_view">All apps view</string>
     <string name="all_apps_view_list">List</string>
     <string name="all_apps_view_grid">Grid</string>

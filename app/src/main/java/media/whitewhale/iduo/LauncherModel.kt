@@ -77,7 +77,12 @@ data class LauncherState(
     /** How see-through an open folder's background is, from opaque (0) to [MAX_FOLDER_TRANSPARENCY]. */
     val folderTransparency: Float = DEFAULT_FOLDER_TRANSPARENCY,
     /** The outline of folders on Home and in the dock. */
-    val folderShape: FolderShape = FolderShape.SQUARE,
+    val folderShape: HomeShape = HomeShape.SQUARE,
+    /** The outline app icons are cut to; icons that are not adaptive, or come from an icon pack, keep their own. */
+    val iconShape: HomeShape = HomeShape.SQUARE,
+    val iconStyle: IconStyle = IconStyle.ORIGINAL,
+    /** Whether [iconStyle] applies only while iDuo is dark. */
+    val iconStyleWhenDark: Boolean = true,
     /** All apps as horizontal pages of a grid instead of a vertical list. */
     val libraryGrid: Boolean = false,
     /** All apps as folders by purpose, like iOS's App Library; wins over [libraryGrid]. */
@@ -167,6 +172,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
     private val unavailablePackages = mutableSetOf<Pair<Long, String>>()
     // Accessed only in the serialized IO refresh. Returning Home reuses existing bitmaps.
     private val iconCache = mutableMapOf<String, AppEntry>()
+    private var darkAppearance = false
     private var iconConfiguration = ""
     internal var completedRefreshes = 0
         private set
@@ -206,7 +212,10 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         val resources = getApplication<Application>().resources
         val iconPackName = mutable.value.iconPack
         val iconOverrides = mutable.value.iconOverrides
-        val configuration = resources.configuration.let { "${it.densityDpi}|${it.locales.toLanguageTags()}|${it.uiMode}" }
+        val iconLook = mutable.value.let { state ->
+            IconLook(state.iconShape, if (state.iconStyleWhenDark && !darkAppearance) IconStyle.ORIGINAL else state.iconStyle)
+        }
+        val configuration = resources.configuration.let { "${it.densityDpi}|${it.locales.toLanguageTags()}|${it.uiMode}" } + "|" + iconLook
         viewModelScope.launch {
             try {
                 val apps = withContext(Dispatchers.IO) {
@@ -255,7 +264,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
                             iconCache[id]?.takeIf { it.label == label && it.available } ?: run {
                                 val icon = iconOverrides[id]?.let { choice -> runCatching { chosenIcon(application, choice, profile) }.getOrNull() }
                                     ?: iconPack?.let { pack -> runCatching { packIcon(application, pack, info, profile) }.getOrNull() }
-                                    ?: launcherIcon(runCatching { info.getBadgedIcon(0) }.getOrElse { application.packageManager.defaultActivityIcon })
+                                    ?: appIcon(application, info, profile, iconLook)
                                 val appInfo = info.applicationInfo
                                 val category = appCategory(component.packageName, label, appInfo.category,
                                     appInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM != 0)
@@ -581,9 +590,23 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         mutable.update { it.copy(folderTransparency = value.coerceIn(0f, MAX_FOLDER_TRANSPARENCY)) }; persist()
     }
     /** A device-local look setting, like folder transparency. */
-    fun setFolderShape(value: FolderShape) {
+    fun setFolderShape(value: HomeShape) {
         if (statePayloadInvalid) return
         mutable.update { it.copy(folderShape = value) }; persist()
+    }
+    /** Device-local look settings that redraw every app icon. */
+    fun setIconLook(shape: HomeShape = mutable.value.iconShape, style: IconStyle = mutable.value.iconStyle,
+        whenDark: Boolean = mutable.value.iconStyleWhenDark) {
+        val old = mutable.value
+        if (statePayloadInvalid || (old.iconShape == shape && old.iconStyle == style && old.iconStyleWhenDark == whenDark)) return
+        mutable.update { it.copy(iconShape = shape, iconStyle = style, iconStyleWhenDark = whenDark) }; persist(); refresh()
+    }
+    /** Whether iDuo is dark now, which a dark-only icon style follows. */
+    fun setDarkAppearance(dark: Boolean) {
+        if (darkAppearance == dark) return
+        darkAppearance = dark
+        val state = mutable.value
+        if (state.iconStyle != IconStyle.ORIGINAL && state.iconStyleWhenDark) refresh()
     }
     /** A device-local view setting, like folder transparency. */
     fun setLibraryFolders(value: Boolean) {
@@ -839,6 +862,9 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             .put("homeRows", s.homeRows)
             .put("folderTransparency", s.folderTransparency.toDouble())
             .put("folderShape", s.folderShape.name)
+            .put("iconShape", s.iconShape.name)
+            .put("iconStyle", s.iconStyle.name)
+            .put("iconStyleWhenDark", s.iconStyleWhenDark)
             .put("libraryGrid", s.libraryGrid)
             .put("libraryFolders", s.libraryFolders)
             .put("leftPage", s.leftPage.name)
@@ -1018,7 +1044,10 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             homeRows = j.optInt("homeRows", DEFAULT_HOME_ROWS).coerceIn(DEFAULT_HOME_ROWS, GRID_ROWS),
             folderTransparency = j.optDouble("folderTransparency", DEFAULT_FOLDER_TRANSPARENCY.toDouble()).toFloat()
                 .takeIf { it.isFinite() }?.coerceIn(0f, MAX_FOLDER_TRANSPARENCY) ?: DEFAULT_FOLDER_TRANSPARENCY,
-            folderShape = FolderShape.entries.firstOrNull { it.name == j.optString("folderShape") } ?: FolderShape.SQUARE,
+            folderShape = HomeShape.entries.firstOrNull { it.name == j.optString("folderShape") } ?: HomeShape.SQUARE,
+            iconShape = HomeShape.entries.firstOrNull { it.name == j.optString("iconShape") } ?: HomeShape.SQUARE,
+            iconStyle = IconStyle.entries.firstOrNull { it.name == j.optString("iconStyle") } ?: IconStyle.ORIGINAL,
+            iconStyleWhenDark = j.optBoolean("iconStyleWhenDark", true),
             libraryGrid = j.optBoolean("libraryGrid", false),
             libraryFolders = j.optBoolean("libraryFolders", false),
             // Layouts from before Google News chose "DISCOVER", which now falls back to Google News.
@@ -1076,14 +1105,47 @@ private fun chosenIcon(context: Context, choice: IconChoice, user: UserHandle): 
     return badged.toBitmap(ICON_SIZE, ICON_SIZE)
 }
 
-/** Render adaptive layers through our rounded-square mask, preserving original app artwork. */
-internal fun launcherIcon(drawable: Drawable): Bitmap {
-    if (drawable !is AdaptiveIconDrawable) return drawable.toBitmap(144, 144)
-    val bitmap = Bitmap.createBitmap(144, 144, Bitmap.Config.ARGB_8888)
+/** How app icons are drawn: the outline they are cut to and their colouring. */
+internal data class IconLook(val shape: HomeShape = HomeShape.SQUARE, val style: IconStyle = IconStyle.ORIGINAL)
+
+/** An app's own icon in [look]; work apps keep Android's badge. */
+private fun appIcon(context: Context, info: android.content.pm.LauncherActivityInfo, user: UserHandle, look: IconLook): Bitmap {
+    val drawn = launcherIcon(runCatching { info.getIcon(0) }.getOrElse { context.packageManager.defaultActivityIcon }, look)
+    if (user == Process.myUserHandle()) return drawn
+    val badged = context.packageManager.getUserBadgedIcon(android.graphics.drawable.BitmapDrawable(context.resources, drawn), user)
+    return badged.toBitmap(ICON_SIZE, ICON_SIZE)
+}
+
+/**
+ * Renders adaptive layers through [look]'s outline. A dark style keeps the app's foreground on a dark
+ * backdrop; a tinted one draws the app's single-colour layer (Android 13 and later) in one light tint,
+ * falling back to the dark style for apps without that layer. Icons that are not adaptive stay as drawn.
+ */
+internal fun launcherIcon(drawable: Drawable, look: IconLook = IconLook()): Bitmap {
+    if (drawable !is AdaptiveIconDrawable) return drawable.toBitmap(ICON_SIZE, ICON_SIZE)
+    val bitmap = Bitmap.createBitmap(ICON_SIZE, ICON_SIZE, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
-    canvas.clipPath(Path().apply { addRoundRect(0f, 0f, 144f, 144f, 34f, 34f, Path.Direction.CW) })
-    drawable.setBounds(0, 0, 144, 144)
-    drawable.background?.draw(canvas)
-    drawable.foreground?.draw(canvas)
+    canvas.clipPath(look.shape.path(ICON_SIZE.toFloat()))
+    drawable.setBounds(0, 0, ICON_SIZE, ICON_SIZE)
+    val monochrome = if (look.style == IconStyle.TINTED && android.os.Build.VERSION.SDK_INT >= 33) drawable.monochrome?.mutate() else null
+    when {
+        monochrome != null -> {
+            canvas.drawColor(TINTED_ICON_BACKDROP)
+            monochrome.colorFilter = android.graphics.PorterDuffColorFilter(TINTED_ICON_INK, android.graphics.PorterDuff.Mode.SRC_IN)
+            monochrome.draw(canvas)
+        }
+        look.style != IconStyle.ORIGINAL -> {
+            canvas.drawColor(DARK_ICON_BACKDROP)
+            drawable.foreground?.draw(canvas)
+        }
+        else -> {
+            drawable.background?.draw(canvas)
+            drawable.foreground?.draw(canvas)
+        }
+    }
     return bitmap
 }
+
+private const val DARK_ICON_BACKDROP = 0xFF1E2326.toInt()
+private const val TINTED_ICON_BACKDROP = 0xFF1F2A30.toInt()
+private const val TINTED_ICON_INK = 0xFFB4D0DD.toInt()

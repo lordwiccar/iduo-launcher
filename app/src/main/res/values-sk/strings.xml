@@ -196,6 +196,14 @@
     <string name="folder_make_small">Zmenšiť priečinok</string>
     <string name="folder_no_room_large">Na tejto strane nie je miesto pre veľký priečinok</string>
     <string name="folder_open">Otvoriť %1$s</string>
+    <string name="icon_shape">Tvar ikon</string>
+    <string name="icon_style">Štýl ikon</string>
+    <string name="icon_style_original">Pôvodný</string>
+    <string name="icon_style_dark">Tmavý</string>
+    <string name="icon_style_tinted">Tónovaný</string>
+    <string name="icon_style_detail">Tmavý ponechá obrázok aplikácie na tmavom pozadí, Tónovaný ho vykreslí jednou svetlou farbou; aplikácie bez jednofarebnej ikony použijú Tmavý. Ikony z balíka ikon a staršie neadaptívne ikony zostanú bez zmeny.</string>
+    <string name="icon_style_when_dark">Len v tmavom režime</string>
+    <string name="icon_style_when_dark_detail">Riadi sa farebným režimom, aj podľa východu a západu slnka.</string>
     <string name="all_apps_view">Zobrazenie všetkých aplikácií</string>
     <string name="all_apps_view_list">Zoznam</string>
     <string name="all_apps_view_grid">Mriežka</string>

@@ -85,6 +85,7 @@ class MainActivity : ComponentActivity() {
         returningFromShadeSettings = savedInstanceState?.getBoolean(SHADE_SETTINGS_PENDING) == true
         val restoreShadeDialog = savedInstanceState?.getBoolean(SHADE_DIALOG_VISIBLE) == true
         appearance = AppearanceStore(this)
+        model.setDarkAppearance(appearance.state.dark)
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
         // Pick the cover's or the inner screen's Home before the first frame, so folding never shows the other one.
@@ -109,6 +110,7 @@ class MainActivity : ComponentActivity() {
                 applyCoverRotation(state.coverRotation, onCover())
             }
             val deviceStatus = status.state.collectAsStateWithLifecycle().value
+            androidx.compose.runtime.LaunchedEffect(appearance.state.dark) { model.setDarkAppearance(appearance.state.dark) }
             // The window's real size, which follows Samsung moving this window between screens.
             val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
             val onCover = if (window.width <= 0) onCover()
