@@ -20,7 +20,7 @@
     <string name="value_dp">%1$d dp</string>
     <string name="value_percent">%1$d%%</string>
     <string name="customize_close">カスタマイズを閉じる</string>
-    <string name="customize_launcher">ランチャーのカスタマイズ</string>
+    <string name="customize_launcher">カスタマイズと設定</string>
     <string name="customize_wallpaper">壁紙と外観</string>
     <string name="customize_home">ホーム</string>
     <string name="customize_gestures">ジェスチャーと検索</string>
@@ -92,7 +92,7 @@
     <string name="help_home_default">iDuo はホームアプリに設定されています。ランチャーは Android のホーム設定で切り替えられます。</string>
     <string name="help_home_not_default">Android のホーム設定で iDuo を選択すると、ホームを押したときに iDuo が使われます。</string>
     <string name="help_customize_title">どのページもカスタマイズ</string>
-    <string name="help_customize">空いている場所を長押しして「ランチャーのカスタマイズ」を選択します。ページがいっぱいの場合は、左端の細い部分を長押ししてください。</string>
+    <string name="help_customize">空いている場所を長押しして「カスタマイズと設定」を選択します。ページがいっぱいの場合は、左端の細い部分を長押ししてください。</string>
     <string name="help_widgets">ホームの空いているセルに Android ウィジェットを追加できます。ウィジェットを長押しすると移動や削除ができます。</string>
     <string name="help_shade_title">通知、クイック設定、ロック</string>
     <string name="help_shade">ホームで下にスワイプするとシステムパネルが開き、空いている場所をダブルタップすると画面がロックされます。初回は、iDuo が Android のオプションのユーザー補助設定について説明します。このサービスはシステムパネルを開くことと画面のロックのみを行います。</string>
@@ -144,8 +144,6 @@
     <string name="app_info">アプリ情報</string>
     <string name="create_folder">フォルダを作成</string>
     <string name="create_folder_with">%1$s とフォルダを作成</string>
-    <string name="close_empty_space_options">空きスペースのオプションを閉じる</string>
-    <string name="empty_space_detail">ここに置くものを選択してください。</string>
     <string name="wallpaper">壁紙</string>
     <string name="home_options">ホームのオプション</string>
     <string name="folder_default">フォルダ</string>
@@ -257,7 +255,6 @@
     <string name="widget_no_room_there">そこにはスペースがありません。別の場所やページをお試しください。</string>
     <string name="widget_pending">保留中: %1$s</string>
     <string name="widget_options">ウィジェットのオプション</string>
-    <string name="close_widget_options">ウィジェットのオプションを閉じる</string>
     <string name="widget_settings">ウィジェットの設定</string>
     <string name="widget_settings_interrupted">ウィジェットの設定が中断されました。設定を再開するか、キャンセルしてウィジェットをそのままにしてください。</string>
     <string name="widget_setup_title">ウィジェットの設定を完了</string>
@@ -267,9 +264,7 @@
     <string name="widget_setup_cancel">ウィジェットの設定をキャンセル</string>
     <string name="widget_not_added">ウィジェットは追加されませんでした</string>
     <string name="resize">サイズ変更</string>
-    <string name="resize_on_home">ホームでサイズ変更</string>
     <string name="drag_to_resize">ドラッグしてウィジェットのサイズを変更</string>
-    <string name="widget_resize_outside">サイズを変更する前に、このウィジェットをホームのグリッド内に移動してください。</string>
     <string name="width">幅</string>
     <string name="height">高さ</string>
     <string name="decrease_width">ウィジェットの幅を狭くする</string>
@@ -282,9 +277,6 @@
     <plurals name="rows">
         <item quantity="other">%1$d 行</item>
     </plurals>
-    <string name="resize_overlap_note">他のアイテムと重なるサイズは無視されます。</string>
-    <string name="resize_invalid">そのサイズは他のアイテムと重なるか、ページからはみ出します。</string>
-    <string name="apply_size">サイズを適用</string>
     <string name="widget_no_room">ここにはこのウィジェットを置くスペースがありません。</string>
     <string name="widget_home_changed">ウィジェットの設定中にホームが変更されました。もう一度場所を選択してください。</string>
     <string name="widget_unexpected_binding">ウィジェットホストから予期しないバインディングが返されました。もう一度お試しください。</string>
@@ -560,4 +552,13 @@
     <string name="glass_liquid">リキッド</string>
     <string name="glass_liquid_detail">ドック、フォルダ、ニュース、「すべてのアプリ」に、縁が明るい透明なガラスを使います。iDuo で設定した壁紙は、縁で屈折します。</string>
     <string name="glass_liquid_android_wallpaper">この壁紙は Android で設定されています。Android ではアプリが壁紙を読み取れないため、ガラスは透明のままです。ここで同じ画像を選択すると、縁で屈折するようになります。</string>
+    <string name="status_menu_battery">バッテリー</string>
+    <string name="status_menu_wifi">Wi-Fi</string>
+    <string name="status_menu_mobile">モバイルネットワーク</string>
+    <string name="status_open_settings">バッテリー、Wi-Fi、ネットワークの設定を開く</string>
+    <string name="widget_exact_size">正確なサイズ</string>
+    <string name="widget_move_page">ページへ移動</string>
+    <string name="glass_liquid_notice_title">リキッドガラス</string>
+    <string name="glass_liquid_notice">リキッドガラスの効果をすべて確認するには、iDuoの設定画面から直接、壁紙を再度設定してください。</string>
+    <string name="ok">OK</string>
 </resources>

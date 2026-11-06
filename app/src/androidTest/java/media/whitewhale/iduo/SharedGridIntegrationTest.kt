@@ -138,17 +138,16 @@ class SharedGridIntegrationTest {
             compose.onNodeWithContentDescription("Home page 2").performClick()
             compose.waitForIdle()
             compose.onNodeWithTag("widget-slot-$slot").performTouchInput { longClick() }
-            compose.onNodeWithText("Widget options").assertIsDisplayed()
+            compose.onNodeWithTag("widget-resize-mode").assertIsDisplayed()
             pressBack()
-            compose.onNodeWithText("Widget options").assertDoesNotExist()
+            compose.onNodeWithTag("widget-resize-mode").assertDoesNotExist()
             compose.onNodeWithTag("widget-slot-$slot").performTouchInput { longClick() }
-            compose.onNodeWithText("Widget options").assertIsDisplayed()
-            compose.onNodeWithText("Resize on Home").performClick()
             compose.onNodeWithTag("widget-resize-preview-$slot").assertIsDisplayed()
-            compose.onNodeWithTag("widget-resize-handle-$slot").performTouchInput {
-                down(center); moveBy(Offset(width * 2f, 0f), 400); up()
+            compose.onNodeWithTag("widget-resize-handle-$slot-bottom_right").performTouchInput {
+                down(center); moveBy(Offset(width * 8f, 0f), 400); up()
             }
-            compose.onNodeWithText("Apply").performClick()
+            compose.waitForIdle()
+            compose.onNodeWithTag("widget-resize-done").performClick()
             val resized = requireNotNull(model().placement(slot))
             assertTrue("Dragging the handle increases the widget width", resized.spanX > 1)
             val options = manager.getAppWidgetOptions(id)
@@ -193,9 +192,6 @@ class SharedGridIntegrationTest {
             compose.onNode(hasText("Search widgets") and hasSetTextAction())
                 .performTextInput(provider.loadLabel(compose.activity.packageManager).toString())
             compose.onNodeWithTag("widget-provider-${provider.provider.flattenToString()}").performScrollTo().performClick()
-            compose.onNodeWithTag("widget-placement-preview").assertIsDisplayed().assert(
-                SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.StateDescription, "Ready to place"))
-            compose.onNodeWithTag("widget-placement-apply").performClick()
             compose.waitUntil(10_000) { model().placement(slot)?.id?.let { it >= 0 } == true }
             val placed = requireNotNull(model().placement(slot))
             createdId = placed.id
@@ -218,11 +214,8 @@ class SharedGridIntegrationTest {
             val arranged = model().state.value.layout
             val widget = requireNotNull(arranged.placement(0))
             compose.onNodeWithTag("widget-slot-${widget.slot}").performTouchInput { longClick() }
-            compose.onNodeWithText("Apply").assertIsDisplayed()
-            compose.onNodeWithText("Resize on Home").performClick()
             compose.onNodeWithTag("widget-resize-preview-${widget.slot}").assertIsDisplayed()
-            compose.onNode(hasText("Cancel") and hasClickAction() and
-                !hasContentDescription("Cancel widget setup")).performClick()
+            pressBack()
             assertEquals(arranged, model().state.value.layout)
 
             compose.onNodeWithTag("app-pager").performTouchInput { swipeLeft() }

@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.1.8
+
+Google Play release (version code 11).
+
+### New features
+- Home can have as few as one row of apps below the widget band, and a short grid rests on the bottom of the page, above the page dots.
+- Widgets resize freely: a long press opens a frame with a handle on each corner, and apps in the way move aside.
+- Tapping a widget in the picker places it straight away and opens its frame.
+- Tapping the status ring offers Battery, Wi-Fi and Mobile network settings.
+
+### Look and feel
+- The widget menu and the Add to Home menu are small floating windows with icons. A widget's exact size folds away inside its menu.
+- Customize launcher is now called Customize & settings.
+- Search has the Liquid glass style, and small folders bend the wallpaper like the dock and large folders.
+- Choosing Liquid glass explains that the wallpaper has to be set again in iDuo for all its effects.
+
+### Fixes
+- With six or more dock apps, the dock no longer runs into the status ring: the ring moves up to make room.
+- The dock height slider now moves a tall dock.
+- A short press on a clock or date widget no longer opens its menu, and holding a widget responds a little sooner.
+- The resize frame and placement preview are no longer shifted down on screens with a camera cutout.
+
 ## 1.1.7
 
 Second public release on Google Play (version code 10).

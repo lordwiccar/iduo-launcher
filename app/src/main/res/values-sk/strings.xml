@@ -25,7 +25,7 @@
 
     <!-- Customization -->
     <string name="customize_close">Zavrieť prispôsobenie</string>
-    <string name="customize_launcher">Prispôsobiť spúšťač</string>
+    <string name="customize_launcher">Prispôsobenie a nastavenia</string>
     <string name="customize_wallpaper">Tapeta a vzhľad</string>
     <string name="customize_home">Plocha</string>
     <string name="customize_gestures">Gestá a vyhľadávanie</string>
@@ -103,7 +103,7 @@
     <string name="help_home_default">iDuo je vaša domovská aplikácia. Spúšťač môžete zmeniť v nastaveniach domovskej obrazovky Androidu.</string>
     <string name="help_home_not_default">Vyberte iDuo v nastaveniach domovskej obrazovky Androidu, aby sa otvorilo po stlačení tlačidla Domov.</string>
     <string name="help_customize_title">Prispôsobenie ľubovoľnej strany</string>
-    <string name="help_customize">Podržte prst na voľnom mieste a zvoľte Prispôsobiť spúšťač. Ak je strana plná, podržte prst na úzkom páse pri jej ľavom okraji.</string>
+    <string name="help_customize">Podržte prst na voľnom mieste a zvoľte Prispôsobenie a nastavenia. Ak je strana plná, podržte prst na úzkom páse pri jej ľavom okraji.</string>
     <string name="help_widgets">Pridávajte miniaplikácie Androidu do prázdnych buniek plochy. Podržaním miniaplikáciu presuniete alebo odoberiete.</string>
     <string name="help_shade_title">Upozornenia, rýchle nastavenia a zamknutie</string>
     <string name="help_shade">Potiahnutím na ploche nadol otvoríte systémové panely, dvojitým klepnutím na voľné miesto zamknete obrazovku. Prvýkrát iDuo vysvetlí voliteľné nastavenie Dostupnosti v Androide. Služba iba otvára systémové panely a zamyká obrazovku.</string>
@@ -162,8 +162,6 @@
     <string name="app_info">Informácie o aplikácii</string>
     <string name="create_folder">Vytvoriť priečinok</string>
     <string name="create_folder_with">Vytvoriť priečinok s aplikáciou %1$s</string>
-    <string name="close_empty_space_options">Zavrieť možnosti voľného miesta</string>
-    <string name="empty_space_detail">Vyberte, čo na toto miesto patrí.</string>
     <string name="wallpaper">Tapeta</string>
     <string name="home_options">Možnosti plochy</string>
 
@@ -287,7 +285,6 @@
     <string name="widget_no_room_there">Tam nie je miesto. Skúste iné miesto alebo stranu.</string>
     <string name="widget_pending">Čaká: %1$s</string>
     <string name="widget_options">Možnosti miniaplikácie</string>
-    <string name="close_widget_options">Zavrieť možnosti miniaplikácie</string>
     <string name="widget_settings">Nastavenia miniaplikácie</string>
     <string name="widget_settings_interrupted">Nastavenie miniaplikácie bolo prerušené. Pokračujte v nastavení alebo ho zrušte a miniaplikáciu ponechajte bez zmeny.</string>
     <string name="widget_setup_title">Dokončiť nastavenie miniaplikácie</string>
@@ -297,9 +294,7 @@
     <string name="widget_setup_cancel">Zrušiť nastavenie miniaplikácie</string>
     <string name="widget_not_added">Miniaplikácia nebola pridaná</string>
     <string name="resize">Zmeniť veľkosť</string>
-    <string name="resize_on_home">Zmeniť veľkosť na ploche</string>
     <string name="drag_to_resize">Potiahnutím zmeníte veľkosť miniaplikácie</string>
-    <string name="widget_resize_outside">Pred zmenou veľkosti presuňte miniaplikáciu do mriežky plochy.</string>
     <string name="width">Šírka</string>
     <string name="height">Výška</string>
     <string name="decrease_width">Zúžiť miniaplikáciu</string>
@@ -318,9 +313,6 @@
         <item quantity="many">%1$d riadka</item>
         <item quantity="other">%1$d riadkov</item>
     </plurals>
-    <string name="resize_overlap_note">Veľkosti, ktoré by prekryli iný prvok, sa ignorujú.</string>
-    <string name="resize_invalid">Táto veľkosť prekrýva iný prvok alebo presahuje stranu.</string>
-    <string name="apply_size">Použiť veľkosť</string>
     <string name="widget_no_room">Pre túto miniaplikáciu tu nie je miesto.</string>
     <string name="widget_home_changed">Počas nastavovania miniaplikácie sa plocha zmenila. Vyberte miesto znova.</string>
     <string name="widget_unexpected_binding">Hostiteľ miniaplikácií vrátil neočakávané prepojenie. Skúste to znova.</string>
@@ -622,4 +614,13 @@
     <string name="glass_liquid">Tekuté</string>
     <string name="glass_liquid_detail">Číre sklo s jasnými okrajmi na doku, priečinkoch, novinkách a v zozname aplikácií. Okraje ohýbajú tapetu, ak bola nastavená v iDuo.</string>
     <string name="glass_liquid_android_wallpaper">Táto tapeta je nastavená v Androide a ten aplikáciám nedovoľuje ju čítať, takže sklo zostáva číre. Vyberte tu rovnaký obrázok a okraje ho začnú ohýbať.</string>
+    <string name="status_menu_battery">Batéria</string>
+    <string name="status_menu_wifi">Wi-Fi</string>
+    <string name="status_menu_mobile">Mobilná sieť</string>
+    <string name="status_open_settings">Otvoriť nastavenia batérie, Wi-Fi a siete</string>
+    <string name="widget_exact_size">Presná veľkosť</string>
+    <string name="widget_move_page">Presunúť na stranu</string>
+    <string name="glass_liquid_notice_title">Tekuté sklo</string>
+    <string name="glass_liquid_notice">Ak chcete vidieť všetky efekty tekutého skla, nastavte tapetu znovu priamo v nastaveniach iDuo.</string>
+    <string name="ok">OK</string>
 </resources>

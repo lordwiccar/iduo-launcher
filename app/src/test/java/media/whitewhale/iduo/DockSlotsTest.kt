@@ -49,14 +49,17 @@ class DockSlotsTest {
         assertEquals(four.dockHeight + 2f * four.dockRowHeight, six.dockHeight, .01f)
     }
 
-    @Test fun `a tall dock stays below the status rail drawn from the content top`() {
+    @Test fun `a status rail rises to stay clear of a tall dock`() {
         for (height in listOf(832f, 700f)) {
-            val g = homeGeometry(750f, height, LayoutPreset(), true, dockSlots = MAX_DOCK_SLOTS, statusRailHeight = 140f)
-            assertTrue("$height", g.dockTop >= g.contentTop + 140f - .01f)
-            assertTrue("$height", g.dockTop + g.dockHeight <= height - 124f + .01f)
+            val g = homeGeometry(750f, height, LayoutPreset(), true, dockSlots = MAX_DOCK_SLOTS, statusRailHeight = 140f, statusRailInset = 23f)
+            assertTrue("$height", g.statusTop >= 8f)
+            assertTrue("$height", g.dockTop >= g.statusTop + 140f + 8f - .01f)
+            assertTrue("$height", g.dockTop + g.dockHeight <= height - DOCK_BOTTOM_RESERVE + .01f)
         }
-        val four = homeGeometry(750f, 832f, LayoutPreset(), true, statusRailHeight = 140f)
+        val four = homeGeometry(750f, 832f, LayoutPreset(), true, statusRailHeight = 140f, statusRailInset = 23f)
         assertEquals(homeGeometry(750f, 832f, LayoutPreset(), true).dockTop, four.dockTop, .01f)
+        val resting = homeGeometry(750f, 832f, LayoutPreset(), true, statusRailHeight = 100f, statusRailInset = 23f)
+        assertEquals(resting.contentTop + 23f, resting.statusTop, .01f)
     }
 
     @Test fun `a tall dock stays on screen and keeps full size touch targets`() {
@@ -64,7 +67,7 @@ class DockSlotsTest {
             val g = homeGeometry(475f, height, LayoutPreset(), true, dockSlots = MAX_DOCK_SLOTS)
             assertTrue(g.dockRowHeight >= 48f)
             assertTrue("$height", g.dockTop >= 8f)
-            assertTrue("$height", g.dockTop + g.dockHeight <= height - 124f + .01f)
+            assertTrue("$height", g.dockTop + g.dockHeight <= height - DOCK_BOTTOM_RESERVE + .01f)
         }
     }
 }

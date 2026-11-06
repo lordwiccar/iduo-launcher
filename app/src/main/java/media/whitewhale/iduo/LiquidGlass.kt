@@ -56,10 +56,11 @@ internal object WallpaperBlurState {
 
 /** How strongly panels with text are tinted under Liquid, for legibility on the blurred wallpaper. */
 internal const val LIQUID_PANEL_TINT = .26f
-/** The dock's and a large folder's tint: nearly clear, so the wallpaper reads through. */
+/** Search floats over Home's own widgets, which can be dark: its text needs a stronger tint than a panel's. */
+internal const val LIQUID_SEARCH_TINT = .62f
+/** The dock's tint: nearly clear, so the wallpaper reads through. */
 internal const val LIQUID_DOCK_TINT = .07f
-internal const val LIQUID_LARGE_FOLDER_TINT = .2f
-/** A small folder is a lighter pane, set apart from the dark app icons around it. */
+/** A folder is a lighter pane, set apart from the dark app icons around it. */
 internal const val LIQUID_FOLDER_TINT = .2f
 
 /**
@@ -111,9 +112,9 @@ internal fun Modifier.liquidGlass(shape: Shape, refract: Boolean = false): Modif
     }
 }
 
-/** A folder's own surface: frosted as ever, or liquid glass; [tint] and [refract] apply to the latter. */
-internal fun Modifier.folderGlass(shape: Shape, tint: Float = LIQUID_FOLDER_TINT, refract: Boolean = false): Modifier = composed {
-    if (LocalGlassStyle.current == GlassStyle.LIQUID) background(Color.White.copy(alpha = tint), shape).liquidGlass(shape, refract)
+/** A folder's own surface: frosted as ever, or liquid glass that bends the wallpaper like the dock's. */
+internal fun Modifier.folderGlass(shape: Shape): Modifier = composed {
+    if (LocalGlassStyle.current == GlassStyle.LIQUID) background(Color.White.copy(alpha = LIQUID_FOLDER_TINT), shape).liquidGlass(shape, refract = true)
     else background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), shape)
 }
 

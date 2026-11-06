@@ -142,7 +142,7 @@ class NativeWidgetHomeBehaviorIntegrationTest {
                 slot = model.nextWidgetSlot()
             }
             tap("Home page 2")
-            openNativeHomeCustomization(automation) { click("Customize launcher") }; click("Home layout")
+            openNativeHomeCustomization(automation) { click("Customize & settings") }; click("Home layout")
             clickAfterScrolling("Add widget to this page")
             val label = provider.loadLabel(main.packageManager).toString()
             search(label); await { find(label)?.isVisibleToUser == true }; click(label)

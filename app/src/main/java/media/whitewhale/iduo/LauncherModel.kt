@@ -546,7 +546,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
         return moveWidgetTo(from, target.page * HOME_CELLS + target.row * GRID_COLUMNS + target.column)
     }
     fun moveWidgetTo(slot: Int, index: Int) = commitLayout(moveWidget(mutable.value.layout, slot, index))
-    fun resizeWidget(slot: Int, spanX: Int, spanY: Int) = commitLayout(resizeWidget(mutable.value.layout, slot, spanX, spanY))
+    fun setWidgetFootprint(slot: Int, footprint: WidgetFootprint) = commitLayout(setWidgetFootprint(mutable.value.layout, slot, footprint))
     fun placeWidget(placement: WidgetPlacement) = commitLayout(placeWidget(mutable.value.layout, placement))
     fun placement(slot: Int) = mutable.value.layout.placement(slot)
     fun nextWidgetSlot() = (mutable.value.widgetPlacements.maxOfOrNull { it.slot } ?: -1) + 1
@@ -1068,7 +1068,7 @@ class LauncherModel(application: Application) : AndroidViewModel(application) {
             labels = j.optBoolean("labels", true), compact = preset("compact", LayoutPreset()),
             expanded = preset("expanded", LayoutPreset()), verticalStatus = j.optBoolean("verticalStatus", true),
             coverStatusAtTop = j.optBoolean("coverStatusAtTop", true),
-            homeRows = j.optInt("homeRows", DEFAULT_HOME_ROWS).coerceIn(DEFAULT_HOME_ROWS, GRID_ROWS),
+            homeRows = j.optInt("homeRows", DEFAULT_HOME_ROWS).coerceIn(MIN_HOME_ROWS, GRID_ROWS),
             folderTransparency = j.optDouble("folderTransparency", DEFAULT_FOLDER_TRANSPARENCY.toDouble()).toFloat()
                 .takeIf { it.isFinite() }?.coerceIn(0f, MAX_FOLDER_TRANSPARENCY) ?: DEFAULT_FOLDER_TRANSPARENCY,
             folderShape = HomeShape.entries.firstOrNull { it.name == j.optString("folderShape") } ?: HomeShape.SQUARE,

@@ -85,7 +85,7 @@ fun setFolderApps(layout: HomeLayout, folderId: String, appIds: List<String>): H
 }
 
 /** The first free, visible Home cell from [page] on. */
-private fun firstFreeCell(layout: HomeLayout, page: Int): Int {
+internal fun firstFreeCell(layout: HomeLayout, page: Int): Int {
     val blocked = layout.unavailableCells()
     return generateSequence(homeCellIndex(page, 0)) { it + 1 }
         .first { it !in blocked && layout.cellVisible(it) && layout.slotAt(it) == null }

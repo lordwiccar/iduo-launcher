@@ -20,7 +20,7 @@
     <string name="value_dp">%1$d dp</string>
     <string name="value_percent">%1$d%%</string>
     <string name="customize_close">사용자 지정 닫기</string>
-    <string name="customize_launcher">런처 사용자 지정</string>
+    <string name="customize_launcher">사용자 지정 및 설정</string>
     <string name="customize_wallpaper">배경화면 및 모양</string>
     <string name="customize_home">홈</string>
     <string name="customize_gestures">제스처 및 검색</string>
@@ -92,7 +92,7 @@
     <string name="help_home_default">iDuo가 홈 앱으로 설정되어 있습니다. Android의 홈 설정에서 런처를 변경할 수 있습니다.</string>
     <string name="help_home_not_default">Android의 홈 설정에서 iDuo를 선택하면 홈을 누를 때 iDuo가 사용됩니다.</string>
     <string name="help_customize_title">모든 페이지 사용자 지정</string>
-    <string name="help_customize">빈 공간을 길게 누른 다음 ‘런처 사용자 지정’을 선택하세요. 페이지가 가득 찼다면 왼쪽 가장자리의 좁은 영역을 길게 누르세요.</string>
+    <string name="help_customize">빈 공간을 길게 누른 다음 ‘사용자 지정 및 설정’을 선택하세요. 페이지가 가득 찼다면 왼쪽 가장자리의 좁은 영역을 길게 누르세요.</string>
     <string name="help_widgets">홈의 빈 칸에 Android 위젯을 추가하세요. 위젯을 길게 눌러 이동하거나 제거할 수 있습니다.</string>
     <string name="help_shade_title">알림, 빠른 설정 및 잠금</string>
     <string name="help_shade">홈에서 아래로 스와이프하면 시스템 패널이 열리고, 빈 공간을 두 번 탭하면 화면이 잠깁니다. 처음 사용할 때 iDuo가 Android의 선택 사항인 접근성 설정을 설명합니다. 이 서비스는 시스템 패널을 열고 화면을 잠그는 일만 합니다.</string>
@@ -144,8 +144,6 @@
     <string name="app_info">앱 정보</string>
     <string name="create_folder">폴더 만들기</string>
     <string name="create_folder_with">%1$s와(과) 폴더 만들기</string>
-    <string name="close_empty_space_options">빈 공간 옵션 닫기</string>
-    <string name="empty_space_detail">이 공간에 넣을 항목을 선택하세요.</string>
     <string name="wallpaper">배경화면</string>
     <string name="home_options">홈 옵션</string>
     <string name="folder_default">폴더</string>
@@ -257,7 +255,6 @@
     <string name="widget_no_room_there">거기에는 공간이 없습니다. 다른 공간이나 페이지를 사용해 보세요.</string>
     <string name="widget_pending">대기 중: %1$s</string>
     <string name="widget_options">위젯 옵션</string>
-    <string name="close_widget_options">위젯 옵션 닫기</string>
     <string name="widget_settings">위젯 설정</string>
     <string name="widget_settings_interrupted">위젯 설정이 중단되었습니다. 설정을 계속하거나, 취소하고 위젯을 그대로 유지하세요.</string>
     <string name="widget_setup_title">위젯 설정 완료</string>
@@ -267,9 +264,7 @@
     <string name="widget_setup_cancel">위젯 설정 취소</string>
     <string name="widget_not_added">위젯이 추가되지 않았습니다</string>
     <string name="resize">크기 조정</string>
-    <string name="resize_on_home">홈에서 크기 조정</string>
     <string name="drag_to_resize">드래그하여 위젯 크기 조정</string>
-    <string name="widget_resize_outside">크기를 조정하기 전에 이 위젯을 홈 그리드로 옮기세요.</string>
     <string name="width">너비</string>
     <string name="height">높이</string>
     <string name="decrease_width">위젯 너비 줄이기</string>
@@ -282,9 +277,6 @@
     <plurals name="rows">
         <item quantity="other">%1$d행</item>
     </plurals>
-    <string name="resize_overlap_note">다른 항목과 겹치는 크기는 무시됩니다.</string>
-    <string name="resize_invalid">해당 크기는 다른 항목과 겹치거나 페이지를 벗어납니다.</string>
-    <string name="apply_size">크기 적용</string>
     <string name="widget_no_room">여기에는 이 위젯을 넣을 공간이 없습니다.</string>
     <string name="widget_home_changed">위젯을 설정하는 동안 홈이 변경되었습니다. 공간을 다시 선택하세요.</string>
     <string name="widget_unexpected_binding">위젯 호스트가 예기치 않은 바인딩을 반환했습니다. 다시 시도하세요.</string>
@@ -560,4 +552,13 @@
     <string name="glass_liquid">리퀴드</string>
     <string name="glass_liquid_detail">독, 폴더, 뉴스, ‘모든 앱’에 가장자리가 밝은 투명 유리를 사용합니다. iDuo에서 설정한 배경화면은 가장자리에서 굴절됩니다.</string>
     <string name="glass_liquid_android_wallpaper">이 배경화면은 Android에서 설정되었으며, Android에서는 앱이 배경화면을 읽을 수 없어 유리가 투명하게 유지됩니다. 여기서 같은 이미지를 선택하면 가장자리에서 굴절됩니다.</string>
+    <string name="status_menu_battery">배터리</string>
+    <string name="status_menu_wifi">Wi-Fi</string>
+    <string name="status_menu_mobile">모바일 네트워크</string>
+    <string name="status_open_settings">배터리, Wi-Fi 및 네트워크 설정 열기</string>
+    <string name="widget_exact_size">정확한 크기</string>
+    <string name="widget_move_page">페이지로 이동</string>
+    <string name="glass_liquid_notice_title">리퀘드 글래스</string>
+    <string name="glass_liquid_notice">리퀘드 글래스의 모든 효과를 확인하려면 iDuo 설정에서 직접 배경화면을 다시 설정하세요.</string>
+    <string name="ok">확인</string>
 </resources>

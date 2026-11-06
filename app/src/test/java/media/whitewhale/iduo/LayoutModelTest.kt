@@ -20,10 +20,20 @@ class LayoutModelTest {
     }
     @Test fun `manual dock mode keeps saved position and alignment does not overwrite it`() {
         val p = LayoutPreset(dockPosition = .43f, dockAlignToGrid = false)
-        val manual = homeGeometry(475f, 700f, p, true)
-        assertEquals(700f * .43f - 128f, manual.dockTop, .01f)
+        val manual = homeGeometry(475f, 1400f, p, true)
+        assertEquals(1400f * .43f - 128f, manual.dockTop, .01f)
         assertEquals(256f, manual.dockHeight, .01f)
         assertEquals(.43f, p.copy(dockAlignToGrid = true).sanitized().dockPosition)
+    }
+    @Test fun `the height setting moves a tall dock over all the room it has`() {
+        for (slots in MIN_DOCK_SLOTS..MAX_DOCK_SLOTS) {
+            val tops = listOf(.25f, .4f, .5f, .6f, .75f).map { position ->
+                homeGeometry(475f, 780f, LayoutPreset(dockPosition = position, dockAlignToGrid = false), true,
+                    dockSlots = slots, statusRailHeight = 95f, statusRailInset = 23f).dockTop
+            }
+            assertEquals("$slots", tops.sorted(), tops)
+            assertEquals("$slots", tops.size, tops.distinct().size)
+        }
     }
     @Test fun `search keeps four complete dock targets between status and keyboard`() {
         for (width in listOf(475f, 933f)) for (height in listOf(310f, 330f, 375f, 420f)) {
@@ -59,7 +69,7 @@ class LayoutModelTest {
             val p = LayoutPreset(dockPosition = position)
             val g = homeGeometry(width, height, p, true)
             assertTrue("$width x $height", g.dockTop >= 8f)
-            assertTrue("Dock overlaps bottom controls at $width x $height", g.dockTop + g.dockHeight <= height - 124f + .01f)
+            assertTrue("Dock overlaps bottom controls at $width x $height", g.dockTop + g.dockHeight <= height - DOCK_BOTTOM_RESERVE + .01f)
             assertTrue(g.gridWidth + p.dockWidth + 24f <= g.homeWidth)
             assertTrue(g.iconSize + 8f <= g.gridWidth / 4f)
             if (g.dockHeight == 256f) {
@@ -80,7 +90,7 @@ class LayoutModelTest {
             for (position in listOf(.25f, .56f, .75f)) {
                 val g = homeGeometry(475f, height, LayoutPreset(dockPosition = position), true, status)
                 assertTrue(g.dockTop >= status)
-                assertTrue(g.dockTop + g.dockHeight <= height - 124f + .01f)
+                assertTrue(g.dockTop + g.dockHeight <= height - DOCK_BOTTOM_RESERVE + .01f)
                 assertTrue(g.dockHeight >= 68f)
             }
         }

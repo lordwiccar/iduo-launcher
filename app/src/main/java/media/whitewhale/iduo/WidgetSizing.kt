@@ -1,8 +1,36 @@
 package media.whitewhale.iduo
 
+import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 data class WidgetSpan(val width: Int, val height: Int)
+
+/** Where a widget stands on its page and how many cells it covers. */
+data class WidgetFootprint(val column: Int, val row: Int, val spanX: Int, val spanY: Int)
+
+enum class ResizeCorner(val left: Boolean, val top: Boolean) {
+    TOP_LEFT(true, true), TOP_RIGHT(false, true), BOTTOM_LEFT(true, false), BOTTOM_RIGHT(false, false)
+}
+
+/**
+ * [start] with [corner] dragged by [dx] and [dy]: the opposite corner stays, and the dragged one
+ * snaps to the nearest grid lines, keeping at least one cell. Rows differ in height, so [rowLine]
+ * gives the top of each.
+ */
+fun draggedFootprint(start: WidgetFootprint, corner: ResizeCorner, dx: Float, dy: Float, pitchX: Float,
+    rowLine: (Int) -> Float, columns: Int, rows: Int): WidgetFootprint {
+    val columnEnd = start.column + start.spanX
+    val rowEnd = start.row + start.spanY
+    val column = (start.column + (dx / pitchX).roundToInt())
+    val endColumn = (columnEnd + (dx / pitchX).roundToInt())
+    fun nearestRow(from: Int) = (0..rows).minByOrNull { abs(rowLine(it) - (rowLine(from) + dy)) } ?: from
+    val left = if (corner.left) column.coerceIn(0, columnEnd - 1) else start.column
+    val right = if (corner.left) columnEnd else endColumn.coerceIn(start.column + 1, columns)
+    val top = if (corner.top) nearestRow(start.row).coerceIn(0, rowEnd - 1) else start.row
+    val bottom = if (corner.top) rowEnd else nearestRow(rowEnd).coerceIn(start.row + 1, rows)
+    return WidgetFootprint(left, top, right - left, bottom - top)
+}
 
 data class WidgetGridSizing(
     val columns: Int,

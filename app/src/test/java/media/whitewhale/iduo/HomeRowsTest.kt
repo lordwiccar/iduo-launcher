@@ -4,6 +4,21 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class HomeRowsTest {
+    @Test fun aShortGridRestsOnTheBottomOfThePage() {
+        val height = 832f
+        val bottomSpace = 44f
+        for (rows in MIN_HOME_ROWS..5) {
+            val g = homeGeometry(800f, height, LayoutPreset(), true, homeBottomSpace = bottomSpace, homeRows = rows)
+            val gridBottom = g.contentTop + g.widgetHeight + 18f + (rows - 2) * g.rowHeight
+            assertEquals(height - bottomSpace - HOME_BOTTOM_MARGIN, gridBottom, .01f)
+        }
+    }
+
+    @Test fun aFullGridKeepsItsTopMargin() {
+        val g = homeGeometry(800f, 700f, LayoutPreset(), true, homeRows = GRID_ROWS)
+        assertEquals(16f, g.contentTop, .01f)
+    }
+
     private fun cell(page: Int, row: Int, column: Int) = homeCellIndex(page, row * GRID_COLUMNS + column)
 
     @Test fun `legacy six row indices keep their page row and column`() {
@@ -56,7 +71,7 @@ class HomeRowsTest {
             rows = GRID_ROWS)
         val after = resizeHomeRows(before, DEFAULT_HOME_ROWS)
         assertEquals(DEFAULT_HOME_ROWS, after.rows)
-        assertEquals(DEFAULT_HOME_ROWS, after.requiredRows())
+        assertTrue(after.requiredRows() <= DEFAULT_HOME_ROWS)
         val kept = (after.slots + after.leadingSlots).filterNotNull().toSet()
         assertEquals(setOf("a", "b", "c", "l"), kept)
         val moved = after.placement(3)!!
@@ -73,7 +88,7 @@ class HomeRowsTest {
     }
 
     @Test fun `required rows grow to cover saved content`() {
-        assertEquals(DEFAULT_HOME_ROWS, HomeLayout(listOf("a"), emptyList()).requiredRows())
+        assertEquals(MIN_HOME_ROWS, HomeLayout(listOf("a"), emptyList()).requiredRows())
         assertEquals(GRID_ROWS, HomeLayout(List(cell(1, 7, 0) + 1) { if (it == cell(1, 7, 0)) "a" else null }, emptyList()).requiredRows())
     }
 

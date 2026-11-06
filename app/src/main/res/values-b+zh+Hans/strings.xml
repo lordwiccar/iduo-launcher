@@ -20,7 +20,7 @@
     <string name="value_dp">%1$d dp</string>
     <string name="value_percent">%1$d%%</string>
     <string name="customize_close">关闭自定义</string>
-    <string name="customize_launcher">自定义启动器</string>
+    <string name="customize_launcher">自定义和设置</string>
     <string name="customize_wallpaper">壁纸与外观</string>
     <string name="customize_home">主屏幕</string>
     <string name="customize_gestures">手势与搜索</string>
@@ -92,7 +92,7 @@
     <string name="help_home_default">iDuo 是您的主屏幕应用。您可以在 Android 的主屏幕设置中切换启动器。</string>
     <string name="help_home_not_default">在 Android 的主屏幕设置中选择 iDuo，即可在按主屏幕键时使用它。</string>
     <string name="help_customize_title">自定义任意页面</string>
-    <string name="help_customize">长按空白处，然后选择“自定义启动器”。如果页面已满，请长按其左边缘的窄条区域。</string>
+    <string name="help_customize">长按空白处，然后选择“自定义和设置”。如果页面已满，请长按其左边缘的窄条区域。</string>
     <string name="help_widgets">将 Android 小组件添加到主屏幕的空白格中。长按小组件可移动或移除它。</string>
     <string name="help_shade_title">通知、快速设置和锁屏</string>
     <string name="help_shade">在主屏幕上向下滑动可打开系统面板；双击空白处可锁定屏幕。首次使用时，iDuo 会说明 Android 的可选无障碍设置。该服务仅用于打开系统面板和锁定屏幕。</string>
@@ -144,8 +144,6 @@
     <string name="app_info">应用信息</string>
     <string name="create_folder">创建文件夹</string>
     <string name="create_folder_with">与 %1$s 创建文件夹</string>
-    <string name="close_empty_space_options">关闭空白区域选项</string>
-    <string name="empty_space_detail">选择要放在此处的内容。</string>
     <string name="wallpaper">壁纸</string>
     <string name="home_options">主屏幕选项</string>
     <string name="folder_default">文件夹</string>
@@ -257,7 +255,6 @@
     <string name="widget_no_room_there">那里没有空间。请尝试其他位置或页面。</string>
     <string name="widget_pending">等待添加 %1$s</string>
     <string name="widget_options">小组件选项</string>
-    <string name="close_widget_options">关闭小组件选项</string>
     <string name="widget_settings">小组件设置</string>
     <string name="widget_settings_interrupted">小组件设置已中断。请继续配置，或取消并保持小组件不变。</string>
     <string name="widget_setup_title">完成小组件设置</string>
@@ -267,9 +264,7 @@
     <string name="widget_setup_cancel">取消小组件设置</string>
     <string name="widget_not_added">未添加小组件</string>
     <string name="resize">调整大小</string>
-    <string name="resize_on_home">在主屏幕上调整大小</string>
     <string name="drag_to_resize">拖动以调整小组件大小</string>
-    <string name="widget_resize_outside">调整大小前，请先将此小组件移入主屏幕网格。</string>
     <string name="width">宽度</string>
     <string name="height">高度</string>
     <string name="decrease_width">减小小组件宽度</string>
@@ -282,9 +277,6 @@
     <plurals name="rows">
         <item quantity="other">%1$d 行</item>
     </plurals>
-    <string name="resize_overlap_note">与其他项目重叠的尺寸将被忽略。</string>
-    <string name="resize_invalid">该尺寸与其他项目重叠或超出页面范围。</string>
-    <string name="apply_size">应用尺寸</string>
     <string name="widget_no_room">此处没有足够空间放置此小组件。</string>
     <string name="widget_home_changed">配置小组件期间主屏幕已更改。请重新选择位置。</string>
     <string name="widget_unexpected_binding">小组件宿主返回了意外的绑定。请重试。</string>
@@ -560,4 +552,13 @@
     <string name="glass_liquid">液态</string>
     <string name="glass_liquid_detail">程序坞、文件夹、新闻和“所有应用”使用边缘明亮的透明玻璃。如果壁纸是在 iDuo 中设置的，边缘会折射壁纸。</string>
     <string name="glass_liquid_android_wallpaper">这张壁纸是在 Android 中设置的，而 Android 不允许应用读取它，因此玻璃保持透明。在此处选择同一张图片后，边缘就会折射它。</string>
+    <string name="status_menu_battery">电池</string>
+    <string name="status_menu_wifi">Wi-Fi</string>
+    <string name="status_menu_mobile">移动网络</string>
+    <string name="status_open_settings">打开电池、Wi-Fi 和网络设置</string>
+    <string name="widget_exact_size">精确尺寸</string>
+    <string name="widget_move_page">移到页面</string>
+    <string name="glass_liquid_notice_title">液态玻璃</string>
+    <string name="glass_liquid_notice">要查看液态玻璃的所有效果，请直接在 iDuo 设置中重新设置壁纸。</string>
+    <string name="ok">确定</string>
 </resources>

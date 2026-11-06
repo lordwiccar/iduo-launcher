@@ -76,6 +76,7 @@ internal fun SpotlightPanel(
     LaunchedEffect(Unit) { focus.requestFocus() }
     BackHandler(onBack = onDismiss)
     val search = { if (query.isNotBlank()) onWebSearch(query.trim()) }
+    val liquid = LocalGlassStyle.current == GlassStyle.LIQUID
     // Home behind is blurred like behind a folder; a tap outside the panel closes it.
     Box(Modifier.fillMaxSize()
         .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss)
@@ -88,7 +89,8 @@ internal fun SpotlightPanel(
             }
             Column(Modifier.clickable(remember { MutableInteractionSource() }, indication = null) { },
                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().focusRequester(focus).testTag("spotlight-field"),
+                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().focusRequester(focus).testTag("spotlight-field")
+                    .then(if (liquid) Modifier.liquidGlass(RoundedCornerShape(18.dp)) else Modifier),
                     placeholder = { Text(stringResource(R.string.spotlight_hint)) }, singleLine = true,
                     shape = RoundedCornerShape(18.dp),
                     leadingIcon = {
@@ -102,14 +104,14 @@ internal fun SpotlightPanel(
                     keyboardActions = KeyboardActions(onSearch = { search() }),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Ink, unfocusedTextColor = Ink, cursorColor = Ink,
-                        focusedContainerColor = Glass.copy(alpha = .72f), unfocusedContainerColor = Glass.copy(alpha = .72f),
-                        focusedBorderColor = Color.White.copy(alpha = .8f), unfocusedBorderColor = Color.White.copy(alpha = .45f),
+                        focusedContainerColor = Glass.copy(alpha = if (liquid) LIQUID_SEARCH_TINT else .72f), unfocusedContainerColor = Glass.copy(alpha = if (liquid) LIQUID_SEARCH_TINT else .72f),
+                        focusedBorderColor = if (liquid) Color.Transparent else Color.White.copy(alpha = .8f), unfocusedBorderColor = if (liquid) Color.Transparent else Color.White.copy(alpha = .45f),
                         focusedPlaceholderColor = Ink.copy(alpha = .7f), unfocusedPlaceholderColor = Ink.copy(alpha = .7f),
                         focusedLeadingIconColor = Ink, unfocusedLeadingIconColor = Ink,
                         focusedTrailingIconColor = Ink, unfocusedTrailingIconColor = Ink))
-                if (query.isNotBlank()) Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
-                    color = Glass.copy(alpha = .6f), contentColor = Ink,
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = .38f))) {
+                if (query.isNotBlank()) Surface(Modifier.fillMaxWidth().then(if (liquid) Modifier.liquidGlass(RoundedCornerShape(24.dp)) else Modifier),
+                    shape = RoundedCornerShape(24.dp), color = Glass.copy(alpha = if (liquid) LIQUID_SEARCH_TINT else .6f), contentColor = Ink,
+                    border = if (liquid) null else BorderStroke(1.dp, Color.White.copy(alpha = .38f))) {
                     if (matches.isEmpty()) Text(stringResource(R.string.no_apps_found), Modifier.padding(20.dp).testTag("spotlight-empty"))
                     else Column(Modifier.padding(8.dp)) {
                         matches.chunked(columns).forEach { row ->

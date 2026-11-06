@@ -31,6 +31,8 @@ data class HomeGeometry(
     val dockRowHeight: Float,
     /** Whether every visible row fits without scrolling the page. */
     val gridFits: Boolean = true,
+    /** Where the status rail's visible part starts; it gives way upwards to a tall dock. */
+    val statusTop: Float = contentTop,
 )
 
 /** Advance old defaults without changing individually tuned values. */
@@ -47,10 +49,11 @@ fun upgradePreset(preset: LayoutPreset, schema: Int, expanded: Boolean): LayoutP
 /**
  * Home's measurements for a [width] by [height] window. Without a [dockColumn] the grid takes the
  * dock's place and spreads its [columns] across the whole width; [topBar] reserves a status band
- * above everything else. The [cover] screen keeps one page however wide it is.
+ * above everything else. The [cover] screen keeps one page however wide it is. [statusRailHeight]
+ * is the status rail's visible height, and [statusRailInset] how far below the content top it rests.
  */
 fun homeGeometry(width: Float, fullHeight: Float, preset: LayoutPreset, labels: Boolean, statusHeight: Float = 0f, labelHeight: Float = 20f, inLibrary: Boolean = false, homeBottomSpace: Float = 44f, dockSlots: Int = MIN_DOCK_SLOTS, statusRailHeight: Float = 0f, homeRows: Int = DEFAULT_HOME_ROWS,
-    columns: Int = DEFAULT_HOME_COLUMNS, dockColumn: Boolean = true, topBar: Float = 0f, cover: Boolean = false): HomeGeometry {
+    columns: Int = DEFAULT_HOME_COLUMNS, dockColumn: Boolean = true, topBar: Float = 0f, cover: Boolean = false, statusRailInset: Float = 0f): HomeGeometry {
     val p = preset.sanitized()
     val expanded = !cover && width >= 650f
     val height = fullHeight - topBar
@@ -62,19 +65,22 @@ fun homeGeometry(width: Float, fullHeight: Float, preset: LayoutPreset, labels: 
     // The widget band's rows are as tall as two columns are wide.
     val widget = minOf(176f, gridWidth * 2f / columns - 5f).coerceAtLeast(88f)
     // The first two rows form the widget band; each remaining row is one app row.
-    val appRows = homeRows.coerceIn(DEFAULT_HOME_ROWS, GRID_ROWS) - 2
+    val appRows = homeRows.coerceIn(MIN_HOME_ROWS, GRID_ROWS) - 2
     // Extra rows first give up row spacing so the page fits between its 16dp top margin and
     // 8dp bottom padding without scrolling; icons and labels never shrink.
     val roomForRows = height - widget - 18f - homeBottomSpace - 24f
     val row = if (appRows > DEFAULT_HOME_ROWS - 2 && appRows * (tightRow + p.rowGap) > roomForRows)
         maxOf(tightRow, roomForRows / appRows) else tightRow + p.rowGap
     val gridSpace = height - widget - 18f - appRows * row - homeBottomSpace
-    val contentTop = (gridSpace / 2f).coerceIn(16f, 72f)
+    // A full grid sits centred in its small margins; a short one rests on the bottom of the page,
+    // where the thumb is, instead of leaving the room under it empty.
+    val contentTop = maxOf((gridSpace / 2f).coerceIn(16f, 72f), gridSpace - HOME_BOTTOM_MARGIN)
     // Search reclaims the redundant bottom controls' space for all four dock apps.
     // Extremely short windows still scroll rather than reduce touch targets below 48dp.
-    // The status rail is drawn from contentTop, so a tall dock must stay below its measured bottom.
-    val topLimit = maxOf(8f, statusHeight, if (statusRailHeight > 0f) contentTop + statusRailHeight else 0f)
-    val bottomReserve = if (inLibrary) 12f else 124f
+    // The status rail rests near contentTop and rises as far as the screen's top margin to make
+    // room, so a tall dock has to stay below it only when it is that high.
+    val topLimit = maxOf(8f, statusHeight, if (statusRailHeight > 0f) STATUS_MIN_TOP + statusRailHeight + STATUS_DOCK_GAP else 0f)
+    val bottomReserve = if (inLibrary) 12f else DOCK_BOTTOM_RESERVE
     // With four apps, outer dock edges span the first through third icon images, excluding the
     // last label. Each extra app adds one more position of that same pitch.
     val slots = dockSlots.coerceIn(MIN_DOCK_SLOTS, MAX_DOCK_SLOTS)
@@ -84,13 +90,26 @@ fun homeGeometry(width: Float, fullHeight: Float, preset: LayoutPreset, labels: 
     val dockRowHeight = ((dockHeight - 16f) / slots).coerceAtLeast(48f)
     // Use the home position as the anchor, so removing library buttons does not
     // move a low-positioned dock on ordinary page swipes. Move up only to fit.
-    val homeDockHeight = minOf(desiredHeight, (height - topLimit - 124f).coerceAtLeast(76f))
-    val homeDockTop = (if (p.dockAlignToGrid) contentTop + widget + 18f else height * p.dockPosition - homeDockHeight / 2f)
-        .coerceIn(topLimit, maxOf(topLimit, height - homeDockHeight - 124f))
+    val homeDockHeight = minOf(desiredHeight, (height - topLimit - DOCK_BOTTOM_RESERVE).coerceAtLeast(76f))
+    val lowestDockTop = maxOf(topLimit, height - homeDockHeight - DOCK_BOTTOM_RESERVE)
+    // The height setting spans the places the dock can reach, so a tall dock still follows it.
+    fun centredAt(position: Float) = (height * position - homeDockHeight / 2f).coerceIn(topLimit, lowestDockTop)
+    val homeDockTop = if (p.dockAlignToGrid) (contentTop + widget + 18f).coerceIn(topLimit, lowestDockTop)
+        else centredAt(.25f) + (centredAt(.75f) - centredAt(.25f)) * (p.dockPosition - .25f) / .5f
     val dockTop = homeDockTop.coerceIn(topLimit, maxOf(topLimit, height - dockHeight - bottomReserve))
+    val statusRest = contentTop + statusRailInset
+    val statusTop = if (statusRailHeight > 0f) minOf(statusRest, dockTop - statusRailHeight - STATUS_DOCK_GAP).coerceAtLeast(STATUS_MIN_TOP) else statusRest
     return HomeGeometry(expanded, homeWidth, gridWidth, icon, row, widget, contentTop + topBar, dockTop + topBar, dockHeight, dockRowHeight,
-        gridFits = gridSpace >= 24f - .01f)
+        gridFits = gridSpace >= 24f - .01f, statusTop = statusTop + topBar)
 }
+
+/** The air a grid that does not fill the page keeps above the page dots. */
+const val HOME_BOTTOM_MARGIN = 24f
+/** The highest the status rail goes, and the air it keeps above the dock. */
+private const val STATUS_MIN_TOP = 8f
+private const val STATUS_DOCK_GAP = 8f
+/** Room under the dock on Home: for the search button, and for the removal target during a drag. */
+const val DOCK_BOTTOM_RESERVE = 84f
 
 /** Keep stored order stable across installs, removals and configuration changes. */
 fun reconcileOrder(saved: List<String>, installed: List<String>): List<String> {

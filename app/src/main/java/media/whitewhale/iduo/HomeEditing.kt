@@ -9,6 +9,8 @@ const val HOME_CELLS = GRID_COLUMNS * GRID_ROWS
 const val DEFAULT_HOME_COLUMNS = 4
 /** Rows shown by default: the top widget band (two rows) plus four app rows. */
 const val DEFAULT_HOME_ROWS = 6
+/** The fewest rows a page can show: the widget band and one app row. */
+const val MIN_HOME_ROWS = 3
 /** Saved layouts before schema 10 and backups before version 4 stored four columns per page. */
 const val LEGACY_GRID_COLUMNS = 4
 /** Saved layouts before schema 9 and backups before version 3 stored six rows per page. */
@@ -347,6 +349,27 @@ fun resizeWidget(layout: HomeLayout, slot: Int, spanX: Int, spanY: Int): HomeLay
     return placeWidget(layout, old.copy(spanX = spanX, spanY = spanY))
 }
 
+/**
+ * Gives a widget a new place and size within the visible grid. Shortcuts in the way move to the first
+ * free cells from its page on; other widgets and large folders stay, and so does the widget then.
+ */
+fun setWidgetFootprint(layout: HomeLayout, slot: Int, footprint: WidgetFootprint): HomeLayout {
+    val old = layout.placement(slot) ?: return layout
+    val next = old.copy(column = footprint.column, row = footprint.row, spanX = footprint.spanX, spanY = footprint.spanY)
+    if (next == old || next.spanX < 1 || next.spanY < 1 || next.column < 0 || next.row < 0 ||
+        next.column + next.spanX > layout.columns || next.row + next.spanY > layout.rows) return layout
+    val cells = next.coveredIndices()
+    val largeFolders = layout.largeFolderFootprints()
+    if (layout.widgetPlacements.any { it.slot != slot && overlaps(it, next) } || cells.any { it in largeFolders }) return layout
+    val inTheWay = cells.sorted().filter { layout.slotAt(it) != null }
+    val cleared = inTheWay.fold(layout) { current, cell -> current.withSlot(cell, null) }
+    val placed = placeWidget(cleared, next)
+    if (placed == cleared && inTheWay.isEmpty()) return layout
+    return inTheWay.mapNotNull(layout::slotAt).fold(placed) { current, id ->
+        current.withSlot(firstFreeCell(current, next.page), id)
+    }
+}
+
 /** Remove only the shortcut/placement, never the installed app or widget binding. */
 fun removePlacement(layout: HomeLayout, source: DropTarget): HomeLayout = when (source) {
     is DropTarget.Home -> if (layout.slotAt(source.index)?.let(::isFolderId) == true) layout
@@ -495,7 +518,7 @@ fun HomeLayout.requiredRows(): Int {
         leftSlots.indices.filter { leftSlots[it] != null }.map { homeCellIndex(LEFT_HOME_PAGE, it) })
         .maxOfOrNull { homeCellLocal(it) / GRID_COLUMNS + 1 } ?: 0
     val widgetRows = widgetPlacements.filter { it.row < GRID_ROWS }.maxOfOrNull { minOf(GRID_ROWS, it.row + it.spanY) } ?: 0
-    return maxOf(DEFAULT_HOME_ROWS, shortcutRows, widgetRows)
+    return maxOf(MIN_HOME_ROWS, shortcutRows, widgetRows)
 }
 
 /**
@@ -504,7 +527,7 @@ fun HomeLayout.requiredRows(): Int {
  * the grid), then shortcuts move to the first free visible cells.
  */
 fun resizeHomeRows(layout: HomeLayout, rows: Int): HomeLayout {
-    val size = rows.coerceIn(DEFAULT_HOME_ROWS, GRID_ROWS)
+    val size = rows.coerceIn(MIN_HOME_ROWS, GRID_ROWS)
     if (size >= layout.rows) return layout.copy(rows = size)
     val displacedWidgets = layout.widgetPlacements.filter { it.row < GRID_ROWS && it.row + it.spanY > size }
     val displacedLeading = layout.leadingSlots.indices.filter { layout.leadingSlots[it] != null && it / GRID_COLUMNS >= size }

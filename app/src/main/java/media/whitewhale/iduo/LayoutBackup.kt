@@ -237,7 +237,7 @@ fun decodeLayoutBackup(raw: String, currentApps: List<AppEntry>, currentProfiles
     val compact = preset("compact"); val expanded = preset("expanded")
     val labels = root.strictBoolean("labels"); val googleSearch = root.strictBoolean("googleSearch")
     val verticalStatus = root.strictBoolean("verticalStatus")
-    val homeRows = if (legacyCells) DEFAULT_HOME_ROWS else root.strictInt("homeRows").also { require(it in DEFAULT_HOME_ROWS..GRID_ROWS) }
+    val homeRows = if (legacyCells) DEFAULT_HOME_ROWS else root.strictInt("homeRows").also { require(it in MIN_HOME_ROWS..GRID_ROWS) }
     layout = layout.copy(rows = maxOf(homeRows, layout.requiredRows()))
     // Version 4 may carry the cover's own layout. It shares the dock, so its apps must not repeat the dock's.
     val cover = if (version >= 4) root.optJSONObject("cover")?.let { item ->
@@ -245,7 +245,7 @@ fun decodeLayoutBackup(raw: String, currentApps: List<AppEntry>, currentProfiles
         require(cells.length() <= MAX_BACKUP_HOME_CELLS)
         val coverCells = readSlots(cells)
         val columns = item.strictInt("homeColumns").also { require(it in DEFAULT_HOME_COLUMNS..GRID_COLUMNS) }
-        val coverRows = item.strictInt("homeRows").also { require(it in DEFAULT_HOME_ROWS..GRID_ROWS) }
+        val coverRows = item.strictInt("homeRows").also { require(it in MIN_HOME_ROWS..GRID_ROWS) }
         val coverLeftCells = readLeftSlots(item)
         val coverFolders = readFolders(item.getJSONArray("folders"), coverCells + coverLeftCells)
         val coverApps = (coverCells + coverLeftCells).filterNotNull().filterNot(::isReservedFolderId) + rawDock.filterNotNull().filterNot(::isReservedFolderId) +

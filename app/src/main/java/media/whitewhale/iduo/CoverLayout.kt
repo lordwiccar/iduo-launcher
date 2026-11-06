@@ -56,7 +56,7 @@ fun decodeCoverLayout(json: JSONObject, dock: List<String?>): HomeLayout {
         require(leftCells.length() == HOME_CELLS)
         List(HOME_CELLS) { index -> if (leftCells.isNull(index)) null else leftCells.getString(index).takeIf { it.isNotBlank() && it != "null" } }
     }
-    val rows = json.getInt("homeRows").also { require(it in DEFAULT_HOME_ROWS..GRID_ROWS) }
+    val rows = json.getInt("homeRows").also { require(it in MIN_HOME_ROWS..GRID_ROWS) }
     val columns = json.getInt("homeColumns").also { require(it in DEFAULT_HOME_COLUMNS..GRID_COLUMNS) }
     val folderArray = json.getJSONArray("folders")
     val folders = List(folderArray.length()) { index ->

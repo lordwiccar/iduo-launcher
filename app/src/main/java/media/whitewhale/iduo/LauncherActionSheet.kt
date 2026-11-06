@@ -90,22 +90,15 @@ internal fun LauncherAppActionSheet(app: AppEntry, placed: Boolean, homePages: I
     }
 }
 
+/** What a long press on empty space offers, in a small menu beside the finger. */
 @Composable
-internal fun EmptySpaceActionSheet(onAddApps: () -> Unit, onWidgets: () -> Unit, onWallpaper: () -> Unit,
+internal fun EmptySpaceMenu(anchor: androidx.compose.ui.geometry.Rect?, onAddApps: () -> Unit, onWidgets: () -> Unit, onWallpaper: () -> Unit,
     onCustomize: () -> Unit, onClose: () -> Unit) {
-    val maxHeight = with(LocalDensity.current) { (LocalWindowInfo.current.containerSize.height * .75f).toDp() }
-    Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).verticalScroll(rememberScrollState())
-        .padding(horizontal = 20.dp).padding(bottom = 20.dp)) {
-        Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.add_to_home), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-            IconButton(onClick = onClose) { Icon(Icons.Rounded.Close, stringResource(R.string.close_empty_space_options)) }
-        }
-        Text(stringResource(R.string.empty_space_detail), style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
-        ActionRow(Icons.Rounded.Apps, stringResource(R.string.home_add_apps), onAddApps, Modifier.testTag("empty-space-apps"))
-        ActionRow(Icons.Rounded.Widgets, stringResource(R.string.widgets), onWidgets, Modifier.testTag("empty-space-widgets"))
-        ActionRow(Icons.Rounded.Wallpaper, stringResource(R.string.wallpaper), onWallpaper, Modifier.testTag("empty-space-wallpaper"))
-        ActionRow(Icons.Rounded.Tune, stringResource(R.string.customize_launcher), onCustomize, Modifier.testTag("empty-space-customize"))
+    FloatingMenu(anchor, stringResource(R.string.add_to_home), "empty-space-menu", onClose) {
+        MenuRow(Icons.Rounded.Apps, stringResource(R.string.home_add_apps), onAddApps, Modifier.testTag("empty-space-apps"))
+        MenuRow(Icons.Rounded.Widgets, stringResource(R.string.widgets), onWidgets, Modifier.testTag("empty-space-widgets"))
+        MenuRow(Icons.Rounded.Wallpaper, stringResource(R.string.wallpaper), onWallpaper, Modifier.testTag("empty-space-wallpaper"))
+        MenuRow(Icons.Rounded.Tune, stringResource(R.string.customize_launcher), onCustomize, Modifier.testTag("empty-space-customize"))
     }
 }
 

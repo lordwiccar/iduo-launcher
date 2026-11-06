@@ -171,7 +171,9 @@ private suspend fun AwaitPointerEventScope.awaitWidgetLongPressOrCancellation(
 ): PointerInputChange? {
     var current = down
     var canceled = false
-    withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+    // A little sooner than Android's own long press, as its launchers do: holding a widget is
+    // how it is resized, and a press that falls just short would count as a tap on it.
+    withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis * 3 / 4) {
         while (!canceled) {
             val event = awaitPointerEvent(PointerEventPass.Initial)
             val change = event.changes.firstOrNull { it.id == down.id }
@@ -201,7 +203,7 @@ internal fun Modifier.homeDragInput(
             if (!currentEnabled) return@awaitEachGesture
             val point = down.position + drag.rootOrigin
             val region = drag.hit(point, currentEligiblePages)?.takeIf { it.movable } ?: return@awaitEachGesture
-            if (region.target is DropTarget.Widget && (region.widgetId ?: EMPTY_WIDGET) >= 0) {
+            if (region.target is DropTarget.Widget) {
                 awaitWidgetLongPressOrCancellation(down)
             } else {
                 awaitLongPressOrCancellation(down.id)

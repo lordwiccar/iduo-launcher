@@ -25,7 +25,7 @@
 
     <!-- Customization -->
     <string name="customize_close">Zamknij dostosowywanie</string>
-    <string name="customize_launcher">Dostosuj launcher</string>
+    <string name="customize_launcher">Dostosowanie i ustawienia</string>
     <string name="customize_wallpaper">Tapeta i wygląd</string>
     <string name="customize_home">Ekran główny</string>
     <string name="customize_gestures">Gesty i wyszukiwanie</string>
@@ -103,7 +103,7 @@
     <string name="help_home_default">iDuo jest Twoją aplikacją ekranu głównego. Launcher możesz zmienić w ustawieniach ekranu głównego Androida.</string>
     <string name="help_home_not_default">Wybierz iDuo w ustawieniach ekranu głównego Androida, aby otwierało się po naciśnięciu przycisku ekranu głównego.</string>
     <string name="help_customize_title">Dostosuj dowolną stronę</string>
-    <string name="help_customize">Przytrzymaj puste miejsce i wybierz Dostosuj launcher. Jeśli strona jest pełna, przytrzymaj wąski pasek przy jej lewej krawędzi.</string>
+    <string name="help_customize">Przytrzymaj puste miejsce i wybierz Dostosowanie i ustawienia. Jeśli strona jest pełna, przytrzymaj wąski pasek przy jej lewej krawędzi.</string>
     <string name="help_widgets">Dodawaj widżety Androida do pustych komórek ekranu głównego. Przytrzymaj widżet, aby go przenieść lub usunąć.</string>
     <string name="help_shade_title">Powiadomienia, szybkie ustawienia i blokada</string>
     <string name="help_shade">Przesuń w dół na ekranie głównym, aby otworzyć panele systemowe; dotknij dwukrotnie pustego miejsca, aby zablokować ekran. Za pierwszym razem iDuo wyjaśni opcjonalne ustawienie Ułatwień dostępu w Androidzie. Usługa jedynie otwiera panele systemowe i blokuje ekran.</string>
@@ -162,8 +162,6 @@
     <string name="app_info">Informacje o aplikacji</string>
     <string name="create_folder">Utwórz folder</string>
     <string name="create_folder_with">Utwórz folder z aplikacją %1$s</string>
-    <string name="close_empty_space_options">Zamknij opcje pustego miejsca</string>
-    <string name="empty_space_detail">Wybierz, co ma się znaleźć w tym miejscu.</string>
     <string name="wallpaper">Tapeta</string>
     <string name="home_options">Opcje ekranu głównego</string>
 
@@ -287,7 +285,6 @@
     <string name="widget_no_room_there">Tam nie ma miejsca. Spróbuj innego miejsca lub strony.</string>
     <string name="widget_pending">Oczekuje: %1$s</string>
     <string name="widget_options">Opcje widżetu</string>
-    <string name="close_widget_options">Zamknij opcje widżetu</string>
     <string name="widget_settings">Ustawienia widżetu</string>
     <string name="widget_settings_interrupted">Ustawienia widżetu zostały przerwane. Wznów konfigurację albo anuluj i pozostaw widżet bez zmian.</string>
     <string name="widget_setup_title">Dokończ konfigurację widżetu</string>
@@ -297,9 +294,7 @@
     <string name="widget_setup_cancel">Anuluj konfigurację widżetu</string>
     <string name="widget_not_added">Nie dodano widżetu</string>
     <string name="resize">Zmień rozmiar</string>
-    <string name="resize_on_home">Zmień rozmiar na ekranie głównym</string>
     <string name="drag_to_resize">Przeciągnij, aby zmienić rozmiar widżetu</string>
-    <string name="widget_resize_outside">Przed zmianą rozmiaru przenieś widżet do siatki ekranu głównego.</string>
     <string name="width">Szerokość</string>
     <string name="height">Wysokość</string>
     <string name="decrease_width">Zmniejsz szerokość widżetu</string>
@@ -318,9 +313,6 @@
         <item quantity="many">%1$d wierszy</item>
         <item quantity="other">%1$d wiersza</item>
     </plurals>
-    <string name="resize_overlap_note">Rozmiary nachodzące na inny element są pomijane.</string>
-    <string name="resize_invalid">Ten rozmiar nachodzi na inny element lub wykracza poza stronę.</string>
-    <string name="apply_size">Zastosuj rozmiar</string>
     <string name="widget_no_room">Brak miejsca na ten widżet.</string>
     <string name="widget_home_changed">Ekran główny zmienił się podczas konfigurowania widżetu. Wybierz miejsce ponownie.</string>
     <string name="widget_unexpected_binding">Host widżetów zwrócił nieoczekiwane powiązanie. Spróbuj ponownie.</string>
@@ -622,4 +614,13 @@
     <string name="glass_liquid">Płynne</string>
     <string name="glass_liquid_detail">Przezroczyste szkło z jasnymi krawędziami na doku, folderach, aktualnościach i liście aplikacji. Krawędzie załamują tapetę, jeśli została ustawiona w iDuo.</string>
     <string name="glass_liquid_android_wallpaper">Ta tapeta została ustawiona w Androidzie, a Android nie pozwala aplikacjom jej odczytać, więc szkło pozostaje przezroczyste. Wybierz tutaj ten sam obraz, a krawędzie zaczną go załamywać.</string>
+    <string name="status_menu_battery">Bateria</string>
+    <string name="status_menu_wifi">Wi-Fi</string>
+    <string name="status_menu_mobile">Sieć komórkowa</string>
+    <string name="status_open_settings">Otwórz ustawienia baterii, Wi-Fi i sieci</string>
+    <string name="widget_exact_size">Dokładny rozmiar</string>
+    <string name="widget_move_page">Przenieś na stronę</string>
+    <string name="glass_liquid_notice_title">Płynne szkło</string>
+    <string name="glass_liquid_notice">Aby zobaczyć wszystkie efekty płynnego szkła, ustaw tapetę ponownie bezpośrednio w ustawieniach iDuo.</string>
+    <string name="ok">OK</string>
 </resources>

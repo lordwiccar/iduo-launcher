@@ -25,7 +25,7 @@
 
     <!-- Customization -->
     <string name="customize_close">Anpassung schließen</string>
-    <string name="customize_launcher">Launcher anpassen</string>
+    <string name="customize_launcher">Anpassung und Einstellungen</string>
     <string name="customize_wallpaper">Hintergrund &amp; Darstellung</string>
     <string name="customize_home">Startbildschirm</string>
     <string name="customize_gestures">Gesten &amp; Suche</string>
@@ -103,7 +103,7 @@
     <string name="help_home_default">iDuo ist deine Start-App. Du kannst den Launcher in den Android-Einstellungen für den Startbildschirm wechseln.</string>
     <string name="help_home_not_default">Wähle iDuo in den Android-Einstellungen für den Startbildschirm, damit es beim Drücken der Home-Taste erscheint.</string>
     <string name="help_customize_title">Jede Seite anpassen</string>
-    <string name="help_customize">Halte eine freie Stelle gedrückt und wähle „Launcher anpassen“. Ist eine Seite voll, halte den schmalen Bereich am linken Rand gedrückt.</string>
+    <string name="help_customize">Halte eine freie Stelle gedrückt und wähle „Anpassung und Einstellungen“. Ist eine Seite voll, halte den schmalen Bereich am linken Rand gedrückt.</string>
     <string name="help_widgets">Füge Android-Widgets in leere Felder des Startbildschirms ein. Halte ein Widget gedrückt, um es zu verschieben oder zu entfernen.</string>
     <string name="help_shade_title">Benachrichtigungen, Schnelleinstellungen und Sperren</string>
     <string name="help_shade">Wische auf dem Startbildschirm nach unten für die Systemleisten; tippe doppelt auf eine freie Stelle, um den Bildschirm zu sperren. Beim ersten Mal erklärt iDuo die optionale Bedienungshilfen-Einstellung von Android. Der Dienst öffnet nur die Systemleisten und sperrt den Bildschirm.</string>
@@ -160,8 +160,6 @@
     <string name="app_info">App-Info</string>
     <string name="create_folder">Ordner erstellen</string>
     <string name="create_folder_with">Ordner mit %1$s erstellen</string>
-    <string name="close_empty_space_options">Optionen für freie Stelle schließen</string>
-    <string name="empty_space_detail">Wähle, was an diese Stelle gehört.</string>
     <string name="wallpaper">Hintergrund</string>
     <string name="home_options">Startbildschirm-Optionen</string>
 
@@ -281,7 +279,6 @@
     <string name="widget_no_room_there">Dort ist kein Platz. Versuche eine andere Stelle oder Seite.</string>
     <string name="widget_pending">Ausstehend: %1$s</string>
     <string name="widget_options">Widget-Optionen</string>
-    <string name="close_widget_options">Widget-Optionen schließen</string>
     <string name="widget_settings">Widget-Einstellungen</string>
     <string name="widget_settings_interrupted">Die Widget-Einstellungen wurden unterbrochen. Setze die Konfiguration fort oder brich ab, um das Widget unverändert zu lassen.</string>
     <string name="widget_setup_title">Widget-Einrichtung abschließen</string>
@@ -291,9 +288,7 @@
     <string name="widget_setup_cancel">Widget-Einrichtung abbrechen</string>
     <string name="widget_not_added">Widget nicht hinzugefügt</string>
     <string name="resize">Größe ändern</string>
-    <string name="resize_on_home">Größe auf dem Startbildschirm ändern</string>
     <string name="drag_to_resize">Ziehen, um die Widget-Größe zu ändern</string>
-    <string name="widget_resize_outside">Verschiebe dieses Widget vor dem Ändern der Größe in das Raster des Startbildschirms.</string>
     <string name="width">Breite</string>
     <string name="height">Höhe</string>
     <string name="decrease_width">Widget schmaler machen</string>
@@ -308,9 +303,6 @@
         <item quantity="one">%1$d Zeile</item>
         <item quantity="other">%1$d Zeilen</item>
     </plurals>
-    <string name="resize_overlap_note">Größen, die ein anderes Element überdecken, werden ignoriert.</string>
-    <string name="resize_invalid">Diese Größe überdeckt ein anderes Element oder ragt über die Seite hinaus.</string>
-    <string name="apply_size">Größe übernehmen</string>
     <string name="widget_no_room">Für dieses Widget ist hier kein Platz.</string>
     <string name="widget_home_changed">Der Startbildschirm hat sich während der Widget-Konfiguration geändert. Wähle erneut eine Stelle.</string>
     <string name="widget_unexpected_binding">Der Widget-Host hat eine unerwartete Verknüpfung zurückgegeben. Versuche es erneut.</string>
@@ -602,4 +594,13 @@
     <string name="glass_liquid">Flüssig</string>
     <string name="glass_liquid_detail">Klares Glas mit hellen Rändern auf Dock, Ordnern, Nachrichten und Alle Apps. Die Ränder brechen das Hintergrundbild, wenn es in iDuo festgelegt wurde.</string>
     <string name="glass_liquid_android_wallpaper">Dieses Hintergrundbild wurde in Android festgelegt, und Android lässt Apps es nicht lesen, daher bleibt das Glas klar. Wähle hier dasselbe Bild aus, dann brechen es die Ränder.</string>
+    <string name="status_menu_battery">Akku</string>
+    <string name="status_menu_wifi">WLAN</string>
+    <string name="status_menu_mobile">Mobilfunknetz</string>
+    <string name="status_open_settings">Akku-, WLAN- und Netzwerkeinstellungen öffnen</string>
+    <string name="widget_exact_size">Genaue Größe</string>
+    <string name="widget_move_page">Auf Seite verschieben</string>
+    <string name="glass_liquid_notice_title">Flüssiges Glas</string>
+    <string name="glass_liquid_notice">Um alle Effekte von flüssigem Glas zu sehen, lege dein Hintergrundbild direkt in den iDuo-Einstellungen erneut fest.</string>
+    <string name="ok">OK</string>
 </resources>

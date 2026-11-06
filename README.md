@@ -6,7 +6,7 @@
 
 A native Android launcher built around a right-side dock and a home screen that makes room when you unfold your phone.
 
-**Version 1.1.7 · Android 12 or later.** Built and tested on the Galaxy Z Fold 7 (cover and inner displays) and a matching emulator. The left page shows Google News headlines, your own RSS feeds or an extra Home page.
+**Version 1.1.8 · Android 12 or later.** Built and tested on the Galaxy Z Fold 7 (cover and inner displays) and a matching emulator. The left page shows Google News headlines, your own RSS feeds or an extra Home page.
 
 <p>
   <img src="docs/images/iduo-cover.png" width="49%" alt="Home on the cover screen with large folders and the right-side dock, beside Wallpaper and appearance settings">
@@ -16,7 +16,7 @@ A native Android launcher built around a right-side dock and a home screen that 
   <img src="docs/images/iduo-settings.png" width="49%" alt="Home and dock settings, with a live preview for the cover or inner screen">
 </p>
 
-**Start here:** [User guide](docs/user-guide.md) · [Troubleshooting](docs/troubleshooting.md) · [Release notes](docs/releases/1.1.7.md) · [Privacy policy](docs/privacy-policy.md)
+**Start here:** [User guide](docs/user-guide.md) · [Troubleshooting](docs/troubleshooting.md) · [Release notes](docs/releases/1.1.8.md) · [Privacy policy](docs/privacy-policy.md)
 
 ## Features
 
@@ -26,7 +26,7 @@ A native Android launcher built around a right-side dock and a home screen that 
 - App dragging, pages created during an edge drag, Home folders made by dropping one app onto another, and separate personal/work catalogs where device policy permits.
 - All apps as an alphabetical list, a paged grid or right on the Home pages, Home search for apps and Google with a swipe up, and a left news page with Google News or your own RSS feeds.
 - Full-screen Settings with search, a live Home preview, and a list beside the open section on the inner screen.
-- A 4 × 4, 4 × 5 or 4 × 6 Home grid and four to eight dock apps; on the cover screen the dock can slide in from the edge or hide.
+- A Home grid of one to six rows of apps, widgets you resize freely by their corners, and four to eight dock apps; on the cover screen the dock can slide in from the edge or hide.
 - One Home for both screens, or a separate cover Home with its own apps, folders, widgets and up to five columns.
 - Android's own wallpaper on Home, set from a photo or the bundled dunes; third-party icon packs; light/dark/system or sunrise/sunset appearance; and layout export/import.
 - Frosted or Liquid glass for the dock, folders, news and All apps.
@@ -39,7 +39,7 @@ Android still controls the lock screen, notification panels, recents, and system
 1. Install iDuo Launcher from Google Play, or download the signed APK from this repository's Releases section.
 2. Open the APK, allow installation from that source if Android asks, and open **iDuo Launcher**.
 3. Try the layout before choosing **Set as home app**. Select iDuo Launcher in Android's Home app settings when ready.
-4. Long press any empty Home space, including the wallpaper around and below the grid, to add widgets or **Customize launcher** for Settings. Help is under **Help & information**.
+4. Long press any empty Home space, including the wallpaper around and below the grid, to add widgets or **Customize & settings** for Settings. Help is under **Help & information**.
 
 To switch back, open Android **Settings → Apps → Default apps → Home app** and select your previous launcher. Vendor labels may differ. Installing iDuo does not automatically select it as Home.
 
@@ -61,7 +61,7 @@ Updates install over the existing app when they are signed with the same key. Un
 | Notifications / Quick Settings | Swipe down from Home's left 70% / right 30%, after enabling optional Home gestures |
 | Lock the screen | Double-tap empty space on Home, after enabling optional Home gestures |
 
-The surrounding status ring shows battery. On Wi-Fi the middle shows Wi-Fi strength and the lower dots show cellular strength; on mobile data the middle shows signal bars with the network, such as 5G, below them. Unknown readings are not displayed as full signal. This rail applies to Home only.
+The surrounding status ring shows battery. On Wi-Fi the middle shows Wi-Fi strength and the lower dots show cellular strength; on mobile data the middle shows signal bars with the network, such as 5G, below them. Unknown readings are not displayed as full signal. Tap it for Battery, Wi-Fi and Mobile network settings. This rail applies to Home only.
 
 ## Optional access and privacy
 

@@ -25,7 +25,7 @@
 
     <!-- Customization -->
     <string name="customize_close">Close customization</string>
-    <string name="customize_launcher">Customize launcher</string>
+    <string name="customize_launcher">Customize &amp; settings</string>
     <string name="customize_wallpaper">Wallpaper &amp; appearance</string>
     <string name="customize_home">Home</string>
     <string name="customize_gestures">Gestures &amp; search</string>
@@ -103,7 +103,7 @@
     <string name="help_home_default">iDuo is your Home app. You can switch launchers in Android’s Home settings.</string>
     <string name="help_home_not_default">Choose iDuo in Android’s Home settings to use it when you press Home.</string>
     <string name="help_customize_title">Customize any page</string>
-    <string name="help_customize">Long-press empty space, then choose Customize launcher. If a page is full, long-press the slim area at its left edge.</string>
+    <string name="help_customize">Long-press empty space, then choose Customize &amp; settings. If a page is full, long-press the slim area at its left edge.</string>
     <string name="help_widgets">Add Android widgets to empty Home cells. Hold a widget to move or remove it.</string>
     <string name="help_shade_title">Notifications, quick settings and locking</string>
     <string name="help_shade">Swipe down on Home for the system panels; double-tap empty space to lock the screen. The first time, iDuo explains Android’s optional Accessibility setting. The service only opens the system panels and locks the screen.</string>
@@ -160,8 +160,6 @@
     <string name="app_info">App info</string>
     <string name="create_folder">Create folder</string>
     <string name="create_folder_with">Create folder with %1$s</string>
-    <string name="close_empty_space_options">Close empty space options</string>
-    <string name="empty_space_detail">Choose what belongs in this space.</string>
     <string name="wallpaper">Wallpaper</string>
     <string name="home_options">Home options</string>
 
@@ -282,7 +280,6 @@
     <string name="widget_no_room_there">There isn’t room there. Try another space or page.</string>
     <string name="widget_pending">Pending %1$s</string>
     <string name="widget_options">Widget options</string>
-    <string name="close_widget_options">Close widget options</string>
     <string name="widget_settings">Widget settings</string>
     <string name="widget_settings_interrupted">Widget settings were interrupted. Resume configuration, or cancel and keep the widget unchanged.</string>
     <string name="widget_setup_title">Finish widget setup</string>
@@ -292,9 +289,7 @@
     <string name="widget_setup_cancel">Cancel widget setup</string>
     <string name="widget_not_added">Widget not added</string>
     <string name="resize">Resize</string>
-    <string name="resize_on_home">Resize on Home</string>
     <string name="drag_to_resize">Drag to resize widget</string>
-    <string name="widget_resize_outside">Move this widget into the Home grid before resizing.</string>
     <string name="width">Width</string>
     <string name="height">Height</string>
     <string name="decrease_width">Decrease widget width</string>
@@ -309,9 +304,6 @@
         <item quantity="one">%1$d row</item>
         <item quantity="other">%1$d rows</item>
     </plurals>
-    <string name="resize_overlap_note">Sizes that overlap another item are ignored.</string>
-    <string name="resize_invalid">That size overlaps another item or extends beyond the page.</string>
-    <string name="apply_size">Apply size</string>
     <string name="widget_no_room">There isn’t room for this widget here.</string>
     <string name="widget_home_changed">Home changed while the widget was being configured. Choose a space again.</string>
     <string name="widget_unexpected_binding">The widget host returned an unexpected binding. Try again.</string>
@@ -603,4 +595,13 @@
     <string name="glass_liquid">Liquid</string>
     <string name="glass_liquid_detail">Clear glass with bright edges on the dock, folders, news and All apps. Its edges bend the wallpaper when the wallpaper was set in iDuo.</string>
     <string name="glass_liquid_android_wallpaper">This wallpaper was set in Android, and Android does not let apps read it, so the glass stays clear. Choose the same picture here and its edges will bend it.</string>
+    <string name="status_menu_wifi">Wi-Fi</string>
+    <string name="status_menu_battery">Battery</string>
+    <string name="status_menu_mobile">Mobile network</string>
+    <string name="status_open_settings">Open battery, Wi-Fi and network settings</string>
+    <string name="widget_exact_size">Exact size</string>
+    <string name="widget_move_page">Move to page</string>
+    <string name="glass_liquid_notice_title">Liquid glass</string>
+    <string name="glass_liquid_notice">To see all the effects of Liquid glass, set your wallpaper again directly in iDuo’s settings.</string>
+    <string name="ok">OK</string>
 </resources>

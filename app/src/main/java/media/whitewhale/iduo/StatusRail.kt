@@ -1,9 +1,18 @@
 package media.whitewhale.iduo
 
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BatteryFull
 import androidx.compose.material.icons.rounded.LocationOn
+import androidx.compose.material.icons.rounded.SignalCellularAlt
+import androidx.compose.material.icons.rounded.Wifi
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.material3.Text
@@ -87,6 +96,29 @@ private fun statusDescription(status: DeviceStatus, now: LocalDateTime, formats:
             ?.let { stringResource(R.string.status_mobile_data, it) },
     ).joinToString(". ")
 
+/** Opens the first of [actions] this phone's settings can show. */
+private fun openSettings(context: Context, vararg actions: String) {
+    actions.firstOrNull { action ->
+        runCatching { context.startActivity(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess
+    }
+}
+
+/** What a tap on the status offers: the settings behind what it shows. */
+@Composable
+private fun StatusSettingsMenu(expanded: Boolean, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    @Composable fun item(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, tag: String, vararg actions: String) =
+        DropdownMenuItem(text = { Text(label) }, leadingIcon = { Icon(icon, null) }, modifier = Modifier.testTag(tag), onClick = {
+            onDismiss(); openSettings(context, *actions, Settings.ACTION_SETTINGS)
+        })
+    DropdownMenu(expanded, onDismiss) {
+        item(stringResource(R.string.status_menu_battery), Icons.Rounded.BatteryFull, "status-menu-battery", Intent.ACTION_POWER_USAGE_SUMMARY)
+        item(stringResource(R.string.status_menu_wifi), Icons.Rounded.Wifi, "status-menu-wifi", Settings.ACTION_WIFI_SETTINGS)
+        item(stringResource(R.string.status_menu_mobile), Icons.Rounded.SignalCellularAlt, "status-menu-mobile",
+            Settings.ACTION_DATA_ROAMING_SETTINGS, Settings.ACTION_WIRELESS_SETTINGS)
+    }
+}
+
 private val statusTextStyle = TextStyle(shadow = Shadow(Color.Black.copy(alpha = .3f), Offset(0f, 1f), 3f))
 
 /**
@@ -98,13 +130,18 @@ fun CoverStatusBar(status: DeviceStatus, modifier: Modifier = Modifier, ringSize
     val now = currentMinute()
     val formats = rememberStatusFormats()
     val description = statusDescription(status, now, formats)
+    var menu by remember { mutableStateOf(false) }
+    val openLabel = stringResource(R.string.status_open_settings)
     Row(modifier.testTag("cover-status").semantics(mergeDescendants = true) { contentDescription = description },
         verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxHeight().clickable(onClickLabel = openLabel) { menu = true }.testTag("status-open"), verticalAlignment = Alignment.CenterVertically) {
         StatusRing(status, Modifier.size(ringSize))
         Spacer(Modifier.width(6.dp))
         Text(if (airplaneOutside(status, ringCentre(status))) stringResource(R.string.status_airplane_short) else status.battery?.let { "$it%${if (status.charging) " +" else ""}" } ?: "—",
             color = Color.White.copy(alpha = .94f), fontSize = 13.sp, fontWeight = FontWeight.Medium,
             maxLines = 1, softWrap = false, style = statusTextStyle)
+        StatusSettingsMenu(menu) { menu = false }
+        }
         Spacer(Modifier.weight(1f))
         Text(now.format(formats.date), color = Color.White.copy(alpha = .94f), fontSize = 13.sp, fontWeight = FontWeight.Medium,
             maxLines = 1, softWrap = false, style = statusTextStyle)
@@ -129,7 +166,11 @@ fun StatusRail(
     val description = statusDescription(status, now, formats, locationInUse)
     val fontScale = LocalDensity.current.fontScale
     val labelStyle = statusTextStyle
-    BoxWithConstraints(modifier.testTag("status-rail").semantics(mergeDescendants = true) { contentDescription = description }) {
+    var menu by remember { mutableStateOf(false) }
+    val openLabel = stringResource(R.string.status_open_settings)
+    BoxWithConstraints(modifier.testTag("status-rail").semantics(mergeDescendants = true) { contentDescription = description }
+        .clickable(onClickLabel = openLabel) { menu = true }) {
+        StatusSettingsMenu(menu) { menu = false }
         val availableWidth = (maxWidth - 4.dp).coerceAtLeast(28.dp)
         val visualSize = minOf(iconSize, availableWidth, if (compact) 44.dp else 56.dp)
         val timeSize = minOf(18f, availableWidth.value / (2.65f * fontScale)).sp

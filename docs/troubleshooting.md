@@ -4,7 +4,7 @@ iDuo Launcher is an experimental Fold beta. Device vendors, Android releases, th
 
 ## iDuo is not the Home app
 
-Long press empty Home space, choose **Customize launcher**, then **Set as home app** at the top of Settings. You can also use **Language, backup & Home app**. Complete the choice in Android's Home app settings.
+Long press empty Home space, choose **Customize & settings**, then **Set as home app** at the top of Settings. You can also use **Language, backup & Home app**. Complete the choice in Android's Home app settings.
 
 To switch back, choose **Change home app** under **Settings → Language, backup & Home app** or use Android **Settings → Apps → Default apps → Home app**. Installing iDuo never changes the Home app automatically.
 
@@ -48,7 +48,7 @@ Work widgets depend on administrator cross-profile policy. A backup restored on 
 
 Hold still on the widget until pickup begins, then drag. On a scrollable provider such as a calendar list, vertical movement before the hold is treated as provider scrolling. Tiny held jitter is allowed, but a real move, release, cancellation, or second pointer before the long-press timeout cancels pickup.
 
-Long press and release to open **Widget options**. Use **Resize on Home** or the width/height controls, then **Apply** or **Apply size**. A red or disabled preview means the proposed rectangle overlaps another item, extends beyond the page, or violates the provider's resize limits. Move the widget into the six-row grid first if iDuo says that is required.
+Long press and release to open the resize frame, then drag a corner. A red frame means that size overlaps another widget or a large folder, or extends beyond the page, and the frame springs back when you let go. A short press goes to the widget itself; on a clock or date widget it opens the frame too. Sizes are free, so a widget made smaller than its app expects may cut off its content.
 
 ## Paging, widget scrolling, or Home gestures do the wrong thing
 

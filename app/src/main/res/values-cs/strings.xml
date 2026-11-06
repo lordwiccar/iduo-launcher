@@ -25,7 +25,7 @@
 
     <!-- Customization -->
     <string name="customize_close">Zavřít přizpůsobení</string>
-    <string name="customize_launcher">Přizpůsobit spouštěč</string>
+    <string name="customize_launcher">Přizpůsobení a nastavení</string>
     <string name="customize_wallpaper">Tapeta a vzhled</string>
     <string name="customize_home">Plocha</string>
     <string name="customize_gestures">Gesta a vyhledávání</string>
@@ -103,7 +103,7 @@
     <string name="help_home_default">iDuo je vaše domovská aplikace. Spouštěč můžete změnit v nastavení domovské obrazovky Androidu.</string>
     <string name="help_home_not_default">Vyberte iDuo v nastavení domovské obrazovky Androidu, aby se otevřelo po stisknutí tlačítka Domů.</string>
     <string name="help_customize_title">Přizpůsobení libovolné stránky</string>
-    <string name="help_customize">Podržte prst na volném místě a zvolte Přizpůsobit spouštěč. Pokud je stránka plná, podržte prst na úzkém pruhu u jejího levého okraje.</string>
+    <string name="help_customize">Podržte prst na volném místě a zvolte Přizpůsobení a nastavení. Pokud je stránka plná, podržte prst na úzkém pruhu u jejího levého okraje.</string>
     <string name="help_widgets">Přidávejte widgety Androidu do prázdných buněk plochy. Podržením widget přesunete nebo odeberete.</string>
     <string name="help_shade_title">Oznámení, rychlé nastavení a zamknutí</string>
     <string name="help_shade">Přejetím na ploše dolů otevřete systémové panely, dvojím klepnutím na volné místo zamknete obrazovku. Poprvé iDuo vysvětlí volitelné nastavení Usnadnění přístupu v Androidu. Služba pouze otevírá systémové panely a zamyká obrazovku.</string>
@@ -162,8 +162,6 @@
     <string name="app_info">Informace o aplikaci</string>
     <string name="create_folder">Vytvořit složku</string>
     <string name="create_folder_with">Vytvořit složku s aplikací %1$s</string>
-    <string name="close_empty_space_options">Zavřít možnosti volného místa</string>
-    <string name="empty_space_detail">Vyberte, co na toto místo patří.</string>
     <string name="wallpaper">Tapeta</string>
     <string name="home_options">Možnosti plochy</string>
 
@@ -287,7 +285,6 @@
     <string name="widget_no_room_there">Tam není místo. Zkuste jiné místo nebo stránku.</string>
     <string name="widget_pending">Čeká: %1$s</string>
     <string name="widget_options">Možnosti widgetu</string>
-    <string name="close_widget_options">Zavřít možnosti widgetu</string>
     <string name="widget_settings">Nastavení widgetu</string>
     <string name="widget_settings_interrupted">Nastavení widgetu bylo přerušeno. Pokračujte v nastavení, nebo ho zrušte a widget ponechte beze změny.</string>
     <string name="widget_setup_title">Dokončit nastavení widgetu</string>
@@ -297,9 +294,7 @@
     <string name="widget_setup_cancel">Zrušit nastavení widgetu</string>
     <string name="widget_not_added">Widget nebyl přidán</string>
     <string name="resize">Změnit velikost</string>
-    <string name="resize_on_home">Změnit velikost na ploše</string>
     <string name="drag_to_resize">Přetažením změníte velikost widgetu</string>
-    <string name="widget_resize_outside">Před změnou velikosti přesuňte widget do mřížky plochy.</string>
     <string name="width">Šířka</string>
     <string name="height">Výška</string>
     <string name="decrease_width">Zúžit widget</string>
@@ -318,9 +313,6 @@
         <item quantity="many">%1$d řádku</item>
         <item quantity="other">%1$d řádků</item>
     </plurals>
-    <string name="resize_overlap_note">Velikosti, které by překryly jiný prvek, se ignorují.</string>
-    <string name="resize_invalid">Tato velikost překrývá jiný prvek nebo přesahuje stránku.</string>
-    <string name="apply_size">Použít velikost</string>
     <string name="widget_no_room">Pro tento widget tu není místo.</string>
     <string name="widget_home_changed">Během nastavování widgetu se plocha změnila. Vyberte místo znovu.</string>
     <string name="widget_unexpected_binding">Hostitel widgetů vrátil neočekávané propojení. Zkuste to znovu.</string>
@@ -622,4 +614,13 @@
     <string name="glass_liquid">Tekuté</string>
     <string name="glass_liquid_detail">Čiré sklo s jasnými okraji na docku, složkách, novinkách a v seznamu aplikací. Okraje ohýbají tapetu, pokud byla nastavená v iDuo.</string>
     <string name="glass_liquid_android_wallpaper">Tato tapeta je nastavená v Androidu a ten aplikacím nedovoluje ji číst, takže sklo zůstává čiré. Vyberte tady stejný obrázek a okraje ho začnou ohýbat.</string>
+    <string name="status_menu_battery">Baterie</string>
+    <string name="status_menu_wifi">Wi-Fi</string>
+    <string name="status_menu_mobile">Mobilní síť</string>
+    <string name="status_open_settings">Otevřít nastavení baterie, Wi-Fi a sítě</string>
+    <string name="widget_exact_size">Přesná velikost</string>
+    <string name="widget_move_page">Přesunout na stránku</string>
+    <string name="glass_liquid_notice_title">Tekuté sklo</string>
+    <string name="glass_liquid_notice">Aby se projevily všechny efekty Tekutého skla, je potřeba znovu nastavit tapetu přímo v nastavení iDuo.</string>
+    <string name="ok">OK</string>
 </resources>

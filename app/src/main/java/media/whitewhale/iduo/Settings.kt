@@ -615,12 +615,20 @@ private fun AppearancePage(model: LauncherModel, state: LauncherState, appearanc
         }
     }
     backgrounds.targetRequest?.let { WallpaperTargetDialog(backgrounds::applyTo, backgrounds::dismissTargetRequest) }
+    var liquidNotice by rememberSaveable { mutableStateOf(false) }
+    if (liquidNotice) AlertDialog(onDismissRequest = { liquidNotice = false }, modifier = Modifier.testTag("glass-liquid-notice"),
+        title = { Text(stringResource(R.string.glass_liquid_notice_title)) },
+        text = { Text(stringResource(R.string.glass_liquid_notice)) },
+        confirmButton = { TextButton(onClick = { liquidNotice = false }, Modifier.testTag("glass-liquid-notice-ok")) { Text(stringResource(R.string.ok)) } })
     SettingsGroup {
         GroupBody {
             GroupTitle(stringResource(R.string.glass_style))
             val styles = GlassStyle.entries
             Choice(listOf(stringResource(R.string.glass_frosted) to "glass-frosted", stringResource(R.string.glass_liquid) to "glass-liquid"),
-                styles.indexOf(state.glassStyle), { model.setGlassStyle(styles[it]) })
+                styles.indexOf(state.glassStyle), {
+                    if (styles[it] == GlassStyle.LIQUID && state.glassStyle != GlassStyle.LIQUID) liquidNotice = true
+                    model.setGlassStyle(styles[it])
+                })
             if (state.glassStyle == GlassStyle.LIQUID) {
                 Detail(stringResource(R.string.glass_liquid_detail))
                 // Without a wallpaper's pixels the glass cannot bend it; a photo set here gives them.
@@ -1281,7 +1289,7 @@ private fun HelpSection(icon: ImageVector, title: String, detail: String) {
 
 /** Home rows on a wheel; layouts that cannot fit this screen stay visible but cannot be chosen. */
 @Composable private fun GridLayoutDialog(current: Int, columns: Int, maxRowsFit: Int, onDismiss: () -> Unit, onChoose: (Int) -> Unit) {
-    val options = (DEFAULT_HOME_ROWS..GRID_ROWS).toList()
+    val options = (MIN_HOME_ROWS..GRID_ROWS).toList()
     var chosen by remember { mutableIntStateOf(current) }
     fun fits(rows: Int) = rows <= maxOf(DEFAULT_HOME_ROWS, maxRowsFit)
     AlertDialog(onDismissRequest = onDismiss, title = { Text(stringResource(R.string.grid_layout)) },
