@@ -5,22 +5,20 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StatusSignalMappingTest {
-    @Test fun wifiLevelsLightDotThenThreeArcs() {
-        val visuals = (0..4).map { level ->
-            wifiSignalVisual(connected = true, level = level) as WifiSignalVisual.Connected
+    @Test fun wifiLevelsLightFanThenTwoArcs() {
+        val lit = (0..4).map { level ->
+            val visual = wifiSignalVisual(connected = true, level = level) as WifiSignalVisual.Connected
+            assertEquals(3, visual.elements.size)
+            visual.elements.takeWhile { it == SignalElementEmphasis.LIT }.size
         }
 
-        visuals.forEachIndexed { level, visual ->
-            assertEquals(level, visual.elements.count { it == SignalElementEmphasis.LIT })
-            assertEquals(4 - level, visual.elements.count { it == SignalElementEmphasis.DIM })
-        }
-        assertEquals(5, visuals.map { it.elements }.distinct().size)
+        assertEquals(listOf(0, 1, 2, 3, 3), lit)
     }
 
     @Test fun connectedUnknownWifiUsesNeutralElements() {
         val visual = wifiSignalVisual(connected = true, level = null) as WifiSignalVisual.Connected
 
-        assertEquals(List(4) { SignalElementEmphasis.NEUTRAL }, visual.elements)
+        assertEquals(List(3) { SignalElementEmphasis.NEUTRAL }, visual.elements)
     }
 
     @Test fun disconnectedWifiHasNoSignalLevel() {

@@ -612,4 +612,14 @@
     <string name="notification_badges_needs_access">Vyžaduje přístup k oznámením: iDuo počítá oznámení každé aplikace a nic jiného si neukládá.</string>
     <string name="notification_badges_allow">Povolit přístup k oznámením</string>
     <string name="notification_badges_service">Odznaky oznámení iDuo</string>
+    <string name="dock_background">Pozadí docku</string>
+    <string name="dock_background_detail">Po vypnutí budou ikony volně na tapetě.</string>
+    <string name="left_page_home">Další plocha</string>
+    <string name="left_page_home_detail">Další plocha pro aplikace, složky a widgety. Co sem umístíte, zůstane uložené i ve chvíli, kdy levá stránka ukazuje novinky.</string>
+    <string name="move_to_left_page">Přesunout na levou stránku</string>
+    <string name="glass_style">Styl skla</string>
+    <string name="glass_frosted">Matné</string>
+    <string name="glass_liquid">Tekuté</string>
+    <string name="glass_liquid_detail">Čiré sklo s jasnými okraji na docku, složkách, novinkách a v seznamu aplikací. Okraje ohýbají tapetu, pokud byla nastavená v iDuo.</string>
+    <string name="glass_liquid_android_wallpaper">Tato tapeta je nastavená v Androidu a ten aplikacím nedovoluje ji číst, takže sklo zůstává čiré. Vyberte tady stejný obrázek a okraje ho začnou ohýbat.</string>
 </resources>

@@ -592,4 +592,14 @@
     <string name="notification_badges_needs_access">Benötigt Zugriff auf Benachrichtigungen: iDuo zählt Benachrichtigungen je App und speichert sonst nichts.</string>
     <string name="notification_badges_allow">Zugriff auf Benachrichtigungen erlauben</string>
     <string name="notification_badges_service">iDuo Benachrichtigungs-Badges</string>
+    <string name="dock_background">Dock-Hintergrund</string>
+    <string name="dock_background_detail">Schalte ihn aus, damit die Symbole auf dem Hintergrundbild schweben.</string>
+    <string name="left_page_home">Weitere Startseite</string>
+    <string name="left_page_home_detail">Eine weitere Startseite für Apps, Ordner und Widgets. Was du hier ablegst, bleibt gespeichert, während die linke Seite Nachrichten zeigt.</string>
+    <string name="move_to_left_page">Auf die linke Seite verschieben</string>
+    <string name="glass_style">Glasstil</string>
+    <string name="glass_frosted">Matt</string>
+    <string name="glass_liquid">Flüssig</string>
+    <string name="glass_liquid_detail">Klares Glas mit hellen Rändern auf Dock, Ordnern, Nachrichten und Alle Apps. Die Ränder brechen das Hintergrundbild, wenn es in iDuo festgelegt wurde.</string>
+    <string name="glass_liquid_android_wallpaper">Dieses Hintergrundbild wurde in Android festgelegt, und Android lässt Apps es nicht lesen, daher bleibt das Glas klar. Wähle hier dasselbe Bild aus, dann brechen es die Ränder.</string>
 </resources>

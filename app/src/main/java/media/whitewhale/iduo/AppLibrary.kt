@@ -58,8 +58,8 @@ internal fun AppLibrary(
     val glass = !editing
     val palette = LocalDuoPalette.current
     val ink = if (glass) Ink else MaterialTheme.colorScheme.onSurface
-    val pinned = remember(state.homeSlots, state.leadingSlots) {
-        (state.homeSlots.asSequence() + state.leadingSlots.asSequence()).filterNotNull().toSet()
+    val pinned = remember(state.homeSlots, state.leadingSlots, state.leftSlots) {
+        (state.homeSlots.asSequence() + state.leadingSlots.asSequence() + state.leftSlots.asSequence()).filterNotNull().toSet()
     }
     val hasWork = state.profiles.any { it.isWork } || state.apps.any { it.isWork }
     var showWork by remember { mutableStateOf(false) }
@@ -77,10 +77,11 @@ internal fun AppLibrary(
             it.label.firstOrNull()?.takeIf(Char::isLetter)?.uppercaseChar()?.toString() ?: "#"
         }
     }
-    Surface(modifier, shape = RoundedCornerShape(24.dp),
-        color = if (glass) Glass.copy(alpha = .48f) else MaterialTheme.colorScheme.surface,
+    val liquid = glass && LocalGlassStyle.current == GlassStyle.LIQUID
+    Surface(if (liquid) modifier.liquidGlass(RoundedCornerShape(24.dp)) else modifier, shape = RoundedCornerShape(24.dp),
+        color = if (liquid) Glass.copy(alpha = LIQUID_PANEL_TINT) else if (glass) Glass.copy(alpha = .48f) else MaterialTheme.colorScheme.surface,
         contentColor = ink,
-        border = if (glass) BorderStroke(1.dp, Color.White.copy(alpha = .38f)) else null) {
+        border = if (glass && !liquid) BorderStroke(1.dp, Color.White.copy(alpha = .38f)) else null) {
         Column(Modifier.background(Brush.verticalGradient(if (glass)
             listOf(Color.White.copy(alpha = .09f), Color.Transparent) else listOf(Color.Transparent, Color.Transparent)))
             .padding(horizontal = 16.dp).padding(top = 18.dp)) {
@@ -261,8 +262,10 @@ private fun LibraryFolders(apps: List<AppEntry>, recent: List<String>, drag: Hom
             val (category, members) = folders[index]
             val title = stringResource(category.label)
             Column(Modifier.fillMaxWidth().testTag("library-category-${category.name.lowercase()}")) {
+                val liquid = LocalGlassStyle.current == GlassStyle.LIQUID
                 BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(26.dp))
-                    .background(Color.White.copy(alpha = .22f)).padding(10.dp)) {
+                    .then(if (liquid) Modifier.liquidGlass(RoundedCornerShape(26.dp)) else Modifier)
+                    .background(Color.White.copy(alpha = if (liquid) .1f else .22f)).padding(10.dp)) {
                     val cell = (maxWidth - 10.dp) / 2
                     val big = members.size <= 4
                     members.take(if (big) 4 else 3).forEachIndexed { position, app ->

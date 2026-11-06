@@ -314,11 +314,28 @@ fun LauncherScreen(
     val openLeftPage = { scope.launch { pager.animateScrollToPage(-1) }; Unit }
     val openLibrary = { scope.launch { pager.animateScrollToPage(homePages) }; Unit }
 
+    // With the extra Home page, the pager's left position is that much more Home.
+    val leftHome = state.leftPage == LeftPage.HOME
+    val firstHomePosition = if (leftHome) -1 else 0
     val dragWindowPage = if (expandedWorkspace && (drag.active || widgetSession != null)) pager.settledPage else pager.currentPage
-    val eligibleDragPages = remember(expandedWorkspace, dragWindowPage, visibleHomePages) {
-        if (expandedWorkspace && dragWindowPage in 0 until visibleHomePages) {
-            setOfNotNull((dragWindowPage - 1).takeIf { it >= -1 }, dragWindowPage)
-        } else setOf(dragWindowPage)
+    val eligibleDragPages = remember(expandedWorkspace, dragWindowPage, visibleHomePages, leftHome) {
+        when {
+            expandedWorkspace && dragWindowPage in 0 until visibleHomePages ->
+                setOfNotNull((dragWindowPage - 1).takeIf { it >= -1 }, dragWindowPage)
+            // The left position shows the extra page, beside the unfolded-only page where there is room.
+            leftHome && dragWindowPage == -1 -> if (expandedWorkspace) setOf(LEFT_HOME_PAGE, -1) else setOf(LEFT_HOME_PAGE)
+            else -> setOf(dragWindowPage)
+        }
+    }
+    /** The pager position showing the grid page [page]. */
+    fun positionOfPage(page: Int) = if (page == LEFT_HOME_PAGE) -1 else page.coerceIn(0, homePages)
+    /** The pages a widget can go on, in the order to look for room. */
+    fun widgetPages() = (if (expandedWorkspace) listOf(-1) else emptyList()) + (0..homePages) + (if (leftHome) listOf(LEFT_HOME_PAGE) else emptyList())
+    fun widgetRequestedPage(index: Int) = homeCellPage(index).let { page -> if (page in widgetPages()) page else page.coerceIn(0, homePages) }
+    /** The grid page before or after [page] on this screen; the cover has no unfolded-only page. */
+    fun neighbourPage(page: Int, by: Int): Int {
+        val pages = widgetPages().sorted()
+        return pages.getOrElse(pages.indexOf(page) + by) { page }
     }
     // A large folder keeps the cell it was picked up by under the finger, as a widget does.
     fun largeFolderDrop(raw: DropTarget.Home, source: DragRegion): DropTarget.Home {
@@ -366,7 +383,7 @@ fun LauncherScreen(
         widgetCandidate(state.layout, session.slot, session.targetIndex ?: cell.index, session.span.width, session.span.height)
     } ?: session.targetIndex?.let { widgetCandidate(state.layout, session.slot, it, session.span.width, session.span.height) } }
     val dropHomePage = if (pager.currentPage >= visibleHomePages)
-        lastHomePage.coerceIn(0, homePages - 1) else pager.currentPage.coerceIn(0, homePages)
+        lastHomePage.coerceIn(0, homePages - 1) else pager.currentPage.coerceIn(firstHomePosition, homePages)
     val previewLayout = remember(state.layout, drag.source, insertionTarget, drag.moved) {
         val id = drag.source?.appId
         when {
@@ -385,7 +402,7 @@ fun LauncherScreen(
         if (edge != 0) while (drag.active || widgetSession?.dragging == true) {
             // Opening the empty page after the last one makes a new page, so it asks for a longer hold.
             delay(if (edge > 0 && pager.currentPage + 1 >= homePages) NEW_PAGE_HOLD_MS else PAGE_TURN_HOLD_MS)
-            val next = (pager.currentPage + edge).coerceIn(0, homePages)
+            val next = (pager.currentPage + edge).coerceIn(firstHomePosition, homePages)
             if ((!drag.active && widgetSession?.dragging != true) || next == pager.currentPage) break
             // Do not key this effect on currentPage: it changes halfway through the
             // animation and would cancel the turn before the inner grid is visible.
@@ -423,9 +440,10 @@ fun LauncherScreen(
         }
         val returnToLibrary = source.target is DropTarget.Library && source.folderId == null && !changed
         val destinationHomePage = (destination as? DropTarget.Home)?.index?.let(::homeCellPage)
-        val currentWindow = pager.settledPage.coerceIn(0, visibleHomePages - 1)
+        val currentWindow = pager.settledPage.coerceIn(firstHomePosition, visibleHomePages - 1)
         val page = when (destination) {
-            is DropTarget.Home -> if (expandedWorkspace && homeCellPage(destination.index) in eligibleDragPages) currentWindow else destinationHomePage!!
+            is DropTarget.Home -> if (expandedWorkspace && homeCellPage(destination.index) in eligibleDragPages) currentWindow
+                else positionOfPage(destinationHomePage!!)
             is DropTarget.Dock -> dropHomePage
             is DropTarget.Widget -> 0
             else -> if (source.target is DropTarget.Library) pager.currentPage else drag.originPage
@@ -435,7 +453,7 @@ fun LauncherScreen(
             withFrameNanos { }
             drag.clear()
             withFrameNanos { }
-            pager.scrollToPage(if (returnToLibrary) model.state.value.homePages else page.coerceIn(0, model.state.value.homePages - 1))
+            pager.scrollToPage(if (returnToLibrary) model.state.value.homePages else page.coerceIn(firstHomePosition, model.state.value.homePages - 1))
             if (!moved && !cancelled) {
                 if (source.target is DropTarget.Dock) {
                     val docked = model.state.value.dock.getOrNull(source.target.index)
@@ -461,14 +479,18 @@ fun LauncherScreen(
     // The wallpaper blurs fully behind an open folder or search, and as All apps or the news
     // page slides in, so their labels stay readable on busy wallpapers. The dock instead frosts
     // only the wallpaper behind itself; see frostedWallpaper.
-    val wallpaperBlurProgress by remember(nativePager, firstHome, visibleHomePages, hasLibrary) {
+    val leftPageOnWallpaper = leftHome
+    val wallpaperBlurState = remember(nativePager, firstHome, visibleHomePages, hasLibrary, leftPageOnWallpaper) {
         derivedStateOf {
             val position = nativePager.currentPage + nativePager.currentPageOffsetFraction - firstHome
-            val panel = maxOf((-position).coerceIn(0f, 1f),
+            // The extra Home page is Home like any other, on the wallpaper as it is.
+            val panel = maxOf(if (leftPageOnWallpaper) 0f else (-position).coerceIn(0f, 1f),
                 if (hasLibrary) (position - (visibleHomePages - 1)).coerceIn(0f, 1f) else 0f)
             maxOf(panel, folderBlur / FOLDER_BACKDROP_BLUR)
         }
     }
+    val wallpaperBlurProgress by wallpaperBlurState
+    SideEffect { WallpaperBlurState.source = wallpaperBlurState }
     // Android's wallpaper lies behind this window, so the window blurs it where Android allows
     // that. Samsung turns cross-window blur off but offers its own (SamsungBlur); elsewhere
     // without it Home draws a blurred stand-in of the wallpaper instead.
@@ -638,19 +660,24 @@ fun LauncherScreen(
             val lockAt by rememberUpdatedState { point: Offset ->
                 val page = pager.currentPage
                 val region = drag.hit(point + gestureOriginInRoot, setOf(page - 1, page))
-                if (state.doubleTapLock && pagerInputEnabled && page in 0 until visibleHomePages &&
+                if (state.doubleTapLock && pagerInputEnabled && page in firstHomePosition until visibleHomePages &&
                     (region == null || region.target is DropTarget.Home && !region.movable)) launcherActivity.lockScreen()
             }
             SideEffect {
                 drag.onEmptyCellDoubleTap = {
-                    if (state.doubleTapLock && pagerInputEnabled && pager.currentPage in 0 until visibleHomePages) launcherActivity.lockScreen()
+                    if (state.doubleTapLock && pagerInputEnabled && pager.currentPage in firstHomePosition until visibleHomePages) launcherActivity.lockScreen()
                 }
             }
             val openHomeOptionsAt by rememberUpdatedState { point: Offset, width: Int ->
                 val page = pager.currentPage
-                val targetPage = if (geometry.expanded && point.x < width / 2f) page - 1 else page
+                val leftHalf = geometry.expanded && point.x < width / 2f
+                val targetPage = when {
+                    page == -1 -> if (geometry.expanded && !leftHalf) -1 else LEFT_HOME_PAGE
+                    leftHalf -> page - 1
+                    else -> page
+                }
                 val overItem = drag.hit(point + gestureOriginInRoot, setOf(page - 1, page))?.movable == true
-                if (pagerInputEnabled && page in 0 until visibleHomePages && !overItem) {
+                if (pagerInputEnabled && page in firstHomePosition until visibleHomePages && !overItem) {
                     emptyCellIndex = firstEmptyHomeCell(state, targetPage)
                 }
             }
@@ -659,7 +686,7 @@ fun LauncherScreen(
             // swipe's direction also keeps it.
             fun homeOwnsVerticalSwipe(point: Offset, upward: Boolean): Boolean {
                 val page = pager.currentPage
-                if (page !in 0 until visibleHomePages) return false
+                if (page !in firstHomePosition until visibleHomePages) return false
                 val region = drag.hit(point + gestureOriginInRoot, eligibleDragPages)
                 val rootOnScreen = IntArray(2).also(launcherRootView::getLocationOnScreen)
                 val screenPoint = point + gestureOriginInWindow +
@@ -711,7 +738,7 @@ fun LauncherScreen(
                         nativePager = nativePager, motion = workspaceMotion!!, firstHome = firstHome,
                         visibleHomePages = visibleHomePages, panelWidth = panelWidth,
                         contentHeight = contentHeight, bottomSpace = bottomSpace, geometry = geometry,
-                        state = state, previewSlots = previewLayout.slots, previewLeadingSlots = previewLayout.leadingSlots,
+                        state = state, previewSlots = previewLayout.slots, previewLeadingSlots = previewLayout.leadingSlots, previewLeftSlots = previewLayout.leftSlots,
                         previewWidgetPlacements = previewLayout.widgetPlacements, appsById = appsById,
                         widgets = widgets, drag = drag, target = target, insertionTarget = insertionTarget,
                         libraryQuery = libraryQuery, onLibraryQuery = { libraryQuery = it },
@@ -732,7 +759,16 @@ fun LauncherScreen(
                     key = { if (it < firstHome) "left" else if (it - firstHome == visibleHomePages) "library" else "home-${it - firstHome}" }) { physicalPage ->
                     val page = physicalPage - firstHome
                     if (page == -1) {
-                        NewsPage(Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = bottomSpace),
+                        if (leftHome) Row(Modifier.fillMaxSize().testTag("home-surface")) {
+                            HomePagePane(LEFT_HOME_PAGE, state, previewLayout.slots, previewLayout.leadingSlots, previewLayout.widgetPlacements, appsById, geometry, contentHeight,
+                                bottomSpace, widgets, drag, target, insertionTarget, showLargeWidget = false,
+                                onLaunch = onLaunchFrom, onActions = { selectedId = it.id },
+                                onWidget = { widgetSlot = it; sheet = "widgetActions" },
+                                onFolder = { openFolderId = it },
+                                onEmptyWidget = { emptyCellIndex = it },
+                                onRefresh = model::refresh, previewLeftSlots = previewLayout.leftSlots)
+                        }
+                        else NewsPage(Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = bottomSpace),
                             active = pager.currentPage == -1, mode = state.leftPage)
                     } else if (page == visibleHomePages) {
                         AppLibrary(state, libraryQuery, { libraryQuery = it }, onLaunch, model::setPinned,
@@ -746,7 +782,7 @@ fun LauncherScreen(
                                 onWidget = { widgetSlot = it; sheet = "widgetActions" },
                                 onFolder = { openFolderId = it },
                                 onEmptyWidget = { emptyCellIndex = it },
-                                onRefresh = model::refresh)
+                                onRefresh = model::refresh, previewLeftSlots = previewLayout.leftSlots)
                         }
                     }
                 }
@@ -763,20 +799,28 @@ fun LauncherScreen(
                             if (contentHeight < 500.dp) 0f else 23f).coerceAtLeast(0f)
                     },
                 compact = contentHeight < 500.dp, iconSize = dockIconSize(geometry.iconSize).dp)
+            val dockGlass = state.dockBackground
+            val dockLiquid = dockGlass && state.glassStyle == GlassStyle.LIQUID
             if (dockMode != DockMode.HIDDEN) Surface(Modifier.align(Alignment.TopEnd).padding(end = 12.dp).offset(y = geometry.dockTop.dp)
                 .width(preset.dockWidth.dp).height(geometry.dockHeight.dp).graphicsLayer {
                     // Composite the stationary dock independently of the shared pager layer.
                     compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
                     translationX = (1f - dockReveal.value) * dockTravel
-                }.onGloballyPositioned { dockBounds[0] = it.boundsInRoot() }.frostedWallpaper(RoundedCornerShape(30.dp))
+                }.onGloballyPositioned { dockBounds[0] = it.boundsInRoot() }
+                .then(if (dockLiquid) Modifier.liquidGlass(RoundedCornerShape(30.dp), refract = true)
+                    else if (dockGlass) Modifier.frostedWallpaper(RoundedCornerShape(30.dp)) else Modifier)
                 .then(if (dockMode == DockMode.SLIDE) Modifier.pointerInput(Unit) {
                     detectHorizontalDragGestures(onDragStart = dockDragBegin, onDragEnd = dockDragEnd,
                         onDragCancel = dockDragEnd) { change, dx -> if (dx > 0f || dockReveal.value < 1f) { change.consume(); dockDrag(dx) } }
                 } else Modifier).testTag("dock"),
                 // Frosted glass covers what lies behind, so icons under a sliding dock do not show through.
-                shape = RoundedCornerShape(30.dp), color = Glass.copy(alpha = .32f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = .3f))) {
-                if (!ownWallpaper && SamsungBlur.available)
+                shape = RoundedCornerShape(30.dp), color = when {
+                    dockLiquid -> Color.White.copy(alpha = LIQUID_DOCK_TINT)
+                    dockGlass -> Glass.copy(alpha = .32f)
+                    else -> Color.Transparent
+                },
+                border = if (dockGlass && !dockLiquid) androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = .3f)) else null) {
+                if (dockGlass && !dockLiquid && !ownWallpaper && SamsungBlur.available)
                     SamsungWallpaperBlur(DOCK_SAMSUNG_BLUR, 30.dp, Glass.copy(alpha = .32f), Modifier.fillMaxSize())
                 Column(Modifier.padding(vertical = 8.dp).verticalScroll(dockScroll)) {
                     DockAppColumn(state.dock, previewLayout.dock, appsById, geometry.dockRowHeight,
@@ -810,7 +854,13 @@ fun LauncherScreen(
                     Icon(Icons.Rounded.Home, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.set_as_home_app))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                    if (!drag.active) IconButton(onClick = openLeftPage, Modifier.size(32.dp).testTag("left-page-link")) {
+                    // The extra Home page is one more dot; news keeps its icon.
+                    if (leftHome) Box(Modifier.size(28.dp).clip(CircleShape).clickable { openLeftPage() }
+                        .semantics { contentDescription = leftPageTitle }.testTag("left-page-link"), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(if (pager.currentPage == -1) 6.dp else 4.dp)
+                            .background(Color.White.copy(alpha = if (pager.currentPage == -1) 1f else .4f), CircleShape))
+                    }
+                    else if (!drag.active) IconButton(onClick = openLeftPage, Modifier.size(32.dp).testTag("left-page-link")) {
                         Icon(if (state.leftPage == LeftPage.RSS) Icons.Rounded.RssFeed else Icons.Rounded.Newspaper,
                             leftPageTitle,
                             tint = Color.White.copy(alpha = .65f), modifier = Modifier.size(17.dp))
@@ -832,7 +882,7 @@ fun LauncherScreen(
                 .width(preset.dockWidth.dp), horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val controlSize = dockIconSize(geometry.iconSize).dp
-                if (pager.currentPage == -1) CircleControl(Icons.Rounded.ArrowForward, stringResource(R.string.back_to_home), "left-page-home", controlSize) { scope.launch { pager.animateScrollToPage(0) } }
+                if (pager.currentPage == -1 && !leftHome) CircleControl(Icons.Rounded.ArrowForward, stringResource(R.string.back_to_home), "left-page-home", controlSize) { scope.launch { pager.animateScrollToPage(0) } }
                 val searchBounds = remember { android.graphics.Rect() }
                 Box(Modifier.onGloballyPositioned { searchBounds.set(it.boundsInWindow().toAndroidBounds()) }) {
                     CircleControl(Icons.Rounded.Search, stringResource(if (state.googleSearch) R.string.search_google else R.string.search_apps), "search", controlSize) {
@@ -992,8 +1042,8 @@ fun LauncherScreen(
                             }
                             val requestedIndex = existing?.let { homeCellIndex(it.page, it.row * GRID_COLUMNS + it.column) }
                                 ?: widgetTargetIndex.takeUnless { it == Int.MIN_VALUE } ?: 0
-                            val requestedPage = homeCellPage(requestedIndex).coerceIn(if (expandedWorkspace) -1 else 0, homePages)
-                            val availablePages = (if (expandedWorkspace) -1 else 0)..homePages
+                            val requestedPage = widgetRequestedPage(requestedIndex)
+                            val availablePages = widgetPages()
                             val autoPages = (listOf(requestedPage) + availablePages.filter { it != requestedPage })
                             val freeIndex = if (existing != null || widgetExactTarget) requestedIndex.takeIf {
                                 widgetCandidate(state.layout, widgetSlot, it, span.width, span.height) != null
@@ -1005,7 +1055,7 @@ fun LauncherScreen(
                                 dragging = false, targetIndex = targetIndex)
                             widgetPlacementMessage = if (freeIndex == null)
                                 launcherActivity.getString(R.string.widget_no_room_size) else null
-                            scope.launch { pager.scrollToPage(homeCellPage(targetIndex).coerceIn(0, homePages)) }
+                            scope.launch { pager.scrollToPage(positionOfPage(homeCellPage(targetIndex))) }
                         }
                     },
                     onBuiltin = builtin@{ builtinId ->
@@ -1022,8 +1072,8 @@ fun LauncherScreen(
                         val requested = existing?.let {
                             homeCellIndex(it.page, it.row * GRID_COLUMNS + it.column)
                         } ?: widgetTargetIndex.takeUnless { it == Int.MIN_VALUE } ?: 0
-                        val requestedPage = homeCellPage(requested).coerceIn(if (expandedWorkspace) -1 else 0, homePages)
-                        val availablePages = (if (expandedWorkspace) -1 else 0)..homePages
+                        val requestedPage = widgetRequestedPage(requested)
+                        val availablePages = widgetPages()
                         val candidates = if (model.placement(widgetSlot) != null || widgetExactTarget) sequenceOf(requested)
                             else (listOf(requestedPage) + availablePages.filter { it != requestedPage }).asSequence()
                                 .flatMap { page -> (0 until HOME_CELLS).asSequence().map { homeCellIndex(page, it) } }
@@ -1034,7 +1084,7 @@ fun LauncherScreen(
                             dragging = false, targetIndex = free ?: requested, builtinId = builtinId)
                         widgetPlacementMessage = if (free == null)
                             launcherActivity.getString(R.string.widget_no_room_card) else null
-                        scope.launch { pager.scrollToPage(homeCellPage(free ?: requested).coerceIn(0, homePages)) }
+                        scope.launch { pager.scrollToPage(positionOfPage(homeCellPage(free ?: requested))) }
                     },
                     onDragStart = { provider, point ->
                         footprint(provider)?.let { span ->
@@ -1090,18 +1140,18 @@ fun LauncherScreen(
                                 modifier = Modifier.testTag("widget-replacement-locked"))
                             val targetPage = homeCellPage(session.targetIndex ?: 0)
                             if (!session.dragging && session.candidate == null) IconButton(
-                                enabled = targetPage > if (expandedWorkspace) -1 else 0, onClick = {
+                                enabled = neighbourPage(targetPage, -1) != targetPage, onClick = {
                                 val local = homeCellLocal(session.targetIndex ?: 0)
-                                val page = targetPage - 1
+                                val page = neighbourPage(targetPage, -1)
                                 widgetSession = session.copy(targetIndex = homeCellIndex(page, local))
-                                scope.launch { pager.animateScrollToPage(page.coerceAtLeast(0)) }
+                                scope.launch { pager.animateScrollToPage(positionOfPage(page)) }
                             }) { Icon(Icons.Rounded.ChevronLeft, stringResource(R.string.previous_home_page)) }
                             Text("${session.span.width} × ${session.span.height}", color = Ink)
                             if (!session.dragging && session.candidate == null) IconButton(enabled = targetPage < homePages, onClick = {
                                 val local = homeCellLocal(session.targetIndex ?: 0)
-                                val page = (targetPage + 1).coerceAtMost(homePages)
+                                val page = neighbourPage(targetPage, 1)
                                 widgetSession = session.copy(targetIndex = homeCellIndex(page, local))
-                                scope.launch { pager.animateScrollToPage(page.coerceAtLeast(0)) }
+                                scope.launch { pager.animateScrollToPage(positionOfPage(page)) }
                             }) { Icon(Icons.Rounded.ChevronRight, stringResource(R.string.next_home_page)) }
                             if (!session.dragging) TextButton(enabled = widgetDraft != null, onClick = {
                                 widgetDraft?.let { draft ->
@@ -1243,7 +1293,7 @@ fun LauncherScreen(
                 val minH = resizeConstraints?.minimum?.height ?: 2
                 val maxW = minOf(state.homeColumns - placement.column, resizeConstraints?.maximum?.width ?: state.homeColumns)
                 val maxH = minOf(state.homeRows - placement.row, resizeConstraints?.maximum?.height ?: state.homeRows)
-                val feasible = placement.page >= -1 && placement.row in 0 until state.homeRows &&
+                val feasible = placement.page >= LEFT_HOME_PAGE && placement.row in 0 until state.homeRows &&
                     !(placement.id >= 0 && resizeConstraints == null) && minW <= maxW && minH <= maxH
                 val candidate = resizeWidget(state.layout, slot, resizeWidth, resizeHeight)
                 val valid = feasible && ((resizeWidth == placement.spanX && resizeHeight == placement.spanY) || candidate != state.layout)
@@ -1380,7 +1430,7 @@ fun LauncherScreen(
                     items(state.apps.filter { it.id != firstId && it.available }, key = { it.id }) { second ->
                         TextButton(onClick = {
                             val preferredPage = state.layout.indexOfShortcut(firstId)?.let(::homeCellPage)
-                                ?.takeIf { it >= 0 || expandedWorkspace } ?: lastHomePage.coerceIn(0, homePages - 1)
+                                ?.takeIf { it >= 0 || it == LEFT_HOME_PAGE || expandedWorkspace } ?: lastHomePage.coerceIn(0, homePages - 1)
                             val blocked = state.layout.unavailableCells()
                             val targetIndex = (0 until HOME_CELLS).map { homeCellIndex(preferredPage, it) }
                                 .firstOrNull { it !in blocked && state.layout.slotAt(it) in listOf(null, firstId, second.id) }
@@ -1398,7 +1448,8 @@ fun LauncherScreen(
         openFolderId?.let { id ->
             state.folders.firstOrNull { it.id == id }?.let { folder ->
                 val blocked = state.layout.unavailableCells()
-                val destinationPages = (if (expandedWorkspace) listOf(-1) else emptyList()) + (0 until homePages)
+                val destinationPages = (if (leftHome) listOf(LEFT_HOME_PAGE) else emptyList()) +
+                    (if (expandedWorkspace) listOf(-1) else emptyList()) + (0 until homePages)
                 val homeDestinations = destinationPages.mapNotNull { destinationPage ->
                     (0 until HOME_CELLS).map { homeCellIndex(destinationPage, it) }.firstOrNull {
                         if (folder.large) largeFolderFits(state.layout, id, it) else it !in blocked && state.layout.slotAt(it) == null
@@ -1414,7 +1465,7 @@ fun LauncherScreen(
                     onMoveFolder = { destination ->
                         if (model.applyDrop(id, DropTarget.Home(destination))) {
                             openFolderId = null
-                            scope.launch { pager.animateScrollToPage(homeCellPage(destination).coerceIn(0, homePages - 1)) }
+                            scope.launch { pager.animateScrollToPage(positionOfPage(homeCellPage(destination)).coerceAtMost(homePages - 1)) }
                         }
                     },
                     onDisband = { if (model.disbandFolder(id)) openFolderId = null },
@@ -1505,6 +1556,7 @@ private fun ExpandedWorkspace(
     onFolder: (String) -> Unit,
     onEmptyWidget: (Int) -> Unit,
     onRefresh: () -> Unit,
+    previewLeftSlots: List<String?>,
 ) {
     val density = LocalDensity.current
     val viewportWidth = motion.pageWidth
@@ -1568,7 +1620,17 @@ private fun ExpandedWorkspace(
         if (showLeftPage) {
             key("left-page-pane") {
                 // One pane wide, so the leading Home page stays in view beside it.
-                Box(Modifier.placeFading(-stride).width(with(density) { stride.toDp() }).fillMaxHeight()) {
+                if (state.leftPage == LeftPage.HOME) Box(Modifier.placeFading(initialHomeOrigin - 2f * stride)
+                    .width((geometry.gridWidth + 16f).dp).fillMaxHeight().testTag("expanded-left-home")) {
+                    HomePagePane(
+                        LEFT_HOME_PAGE, state, previewSlots, previewLeadingSlots, previewWidgetPlacements, appsById, geometry, contentHeight, bottomSpace,
+                        widgets, drag, target, insertionTarget, showLargeWidget = true,
+                        onLaunch = onLaunchFrom, onActions = onActions, onWidget = onWidget,
+                        onFolder = onFolder, onEmptyWidget = onEmptyWidget, onRefresh = onRefresh,
+                        previewLeftSlots = previewLeftSlots,
+                    )
+                }
+                else Box(Modifier.placeFading(-stride).width(with(density) { stride.toDp() }).fillMaxHeight()) {
                     NewsPage(Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, bottom = bottomSpace),
                         active = nativePager.currentPage < firstHome, mode = state.leftPage)
                 }
@@ -1584,7 +1646,7 @@ private fun ExpandedWorkspace(
                         widgets, drag, target, insertionTarget, showLargeWidget = true,
                         onLaunch = onLaunchFrom, onActions = onActions, onWidget = onWidget,
                         onFolder = onFolder, onEmptyWidget = onEmptyWidget, onRefresh = onRefresh,
-                        modifier = Modifier,
+                        modifier = Modifier, previewLeftSlots = previewLeftSlots,
                     )
                 }
             }
@@ -1602,6 +1664,7 @@ private fun ExpandedWorkspace(
                             onFolder = onFolder,
                             onEmptyWidget = onEmptyWidget,
                             onRefresh = onRefresh,
+                            previewLeftSlots = previewLeftSlots,
                         )
                     }
                 }
@@ -1660,6 +1723,7 @@ private fun HomePagePane(
     onEmptyWidget: (Int) -> Unit = {},
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
+    previewLeftSlots: List<String?>,
 ) {
     val homeScroll = rememberScrollState()
     var paneBounds by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
@@ -1697,7 +1761,7 @@ private fun HomePagePane(
             })
         Column(Modifier.offset(x = 16.dp).width(geometry.gridWidth.dp).fillMaxHeight()
             .verticalScroll(homeScroll).padding(top = geometry.contentTop.dp, bottom = 8.dp)) {
-            SharedHomeGrid(page, state.homeRows, state.homeColumns, state.homeSlots, state.leadingSlots, previewSlots, previewLeadingSlots, previewWidgetPlacements,
+            SharedHomeGrid(page, state.homeRows, state.homeColumns, state.homeSlots, state.leadingSlots, state.leftSlots, previewSlots, previewLeadingSlots, previewLeftSlots, previewWidgetPlacements,
                 appsById, geometry, state.labels, widgets, drag, target,
                 folders = state.folders, onLaunch = onLaunch, onActions = onActions, onWidget = onWidget,
                 onFolder = onFolder, onEmptyWidget = onEmptyWidget)
@@ -1725,8 +1789,10 @@ private fun SharedHomeGrid(
     columns: Int,
     savedSlots: List<String?>,
     savedLeadingSlots: List<String?>,
+    savedLeftSlots: List<String?>,
     previewSlots: List<String?>,
     previewLeadingSlots: List<String?>,
+    previewLeftSlots: List<String?>,
     widgetPlacements: List<WidgetPlacement>,
     appsById: Map<String, AppEntry>,
     geometry: HomeGeometry,
@@ -1745,11 +1811,14 @@ private fun SharedHomeGrid(
     val iconSize = geometry.iconSize
     val pageStart = homeCellIndex(page, 0)
     val pageRange = pageStart until pageStart + HOME_CELLS
-    fun savedAt(index: Int) = if (page == -1) savedLeadingSlots.getOrNull(homeCellLocal(index)) else savedSlots.getOrNull(index)
-    fun previewAt(index: Int) = if (page == -1) previewLeadingSlots.getOrNull(homeCellLocal(index)) else previewSlots.getOrNull(index)
-    fun savedIndexOf(id: String) = if (page == -1) savedLeadingSlots.indexOf(id).takeIf { it >= 0 }?.let { homeCellIndex(-1, it) }
+    // The two pages left of the first Home page keep their own cells.
+    val savedSide = when (page) { -1 -> savedLeadingSlots; LEFT_HOME_PAGE -> savedLeftSlots; else -> null }
+    val previewSide = when (page) { -1 -> previewLeadingSlots; LEFT_HOME_PAGE -> previewLeftSlots; else -> null }
+    fun savedAt(index: Int) = if (savedSide != null) savedSide.getOrNull(homeCellLocal(index)) else savedSlots.getOrNull(index)
+    fun previewAt(index: Int) = if (previewSide != null) previewSide.getOrNull(homeCellLocal(index)) else previewSlots.getOrNull(index)
+    fun savedIndexOf(id: String) = if (savedSide != null) savedSide.indexOf(id).takeIf { it >= 0 }?.let { homeCellIndex(page, it) }
         else savedSlots.indexOf(id).takeIf { it >= 0 }
-    fun previewIndexOf(id: String) = if (page == -1) previewLeadingSlots.indexOf(id).takeIf { it >= 0 }?.let { homeCellIndex(-1, it) }
+    fun previewIndexOf(id: String) = if (previewSide != null) previewSide.indexOf(id).takeIf { it >= 0 }?.let { homeCellIndex(page, it) }
         else previewSlots.indexOf(id).takeIf { it >= 0 }
     val draggedId = drag.source?.appId
     val homeTarget = (target as? DropTarget.Home)?.index
@@ -1820,7 +1889,7 @@ private fun SharedHomeGrid(
             }
         }
 
-        val ids = (if (page == -1) savedLeadingSlots + previewLeadingSlots
+        val ids = (if (savedSide != null && previewSide != null) savedSide + previewSide
             else savedSlots.slicePage(pageRange) + previewSlots.slicePage(pageRange)).filterNotNull().distinct()
         ids.forEach { id ->
             val previewIndex = previewIndexOf(id)
@@ -2020,7 +2089,7 @@ private fun <T> List<T>.slicePage(range: IntRange): List<T> =
 private fun DockFolderIcon(folder: FolderEntry, apps: Map<String, AppEntry>, size: Float, drag: HomeDragState, modifier: Modifier = Modifier) {
     val outline = LocalFolderShape.current.outline(size.dp)
     Box(modifier.size(size.dp).clip(outline)
-        .background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), outline)
+        .folderGlass(outline)
         .dropRegion(drag, DropTarget.Folder(folder.id), folderId = folder.id).testTag("dock-folder-${folder.id}")) {
         FolderPreviewIcons(folder, apps, size)
     }
@@ -2060,7 +2129,7 @@ private fun LargeFolderTile(folder: FolderEntry, apps: Map<String, AppEntry>, si
     val openLabel = stringResource(R.string.folder_open, folder.title)
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.size(side.dp).clip(outline)
-            .background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), outline)
+            .folderGlass(outline, tint = LIQUID_LARGE_FOLDER_TINT, refract = true)
             .clickable(onClickLabel = openLabel, onClick = onOpen)
             .dropRegion(drag, DropTarget.Folder(folder.id), page = page, folderId = folder.id)
             .testTag("folder-drop-${folder.id}")) {
@@ -2102,7 +2171,7 @@ private fun FolderTile(folder: FolderEntry, apps: Map<String, AppEntry>, size: F
         Box {
         val outline = LocalFolderShape.current.outline(size.dp)
         Box(Modifier.size(size.dp).clip(outline)
-            .background(Glass.copy(alpha = .72f)).border(1.dp, Color.White.copy(alpha = .55f), outline)
+            .folderGlass(outline)
             .dropRegion(drag, DropTarget.Folder(folder.id), page = page, folderId = folder.id)
             .testTag("folder-drop-${folder.id}")) {
             FolderPreviewIcons(folder, apps, size)
@@ -2342,7 +2411,7 @@ private fun WidgetActions(
     val minHeight = constraints?.minimum?.height ?: 2
     val maxWidth = minOf(columns - placement.column, constraints?.maximum?.width ?: columns)
     val maxHeight = minOf(rows - placement.row, constraints?.maximum?.height ?: rows)
-    val feasible = placement.page >= -1 && placement.row in 0 until rows &&
+    val feasible = placement.page >= LEFT_HOME_PAGE && placement.row in 0 until rows &&
         !(placement.id >= 0 && constraints == null) && minWidth <= maxWidth && minHeight <= maxHeight
     val valid = feasible && isValid(width, height)
     Column(Modifier.fillMaxWidth().heightIn(max = sheetMaxHeight).verticalScroll(rememberScrollState())
@@ -2400,4 +2469,5 @@ private fun WidgetActions(
 private fun leftPageTitle(page: LeftPage) = when (page) {
     LeftPage.GOOGLE_NEWS -> R.string.left_page_google_news
     LeftPage.RSS -> R.string.rss_title
+    LeftPage.HOME -> R.string.left_page
 }

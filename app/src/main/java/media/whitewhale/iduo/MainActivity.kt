@@ -33,6 +33,8 @@ import android.content.IntentFilter
 /** The current Home activity; Home is a single task, so at most one is live at a time. */
 internal object LauncherHost {
     var activity = java.lang.ref.WeakReference<MainActivity>(null)
+    /** When Home last restarted to leave a window stuck at the cover's size; this outlives the restart. */
+    var narrowWindowRestartAt = 0L
 }
 
 class MainActivity : ComponentActivity() {
@@ -75,6 +77,13 @@ class MainActivity : ComponentActivity() {
     private var shadeSetupDialog: android.app.AlertDialog? = null
     private lateinit var hinge: HingeMonitor
     private var returningFromShadeSettings = false
+    /** Whether Home is on the cover screen, following Samsung moving this window between screens. */
+    private val onCoverScreen = mutableStateOf(false)
+    private val displayListener = object : android.hardware.display.DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = Unit
+        override fun onDisplayRemoved(displayId: Int) = Unit
+        override fun onDisplayChanged(displayId: Int) { if (displayId == display?.displayId) followScreen() }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,20 +111,13 @@ class MainActivity : ComponentActivity() {
         intent.removeExtra("duo_destination")
         if (savedInstanceState == null && UpdateNotice.shouldAskAfterUpdate(this))
             notificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        applyCoverRotation(model.state.value.coverRotation, onCover())
+        followScreen()
         setContent {
             val state = model.state.collectAsStateWithLifecycle().value
-            val smallestWidth = androidx.compose.ui.platform.LocalConfiguration.current.smallestScreenWidthDp
-            androidx.compose.runtime.LaunchedEffect(state.coverRotation, smallestWidth) {
-                applyCoverRotation(state.coverRotation, onCover())
-            }
+            val onCover = onCoverScreen.value
+            androidx.compose.runtime.LaunchedEffect(state.coverRotation, onCover) { applyCoverRotation(state.coverRotation, onCover) }
             val deviceStatus = status.state.collectAsStateWithLifecycle().value
             androidx.compose.runtime.LaunchedEffect(appearance.state.dark) { model.setDarkAppearance(appearance.state.dark) }
-            // The window's real size, which follows Samsung moving this window between screens.
-            val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-            val onCover = if (window.width <= 0) onCover()
-                else isCoverWindow(minOf(window.width, window.height), resources.displayMetrics.xdpi,
-                    androidx.compose.ui.platform.LocalDensity.current.density)
             val foldFrost = rememberFoldFrost(onCover, arrivedByFold, hinge)
             DuoTheme(appearance.state.dark) { androidx.compose.foundation.layout.Box {
                 if (state.foldAnimation) FoldWallpaperBlur(foldFrost, onCover)
@@ -123,7 +125,7 @@ class MainActivity : ComponentActivity() {
                     .then(if (state.foldAnimation) androidx.compose.ui.Modifier.foldFrost(foldFrost, onCover) else androidx.compose.ui.Modifier)) {
                 androidx.compose.runtime.CompositionLocalProvider(LocalBadgeCounts provides
                     if (state.notificationBadges && NotificationBadges.accessGranted) NotificationBadges.counts else emptyMap(),
-                    LocalFolderShape provides state.folderShape) {
+                    LocalFolderShape provides state.folderShape, LocalGlassStyle provides state.glassStyle) {
                 LauncherScreen(state, model, widgets, homeRequests.intValue,
                     onLaunch = { launchApp(it) }, onMakeDefault = ::makeDefault, onAppInfo = ::appInfo,
                     isDefaultHome = defaultHome.value, deviceStatus = deviceStatus, onStatusMode = ::setStatusMode, onWallpaperSettings = ::openWallpaperSettings,
@@ -146,6 +148,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart(); widgets.host.startListening(); widgets.refreshProviders()
+        getSystemService(android.hardware.display.DisplayManager::class.java)
+            .registerDisplayListener(displayListener, android.os.Handler(mainLooper))
+        followScreen()
         if (!timeReceiverRegistered) {
             ContextCompat.registerReceiver(this, timeReceiver, IntentFilter().apply {
                 addAction(Intent.ACTION_TIME_TICK); addAction(Intent.ACTION_TIME_CHANGED)
@@ -157,6 +162,8 @@ class MainActivity : ComponentActivity() {
         SystemWallpaper.verify(this)
     }
     override fun onStop() {
+        window.decorView.removeCallbacks(restartNarrowWindow)
+        getSystemService(android.hardware.display.DisplayManager::class.java).unregisterDisplayListener(displayListener)
         if (timeReceiverRegistered) { unregisterReceiver(timeReceiver); timeReceiverRegistered = false }
         widgets.host.stopListening(); super.onStop()
     }
@@ -166,6 +173,7 @@ class MainActivity : ComponentActivity() {
      */
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
+        followScreen()
         // Pick the screen's Home before the next frame, as a new window would in onCreate.
         model.showDisplay(onCover() || newConfig.screenWidthDp < 650)
     }
@@ -304,9 +312,46 @@ class MainActivity : ComponentActivity() {
         defaultHome.value = getSystemService(RoleManager::class.java).isRoleHeld(RoleManager.ROLE_HOME)
     }
 
-    /** Whether Home is on the cover screen now; Samsung may move this window between screens. */
-    private fun onCover() = resources.displayMetrics.let {
-        isCoverWindow(minOf(it.widthPixels, it.heightPixels), it.xdpi, it.density)
+    /**
+     * Whether Home is on the cover screen now, told from the panel rather than this window: on the
+     * Fold 8's landscape inner screen, a window still upright from the cover gets letterboxed into
+     * a narrow one that looks like the cover, and would keep asking to stay upright.
+     */
+    private fun onCover(): Boolean {
+        val metrics = resources.displayMetrics
+        val mode = display?.mode
+        val shortSide = if (mode != null) minOf(mode.physicalWidth, mode.physicalHeight) else minOf(metrics.widthPixels, metrics.heightPixels)
+        return isCoverScreen(shortSide, metrics.xdpi, metrics.density)
+    }
+
+    /** Takes up the current screen at once, without waiting for a frame the letterboxed window may never change. */
+    private fun followScreen() {
+        val cover = onCover()
+        onCoverScreen.value = cover
+        applyCoverRotation(model.state.value.coverRotation, cover)
+        window.decorView.removeCallbacks(restartNarrowWindow)
+        if (windowStuckNarrow()) window.decorView.postDelayed(restartNarrowWindow, NARROW_WINDOW_GRACE_MS)
+    }
+
+    private fun windowStuckNarrow(): Boolean {
+        val bounds = windowManager.currentWindowMetrics.bounds
+        val metrics = resources.displayMetrics
+        return isWindowStuckNarrow(onCover(), minOf(bounds.width(), bounds.height()), metrics.xdpi, metrics.density)
+    }
+
+    /**
+     * Android can keep a window scaled to the cover's size on the inner screen even once it may
+     * rotate freely, until the activity restarts. Once only, so a window that is narrow for some
+     * other reason, such as a user's aspect ratio setting, cannot restart over and over.
+     */
+    private val restartNarrowWindow = Runnable {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (!isFinishing && !isDestroyed && windowStuckNarrow() &&
+            (LauncherHost.narrowWindowRestartAt == 0L || now - LauncherHost.narrowWindowRestartAt > NARROW_WINDOW_RETRY_MS)) {
+            LauncherHost.narrowWindowRestartAt = now
+            android.util.Log.w("iDuo", "Window stuck at the cover's size on the inner screen; restarting Home")
+            recreate()
+        }
     }
 
     private fun systemDark() = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
@@ -398,5 +443,8 @@ class MainActivity : ComponentActivity() {
     private companion object {
         const val SHADE_DIALOG_VISIBLE = "duo.shade.dialog_visible"
         const val SHADE_SETTINGS_PENDING = "duo.shade.settings_pending"
+        /** Time for Android to resize the window by itself after the orientation is released. */
+        const val NARROW_WINDOW_GRACE_MS = 1_500L
+        const val NARROW_WINDOW_RETRY_MS = 60_000L
     }
 }

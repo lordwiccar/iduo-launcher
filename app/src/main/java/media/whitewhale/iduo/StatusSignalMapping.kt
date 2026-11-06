@@ -13,13 +13,16 @@ internal sealed interface WifiSignalVisual {
 
 internal fun wifiSignalVisual(connected: Boolean, level: Int?): WifiSignalVisual {
     if (!connected) return WifiSignalVisual.Disconnected
-    if (level == null) return WifiSignalVisual.Connected(List(4) { SignalElementEmphasis.NEUTRAL })
+    if (level == null) return WifiSignalVisual.Connected(List(WIFI_PARTS) { SignalElementEmphasis.NEUTRAL })
 
-    val activeElements = level.coerceIn(0, 4)
-    return WifiSignalVisual.Connected(List(4) { index ->
+    // The symbol has three parts for Android's four levels, so the top two levels light all of it.
+    val activeElements = (level.coerceIn(0, 4) * WIFI_PARTS + 3) / 4
+    return WifiSignalVisual.Connected(List(WIFI_PARTS) { index ->
         if (index < activeElements) SignalElementEmphasis.LIT else SignalElementEmphasis.DIM
     })
 }
+
+private const val WIFI_PARTS = 3
 
 internal sealed interface CellularSignalVisual {
     data object Airplane : CellularSignalVisual

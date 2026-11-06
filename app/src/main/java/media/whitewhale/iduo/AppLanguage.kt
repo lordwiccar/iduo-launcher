@@ -14,17 +14,23 @@ import java.util.Locale
  */
 object AppLanguage {
     /** The empty tag follows the system language. */
-    val tags = listOf("", "en", "cs", "sk", "pl", "de")
+    val tags = listOf("", "en", "cs", "sk", "pl", "de", "zh-Hans", "ja", "ko")
     private const val PREFS = "language"
     private const val KEY = "tag"
 
     fun current(context: Context): String {
         val tag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val locales = context.getSystemService(LocaleManager::class.java).applicationLocales
-            if (locales.isEmpty) "" else locales[0].language
+            if (locales.isEmpty) "" else tagFor(locales[0])
         } else prefs(context).getString(KEY, "").orEmpty()
         return tag.takeIf { it in tags } ?: ""
     }
+
+    /** The offered language for [locale]; a script, as in Traditional Chinese, must not differ from the offered one. */
+    internal fun tagFor(locale: Locale): String = tags.drop(1).firstOrNull { tag ->
+        val offered = Locale.forLanguageTag(tag)
+        offered.language == locale.language && (locale.script.isEmpty() || locale.script == offered.script)
+    }.orEmpty()
 
     fun set(activity: Activity, tag: String) {
         if (tag == current(activity)) return
@@ -55,6 +61,7 @@ object AppLanguage {
 
     /** A language's own name, so people can find theirs whatever the current language is. */
     fun nativeName(tag: String): String {
+        if (tag == "zh-Hans") return "简体中文"
         val locale = Locale.forLanguageTag(tag)
         return locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }
     }

@@ -16,12 +16,14 @@ fun isFolderId(id: String) = id.startsWith(FOLDER_PREFIX) &&
 private fun HomeLayout.replacingShortcut(old: String, new: String?) = copy(
     slots = slots.map { if (it == old) new else it }.dropLastWhile { it == null },
     leadingSlots = leadingSlots.map { if (it == old) new else it },
+    leftSlots = leftSlots.map { if (it == old) new else it },
     dock = dock.map { if (it == old) new else it },
 )
 
 private fun HomeLayout.withoutShortcut(id: String) = copy(
     slots = slots.map { it?.takeUnless(id::equals) }.dropLastWhile { it == null },
     leadingSlots = leadingSlots.map { it?.takeUnless(id::equals) },
+    leftSlots = leftSlots.map { it?.takeUnless(id::equals) },
     dock = dock.map { it?.takeUnless(id::equals) },
 )
 
@@ -35,7 +37,7 @@ fun createFolder(
     if (!isFolderId(folder.id) || layout.indexOfShortcut(folder.id) != null || layout.folder(folder.id) != null ||
         folder.title.isBlank() || firstAppId == secondAppId || listOf(firstAppId, secondAppId).any { it.isBlank() || isReservedFolderId(it) } ||
         layout.folders.any { existing -> firstAppId in existing.appIds || secondAppId in existing.appIds } ||
-        homeCellPage(targetIndex) !in -1..layout.pageCount || targetIndex in layout.unavailableCells()) return layout
+        homeCellPage(targetIndex) !in LEFT_HOME_PAGE..layout.pageCount || targetIndex in layout.unavailableCells()) return layout
     val target = layout.slotAt(targetIndex)
     if (target != null && target != firstAppId && target != secondAppId) return layout
     var next = layout.withoutShortcut(firstAppId).withoutShortcut(secondAppId)
@@ -179,7 +181,7 @@ fun HomeLayout.largeFolderFootprints(exceptFolder: String? = null): Set<Int> =
 /** Whether the folder [folderId] can fill two by two cells from [anchor]: all visible, and free of anything else. */
 fun largeFolderFits(layout: HomeLayout, folderId: String, anchor: Int): Boolean {
     val local = homeCellLocal(anchor)
-    if (homeCellPage(anchor) !in -1..layout.pageCount ||
+    if (homeCellPage(anchor) !in LEFT_HOME_PAGE..layout.pageCount ||
         local % GRID_COLUMNS + 1 >= layout.columns || local / GRID_COLUMNS + 1 >= layout.rows) return false
     val taken = layout.widgetPlacements.flatMapTo(mutableSetOf()) { it.coveredIndices() } + layout.largeFolderFootprints(folderId)
     return largeFolderCells(anchor).all { cell ->

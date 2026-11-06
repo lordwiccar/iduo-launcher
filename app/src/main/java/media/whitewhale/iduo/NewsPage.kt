@@ -73,8 +73,10 @@ internal fun NewsPage(modifier: Modifier, active: Boolean, mode: LeftPage) {
     }
     // Changing the Google News edition or sections replaces the sources and marks them stale.
     LaunchedEffect(active, reader, reader.sources) { if (active) { reader.load(context); reader.refreshIfStale(context) } }
-    Surface(modifier.testTag("rss-page"), shape = RoundedCornerShape(24.dp), color = Glass.copy(alpha = .48f),
-        contentColor = Ink, border = BorderStroke(1.dp, Color.White.copy(alpha = .38f))) {
+    val liquid = LocalGlassStyle.current == GlassStyle.LIQUID
+    Surface((if (liquid) modifier.liquidGlass(RoundedCornerShape(24.dp)) else modifier).testTag("rss-page"), shape = RoundedCornerShape(24.dp),
+        color = Glass.copy(alpha = if (liquid) LIQUID_PANEL_TINT else .48f),
+        contentColor = Ink, border = if (liquid) null else BorderStroke(1.dp, Color.White.copy(alpha = .38f))) {
         Column(Modifier.background(Brush.verticalGradient(listOf(Color.White.copy(alpha = .09f), Color.Transparent)))
             .padding(horizontal = 16.dp).padding(top = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {

@@ -164,7 +164,7 @@ internal object GoogleNewsSettings {
         if (loaded) return
         loaded = true
         val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val language = AppLanguage.current(context).ifEmpty { AppLanguage.systemLocale(context).language }
+        val language = AppLanguage.current(context).substringBefore('-').ifEmpty { AppLanguage.systemLocale(context).language }
         edition = NewsEdition.entries.firstOrNull { it.name == prefs.getString(EDITION, null) }
             ?: defaultNewsEdition(language, Locale.getDefault().country)
         topics = prefs.getString(TOPICS, null)?.split(',')?.mapNotNull { name -> NewsTopic.entries.firstOrNull { it.name == name } }

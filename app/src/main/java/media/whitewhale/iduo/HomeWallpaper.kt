@@ -144,7 +144,7 @@ internal fun DrawScope.drawWallpaper(image: ImageBitmap, crop: WallpaperCrop, or
 internal fun onCoverScreen(): Boolean {
     val config = LocalConfiguration.current
     val metrics = androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics
-    return config.screenWidthDp < 650 || isCoverWindow(
+    return config.screenWidthDp < 650 || isCoverScreen(
         (minOf(config.screenWidthDp, config.screenHeightDp) * metrics.density).toInt(), metrics.xdpi, metrics.density)
 }
 

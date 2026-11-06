@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.1.7
+
+Second public release on Google Play (version code 10).
+
+### New features
+- Simplified Chinese, Japanese and Korean, following the system language or chosen in Settings.
+- The left page can be an extra Home page for apps, folders and widgets instead of news, under Settings → Left page.
+- Liquid glass style for the dock, folders, news and All apps, under Settings → Wallpaper & appearance. Its edges bend a wallpaper set in iDuo.
+- The dock's background can be turned off, so its icons float on the wallpaper.
+
+### Look and feel
+- The status ring is redrawn: a slimmer ring, a narrower opening with square ends for the battery level, and a new Wi-Fi symbol. Without Wi-Fi it shows four signal bars with the network, such as 5G, in the bottom opening.
+- The second SIM's signal dots stay visible when they are unlit.
+
+### Fixes
+- Galaxy Z Fold 8: opening the phone could leave Home stuck in a narrow strip in the middle of the inner screen. Home now tells the screens apart by the display itself, and restarts its window if it stays that narrow.
+- The folding animation no longer stays blurred while the phone is left half open.
+
 ## 1.1.6
 
 First public release on Google Play (version code 9).

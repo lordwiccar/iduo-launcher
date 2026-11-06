@@ -60,13 +60,14 @@ fun encodeLayoutBackup(state: LauncherState, widgetDescriptors: List<BackupWidge
         .put("dockWidth", value.dockWidth).put("dockPosition", value.dockPosition).put("dockAlignToGrid", value.dockAlignToGrid)
     val root = JSONObject().put("version", LAYOUT_BACKUP_VERSION).put("sourceScope", sourceScope).put("apps", apps)
         .put("homeSlots", JSONArray(inner.slots)).put("leadingSlots", JSONArray(inner.leadingSlots))
+        .put("leftSlots", JSONArray(inner.leftSlots))
         .put("dock", JSONArray(inner.dock)).put("folders", encodeBackupFolders(inner))
         .put("widgets", encodeBackupWidgets(inner, widgetDescriptors, sourceScope))
         .put("labels", state.labels).put("googleSearch", state.googleSearch).put("verticalStatus", state.verticalStatus).put("homeRows", inner.rows)
         .put("compact", preset(state.compact)).put("expanded", preset(state.expanded))
     state.coverLayout?.let { cover ->
         root.put("separateCover", state.separateCover).put("cover", JSONObject()
-            .put("homeSlots", JSONArray(cover.slots)).put("folders", encodeBackupFolders(cover))
+            .put("homeSlots", JSONArray(cover.slots)).put("leftSlots", JSONArray(cover.leftSlots)).put("folders", encodeBackupFolders(cover))
             .put("widgets", encodeBackupWidgets(cover, coverWidgetDescriptors, sourceScope))
             .put("homeRows", cover.rows).put("homeColumns", cover.columns))
     }
@@ -164,18 +165,25 @@ fun decodeLayoutBackup(raw: String, currentApps: List<AppEntry>, currentProfiles
         val stored = readSlots(array)
         if (version >= 4) stored else upgradeLegacyLeadingSlots(stored, storedRows)
     }
+    /** The extra left page, which backups from older versions do not have. */
+    fun readLeftSlots(item: JSONObject): List<String?> = item.optJSONArray("leftSlots")?.let { array ->
+        require(array.length() == HOME_CELLS) { "The left page must contain exactly $HOME_CELLS cells" }
+        readSlots(array)
+    } ?: List(HOME_CELLS) { null }
+    val rawLeftSlots = readLeftSlots(root)
     val dockArray = root.getJSONArray("dock")
     require(dockArray.length() in MIN_DOCK_SLOTS..MAX_DOCK_SLOTS)
     val rawDock = readSlots(dockArray)
     // Folders may stand on Home or in the dock.
-    val importedFolders = readFolders(root.getJSONArray("folders"), rawSlots + rawLeadingSlots + rawDock)
-    val surfaceApps = (rawSlots + rawLeadingSlots + rawDock).filterNotNull().filterNot(::isReservedFolderId) +
+    val importedFolders = readFolders(root.getJSONArray("folders"), rawSlots + rawLeadingSlots + rawLeftSlots + rawDock)
+    val surfaceApps = (rawSlots + rawLeadingSlots + rawLeftSlots + rawDock).filterNotNull().filterNot(::isReservedFolderId) +
         importedFolders.flatMap(FolderEntry::appIds)
     require(surfaceApps.distinct().size == surfaceApps.size) { "An app shortcut appears more than once" }
     val folderResults = importedFolders.associate { folder -> folder.id to folder.copy(appIds = folder.appIds.mapNotNull(::importedApp)) }
     val folders = folderResults.values.filter { it.appIds.size >= 2 }
     val slots = importCells(rawSlots, folderResults)
     val leadingSlots = importCells(rawLeadingSlots, folderResults)
+    val leftSlots = importCells(rawLeftSlots, folderResults)
     val dock = importCells(rawDock, folderResults)
     val profileSerials = currentProfiles.mapTo(mutableSetOf(), AppProfile::userSerial)
     val profileIssues = linkedSetOf<ProfileIssue>()
@@ -216,7 +224,7 @@ fun decodeLayoutBackup(raw: String, currentApps: List<AppEntry>, currentProfiles
         return layout
     }
     var layout = readWidgets(root.getJSONArray("widgets"),
-        HomeLayout(slots.dropLastWhile { it == null }, dock, folders = folders, leadingSlots = leadingSlots, rows = GRID_ROWS),
+        HomeLayout(slots.dropLastWhile { it == null }, dock, folders = folders, leadingSlots = leadingSlots, rows = GRID_ROWS, leftSlots = leftSlots),
         DEFAULT_HOME_COLUMNS)
     fun preset(key: String): LayoutPreset {
         val item = root.getJSONObject(key)
@@ -238,20 +246,22 @@ fun decodeLayoutBackup(raw: String, currentApps: List<AppEntry>, currentProfiles
         val coverCells = readSlots(cells)
         val columns = item.strictInt("homeColumns").also { require(it in DEFAULT_HOME_COLUMNS..GRID_COLUMNS) }
         val coverRows = item.strictInt("homeRows").also { require(it in DEFAULT_HOME_ROWS..GRID_ROWS) }
-        val coverFolders = readFolders(item.getJSONArray("folders"), coverCells)
-        val coverApps = coverCells.filterNotNull().filterNot(::isReservedFolderId) + rawDock.filterNotNull().filterNot(::isReservedFolderId) +
+        val coverLeftCells = readLeftSlots(item)
+        val coverFolders = readFolders(item.getJSONArray("folders"), coverCells + coverLeftCells)
+        val coverApps = (coverCells + coverLeftCells).filterNotNull().filterNot(::isReservedFolderId) + rawDock.filterNotNull().filterNot(::isReservedFolderId) +
             coverFolders.flatMap(FolderEntry::appIds)
         require(coverApps.distinct().size == coverApps.size) { "An app shortcut appears more than once" }
         val coverResults = coverFolders.associate { folder -> folder.id to folder.copy(appIds = folder.appIds.mapNotNull(::importedApp)) }
         val start = HomeLayout(importCells(coverCells, coverResults).dropLastWhile { it == null }, dock,
-            folders = coverResults.values.filter { it.appIds.size >= 2 }, rows = GRID_ROWS, columns = columns)
+            folders = coverResults.values.filter { it.appIds.size >= 2 }, rows = GRID_ROWS, columns = columns,
+            leftSlots = importCells(coverLeftCells, coverResults))
         require(coverCells.indices.filter { coverCells[it] != null }.all { index -> homeCellLocal(index) % GRID_COLUMNS < columns })
-        readWidgets(item.getJSONArray("widgets"), start, columns).also { read -> require(read.widgetPlacements.none { it.page < 0 }) }
+        readWidgets(item.getJSONArray("widgets"), start, columns).also { read -> require(read.widgetPlacements.none { it.page == -1 }) }
             .let { it.copy(rows = maxOf(coverRows, it.requiredRows())) }
     } else null
     val separateCover = cover != null && root.optBoolean("separateCover", false)
     return LayoutImportPreview(layout, missing.toList(), profileIssues.toList(),
-        appCount = (slots + leadingSlots).count { it != null && !isReservedFolderId(it) } +
+        appCount = (slots + leadingSlots + leftSlots).count { it != null && !isReservedFolderId(it) } +
             dock.count { it != null } + folders.sumOf { it.appIds.size },
         folderCount = folders.size, widgetCount = layout.widgetPlacements.size,
         compact = compact, expanded = expanded, labels = labels, googleSearch = googleSearch, verticalStatus = verticalStatus,
@@ -259,7 +269,7 @@ fun decodeLayoutBackup(raw: String, currentApps: List<AppEntry>, currentProfiles
 }
 
 internal fun validBackupPlacement(value: WidgetPlacement, rows: Int = GRID_ROWS, columns: Int = DEFAULT_HOME_COLUMNS): Boolean {
-    val base = value.slot in 0..10_000 && value.page in -1..99 && value.column >= 0 && value.row >= 0 &&
+    val base = value.slot in 0..10_000 && value.page in LEFT_HOME_PAGE..99 && value.column >= 0 && value.row >= 0 &&
         value.spanX in 1..columns && value.spanY in 1..rows && value.column + value.spanX <= columns
     val inside = value.row + value.spanY <= rows
     val overflow = value.page > 0 && value.slot / 3 == value.page && value.slot % 3 == 2 && value.column == 0 &&

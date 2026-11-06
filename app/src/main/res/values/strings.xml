@@ -593,4 +593,14 @@
     <string name="notification_badges_needs_access">Needs notification access: iDuo counts notifications per app and keeps nothing else.</string>
     <string name="notification_badges_allow">Allow notification access</string>
     <string name="notification_badges_service">iDuo notification badges</string>
+    <string name="dock_background">Dock background</string>
+    <string name="dock_background_detail">Turn it off to let the icons float on the wallpaper.</string>
+    <string name="left_page_home">Extra Home page</string>
+    <string name="left_page_home_detail">Another Home page for apps, folders and widgets. What you place here stays saved while the left page shows news.</string>
+    <string name="move_to_left_page">Move to the left page</string>
+    <string name="glass_style">Glass style</string>
+    <string name="glass_frosted">Frosted</string>
+    <string name="glass_liquid">Liquid</string>
+    <string name="glass_liquid_detail">Clear glass with bright edges on the dock, folders, news and All apps. Its edges bend the wallpaper when the wallpaper was set in iDuo.</string>
+    <string name="glass_liquid_android_wallpaper">This wallpaper was set in Android, and Android does not let apps read it, so the glass stays clear. Choose the same picture here and its edges will bend it.</string>
 </resources>

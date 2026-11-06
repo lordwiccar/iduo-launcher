@@ -48,7 +48,7 @@ internal fun HomeAppsDialog(layout: HomeLayout, apps: List<AppEntry>, from: Int,
     var query by rememberSaveable { mutableStateOf("") }
     val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     val choices = remember(apps, layout, locale) {
-        val placed = (layout.slots + layout.leadingSlots + layout.dock).filterNotNull().toSet() + layout.folders.flatMap { it.appIds }
+        val placed = (layout.slots + layout.leadingSlots + layout.leftSlots + layout.dock).filterNotNull().toSet() + layout.folders.flatMap { it.appIds }
         val collator = java.text.Collator.getInstance(locale)
         apps.filter { it.available && it.id !in placed }.sortedWith { a, b -> collator.compare(a.label, b.label) }
     }

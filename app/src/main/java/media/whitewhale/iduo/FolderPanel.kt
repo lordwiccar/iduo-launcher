@@ -153,6 +153,7 @@ internal fun FolderPanel(
         val gridWidth = FolderCellWidth * shape.columns + FolderColumnGap * (shape.columns - 1)
         val gridHeight = FolderCellHeight * shape.rows + FolderRowGap * (shape.rows - 1)
         val pager = rememberPagerState { shape.pages }
+        val liquid = LocalGlassStyle.current == GlassStyle.LIQUID
         Surface(Modifier.width(maxOf(gridWidth + FolderPadding * 2, FolderMinWidth).coerceAtMost(maxWidth))
             // Measured before the layer below, so the bounds are the settled, unscaled panel.
             .onGloballyPositioned { panelBounds = it.boundsInRoot() }
@@ -170,9 +171,11 @@ internal fun FolderPanel(
                 indication = null,
                 onClick = {},
             )
+            .then(if (liquid) Modifier.liquidGlass(RoundedCornerShape(30.dp)) else Modifier)
             .testTag("folder-panel-content"),
-            color = Glass.copy(alpha = 1f - transparency.coerceIn(0f, MAX_FOLDER_TRANSPARENCY)), shape = RoundedCornerShape(30.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = .6f))) {
+            // Liquid starts out clearer; the transparency setting still moves it from there.
+            color = Glass.copy(alpha = (1f - transparency.coerceIn(0f, MAX_FOLDER_TRANSPARENCY)) * if (liquid) .55f else 1f), contentColor = Ink, shape = RoundedCornerShape(30.dp),
+            border = if (liquid) null else androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = .6f))) {
             Column(Modifier.padding(FolderPadding), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (editing) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     val focus = remember { FocusRequester() }
@@ -305,7 +308,8 @@ private fun FolderMenu(destinations: List<Int>, onMove: (Int) -> Unit, onDisband
                 onClick = { open = false; onToggleLarge() }, modifier = Modifier.testTag("folder-size"))
             destinations.distinctBy(::homeCellPage).forEach { destination ->
                 val destinationPage = homeCellPage(destination)
-                DropdownMenuItem(text = { Text(if (destinationPage == -1) stringResource(R.string.move_to_leading_page)
+                DropdownMenuItem(text = { Text(if (destinationPage == LEFT_HOME_PAGE) stringResource(R.string.move_to_left_page)
+                    else if (destinationPage == -1) stringResource(R.string.move_to_leading_page)
                     else stringResource(R.string.move_to_page, destinationPage + 1)) },
                     onClick = { open = false; onMove(destination) },
                     modifier = Modifier.testTag("folder-move-page-$destinationPage"))

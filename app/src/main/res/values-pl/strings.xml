@@ -612,4 +612,14 @@
     <string name="notification_badges_needs_access">Wymaga dostępu do powiadomień: iDuo liczy powiadomienia każdej aplikacji i niczego więcej nie zachowuje.</string>
     <string name="notification_badges_allow">Zezwól na dostęp do powiadomień</string>
     <string name="notification_badges_service">Plakietki powiadomień iDuo</string>
+    <string name="dock_background">Tło doku</string>
+    <string name="dock_background_detail">Po wyłączeniu ikony unoszą się na tapecie.</string>
+    <string name="left_page_home">Dodatkowy ekran główny</string>
+    <string name="left_page_home_detail">Kolejny ekran główny na aplikacje, foldery i widżety. To, co tu umieścisz, pozostaje zapisane, gdy lewa strona pokazuje aktualności.</string>
+    <string name="move_to_left_page">Przenieś na lewą stronę</string>
+    <string name="glass_style">Styl szkła</string>
+    <string name="glass_frosted">Matowe</string>
+    <string name="glass_liquid">Płynne</string>
+    <string name="glass_liquid_detail">Przezroczyste szkło z jasnymi krawędziami na doku, folderach, aktualnościach i liście aplikacji. Krawędzie załamują tapetę, jeśli została ustawiona w iDuo.</string>
+    <string name="glass_liquid_android_wallpaper">Ta tapeta została ustawiona w Androidzie, a Android nie pozwala aplikacjom jej odczytać, więc szkło pozostaje przezroczyste. Wybierz tutaj ten sam obraz, a krawędzie zaczną go załamywać.</string>
 </resources>

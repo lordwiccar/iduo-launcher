@@ -65,15 +65,19 @@ internal object FoldHandoff {
 }
 
 /**
- * Whether a window whose short side is [shortSidePx] lies on a foldable's cover screen. Measured
+ * Whether a screen whose short side is [shortSidePx] is a foldable's cover screen. Measured
  * in inches, because a smaller display size setting stretches the dp width of a wide cover, such
  * as the Fold 8's, past any dp threshold: covers are under 4 inches across, inner screens over
  * 4.5. Falls back to dp when the screen reports an implausible density.
  */
-internal fun isCoverWindow(shortSidePx: Int, xdpi: Float, density: Float): Boolean =
+internal fun isCoverScreen(shortSidePx: Int, xdpi: Float, density: Float): Boolean =
     if (xdpi in 120f..800f) shortSidePx / xdpi < COVER_MAX_INCHES else shortSidePx / density < 600f
 
 private const val COVER_MAX_INCHES = 4f
+
+/** Whether a window on the inner panel is still as narrow as one on the cover. */
+internal fun isWindowStuckNarrow(panelIsCover: Boolean, windowShortSidePx: Int, xdpi: Float, density: Float): Boolean =
+    !panelIsCover && isCoverScreen(windowShortSidePx, xdpi, density)
 
 /**
  * The hinge angle in degrees, 0 shut to 180 flat, or null until Android reports it. Samsung's
@@ -108,7 +112,8 @@ internal class HingeMonitor(context: Context) : DefaultLifecycleObserver, Sensor
  * frosted. Half open is fully frosted on both screens. On the inner screen it clears as the
  * phone opens flat; on the [cover] it clears as the phone shuts. A window that [arrived] by a
  * fold, or whose window moved to the other screen, starts frosted and clears once the hinge allows and Home is in front, not while the lock
- * screen still covers it.
+ * screen still covers it. Frost is only for the movement: a phone left half open clears after a
+ * moment, as does anything else that leaves the target frosted.
  */
 @Composable
 internal fun rememberFoldFrost(cover: Boolean, arrived: Boolean, hinge: HingeMonitor): State<Float> {
@@ -119,7 +124,7 @@ internal fun rememberFoldFrost(cover: Boolean, arrived: Boolean, hinge: HingeMon
     // Samsung sometimes moves Home's window to the other screen instead of starting a new one;
     // that is an arrival too.
     val shownOnCover = remember { booleanArrayOf(cover) }
-    LaunchedEffect(target, cover) {
+    LaunchedEffect(target, cover, resumed) {
         if (shownOnCover[0] != cover) {
             shownOnCover[0] = cover
             frost.snapTo(1f)
@@ -127,6 +132,10 @@ internal fun rememberFoldFrost(cover: Boolean, arrived: Boolean, hinge: HingeMon
         // Clearing is the arrival and is given time to be seen; frosting answers the hand at once.
         if (target < frost.value) frost.animateTo(target, tween(CLEAR_MS, easing = LinearOutSlowInEasing))
         else frost.animateTo(target, tween(FROST_MS, easing = FastOutSlowInEasing))
+        if (resumed && target > 0f) {
+            kotlinx.coroutines.delay(FROST_HOLD_MS)
+            frost.animateTo(0f, tween(CLEAR_MS, easing = LinearOutSlowInEasing))
+        }
     }
     return frost.asState()
 }
@@ -260,6 +269,8 @@ private val FOLD_WALLPAPER_BLUR = 48.dp
 private const val HALF_OPEN_DEG = 90f
 private const val CLEAR_MS = 650
 private const val FROST_MS = 300
+/** Longer than the 3 s or so measured between the hinge reporting half open and the inner screen lighting. */
+private const val FROST_HOLD_MS = 4_000L
 /** How far the swinging half seems to tilt away from the viewer when fully frosted. */
 private const val MAX_TILT_DEG = 60f
 private const val REFERENCE_PX_PER_MM = 15.9f

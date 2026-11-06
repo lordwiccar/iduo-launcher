@@ -13,7 +13,7 @@ import org.json.JSONObject
 fun coverLayoutFrom(inner: HomeLayout, restoreFor: (WidgetPlacement) -> WidgetRestore?): HomeLayout {
     val placements = mutableListOf<WidgetPlacement>()
     val restores = mutableListOf<WidgetRestore>()
-    inner.widgetPlacements.filter { it.page >= 0 }.forEach { placement ->
+    inner.widgetPlacements.filter { it.page >= 0 || it.page == LEFT_HOME_PAGE }.forEach { placement ->
         when {
             placement.id >= 0 -> restoreFor(placement)?.let { restore ->
                 placements += placement.copy(id = NEEDS_BINDING_WIDGET)
@@ -42,7 +42,8 @@ fun encodeCoverLayout(layout: HomeLayout): JSONObject {
         .put("slot", restore.slot).put("provider", restore.providerComponent).put("userSerial", restore.userSerial)
         .put("title", restore.title).put("profileLabel", restore.profileLabel).put("work", restore.isWork)
         .put("sourceScope", restore.sourceScope)) } }
-    return JSONObject().put("homeSlots", JSONArray(layout.slots)).put("widgets", widgets).put("folders", folders)
+    return JSONObject().put("homeSlots", JSONArray(layout.slots)).put("leftSlots", JSONArray(layout.leftSlots))
+        .put("widgets", widgets).put("folders", folders)
         .put("restores", restores).put("homeRows", layout.rows).put("homeColumns", layout.columns)
 }
 
@@ -50,6 +51,11 @@ fun encodeCoverLayout(layout: HomeLayout): JSONObject {
 fun decodeCoverLayout(json: JSONObject, dock: List<String?>): HomeLayout {
     val cells = json.getJSONArray("homeSlots")
     val slots = List(cells.length()) { index -> if (cells.isNull(index)) null else cells.getString(index).takeIf { it.isNotBlank() && it != "null" } }
+    val leftCells = json.optJSONArray("leftSlots")
+    val leftSlots = if (leftCells == null) List(HOME_CELLS) { null } else {
+        require(leftCells.length() == HOME_CELLS)
+        List(HOME_CELLS) { index -> if (leftCells.isNull(index)) null else leftCells.getString(index).takeIf { it.isNotBlank() && it != "null" } }
+    }
     val rows = json.getInt("homeRows").also { require(it in DEFAULT_HOME_ROWS..GRID_ROWS) }
     val columns = json.getInt("homeColumns").also { require(it in DEFAULT_HOME_COLUMNS..GRID_COLUMNS) }
     val folderArray = json.getJSONArray("folders")
@@ -76,14 +82,14 @@ fun decodeCoverLayout(json: JSONObject, dock: List<String?>): HomeLayout {
     }
     restores.forEach { require(ComponentName.unflattenFromString(it.providerComponent) != null && it.title.isNotBlank()) }
     var layout = HomeLayout(slots.dropLastWhile { it == null }, dock, folders = folders, widgetRestores = restores,
-        leadingSlots = List(HOME_CELLS) { null }, rows = rows, columns = columns)
+        leadingSlots = List(HOME_CELLS) { null }, rows = rows, columns = columns, leftSlots = leftSlots)
     require(layout.slots.indices.filter { layout.slots[it] != null }.all(layout::cellVisible))
     val widgetArray = json.getJSONArray("widgets")
     repeat(widgetArray.length()) { index ->
         val w = widgetArray.getJSONObject(index)
         val placement = WidgetPlacement(w.getInt("slot"), w.getInt("id"), w.getInt("page"), w.getInt("column"),
             w.getInt("row"), w.getInt("spanX"), w.getInt("spanY"))
-        require(placement.page >= 0 && layout.placement(placement.slot) == null)
+        require((placement.page >= 0 || placement.page == LEFT_HOME_PAGE) && layout.placement(placement.slot) == null)
         val next = placeWidget(layout, placement)
         require(next.placement(placement.slot) == placement) { "Invalid cover widget" }
         layout = next.copy(widgetRestores = restores)

@@ -23,6 +23,11 @@ const val CLOCK_WIDGET = -2
 const val DATE_WIDGET = -3
 const val INFO_WIDGET = -4
 const val NEEDS_BINDING_WIDGET = -5
+/**
+ * The extra Home page on the left, where news can otherwise be. Page -1 is the unfolded-only page
+ * beside the first Home page, so this one lies past it.
+ */
+const val LEFT_HOME_PAGE = -2
 
 data class WidgetPlacement(val slot: Int, val id: Int, val page: Int, val column: Int, val row: Int, val spanX: Int, val spanY: Int)
 data class WidgetRestore(val slot: Int, val providerComponent: String, val userSerial: Long, val title: String,
@@ -36,7 +41,7 @@ val DEFAULT_WIDGET_PLACEMENTS = listOf(
 fun homeCellPage(index: Int) = Math.floorDiv(index, HOME_CELLS)
 fun homeCellLocal(index: Int) = Math.floorMod(index, HOME_CELLS)
 fun homeCellIndex(page: Int, local: Int): Int {
-    require(page >= -1 && local in 0 until HOME_CELLS)
+    require(page >= LEFT_HOME_PAGE && local in 0 until HOME_CELLS)
     return page * HOME_CELLS + local
 }
 
@@ -63,6 +68,8 @@ data class HomeLayout(
     val rows: Int = DEFAULT_HOME_ROWS,
     /** Visible columns per page; stored columns to the right stay empty. */
     val columns: Int = DEFAULT_HOME_COLUMNS,
+    /** The extra Home page on the left, kept while the left page shows news. */
+    val leftSlots: List<String?> = List(HOME_CELLS) { null },
 ) {
     fun cellVisible(index: Int) = homeCellLocal(index).let { it / GRID_COLUMNS < rows && it % GRID_COLUMNS < columns }
     /**
@@ -72,7 +79,7 @@ data class HomeLayout(
     fun unavailableCells(exceptSlot: Int? = null, exceptFolder: String? = null): Set<Int> = buildSet {
         widgetPlacements.filter { it.slot != exceptSlot }.forEach { addAll(it.coveredIndices()) }
         addAll(largeFolderFootprints(exceptFolder))
-        for (page in -1..pageCount + 1) for (row in 0 until GRID_ROWS) repeat(GRID_COLUMNS) { column ->
+        for (page in LEFT_HOME_PAGE..pageCount + 1) for (row in 0 until GRID_ROWS) repeat(GRID_COLUMNS) { column ->
             if (row >= rows || column >= columns) add(homeCellIndex(page, row * GRID_COLUMNS + column))
         }
     }
@@ -87,25 +94,43 @@ data class HomeLayout(
         widgetPlacements.filter { it.page >= 0 }.maxOfOrNull { it.page + 1 } ?: 1)
     fun slotAt(index: Int): String? = when (homeCellPage(index)) {
         -1 -> leadingSlots.getOrNull(homeCellLocal(index))
+        LEFT_HOME_PAGE -> leftSlots.getOrNull(homeCellLocal(index))
         in 0..Int.MAX_VALUE -> slots.getOrNull(index)
         else -> null
     }
     fun indexOfShortcut(id: String): Int? {
         val leading = leadingSlots.indexOf(id)
         if (leading >= 0) return homeCellIndex(-1, leading)
+        val left = leftSlots.indexOf(id)
+        if (left >= 0) return homeCellIndex(LEFT_HOME_PAGE, left)
         return slots.indexOf(id).takeIf { it >= 0 }
     }
     fun slotsForPage(page: Int): List<String?> = when {
         page == -1 -> normalizedLeadingSlots(leadingSlots)
+        page == LEFT_HOME_PAGE -> normalizedLeadingSlots(leftSlots)
         page >= 0 -> List(HOME_CELLS) { local -> slots.getOrNull(homeCellIndex(page, local)) }
         else -> emptyList()
     }
-    fun withSlot(index: Int, value: String?): HomeLayout = if (homeCellPage(index) == -1) {
-        copy(leadingSlots = normalizedLeadingSlots(leadingSlots).toMutableList().apply { this[homeCellLocal(index)] = value })
+    fun withSlot(index: Int, value: String?): HomeLayout = if (homeCellPage(index) < 0) {
+        withSidePage(homeCellPage(index), slotsForPage(homeCellPage(index)).toMutableList().apply { this[homeCellLocal(index)] = value })
     } else {
         val next = slots.toMutableList().apply { while (size <= index) add(null); this[index] = value }
         copy(slots = next.dropLastWhile { it == null })
     }
+    /** This layout with [cells] as the page left of the first Home page, either of the two. */
+    private fun withSidePage(page: Int, cells: List<String?>) =
+        if (page == LEFT_HOME_PAGE) copy(leftSlots = cells) else copy(leadingSlots = cells)
+    /** Everything [id] can stand on, without it; [keepPage] is left as it is. */
+    private fun withoutShortcutExcept(id: String, keepPage: Int?) = copy(
+        slots = if (keepPage != null && keepPage >= 0) slots else slots.map { it?.takeUnless(id::equals) }.dropLastWhile { it == null },
+        leadingSlots = if (keepPage == -1) leadingSlots else normalizedLeadingSlots(leadingSlots).map { it?.takeUnless(id::equals) },
+        leftSlots = if (keepPage == LEFT_HOME_PAGE) leftSlots else normalizedLeadingSlots(leftSlots).map { it?.takeUnless(id::equals) },
+    )
+    /** [cells] on the side page [page], holding [id], which leaves every other Home page and the dock. */
+    fun placedOnSidePage(page: Int, cells: List<String?>, id: String) =
+        withSidePage(page, cells).withoutShortcutExcept(id, page).copy(dock = dock.map { it?.takeUnless(id::equals) })
+    /** [id] off every Home page except an ordinary one, which the caller has already written. */
+    fun withoutSideShortcut(id: String) = withoutShortcutExcept(id, 0)
 }
 
 sealed interface DropTarget {
@@ -123,7 +148,7 @@ fun canPlaceInDock(layout: HomeLayout, id: String): Boolean =
         (id in layout.dock || layout.dock.any { it == null })
 
 fun WidgetPlacement.coveredIndices(): Set<Int> {
-    if (page < -1) return emptySet()
+    if (page < LEFT_HOME_PAGE) return emptySet()
     return buildSet {
         repeat(spanY) { y -> repeat(spanX) { x ->
             if (row + y < GRID_ROWS) add(homeCellIndex(page, (row + y) * GRID_COLUMNS + column + x))
@@ -132,7 +157,7 @@ fun WidgetPlacement.coveredIndices(): Set<Int> {
 }
 
 private fun WidgetPlacement.valid() =
-    slot >= 0 && id != EMPTY_WIDGET && page >= -1 && column >= 0 && row >= 0 &&
+    slot >= 0 && id != EMPTY_WIDGET && page >= LEFT_HOME_PAGE && column >= 0 && row >= 0 &&
         spanX in 1..GRID_COLUMNS && spanY in 1..GRID_ROWS && column + spanX <= GRID_COLUMNS &&
         row + spanY <= GRID_ROWS
 
@@ -143,7 +168,7 @@ private fun overlaps(a: WidgetPlacement, b: WidgetPlacement) = a.page == b.page 
 /** Builds a non-persistable placement draft when the requested rectangle is available. */
 fun widgetCandidate(layout: HomeLayout, slot: Int, targetIndex: Int, spanX: Int, spanY: Int): WidgetPlacement? {
     val page = homeCellPage(targetIndex)
-    if (slot < 0 || page !in -1..layout.pageCount) return null
+    if (slot < 0 || page !in LEFT_HOME_PAGE..layout.pageCount) return null
     val local = homeCellLocal(targetIndex)
     val candidate = WidgetPlacement(slot, EMPTY_WIDGET, page,
         local % GRID_COLUMNS, local / GRID_COLUMNS, spanX, spanY)
@@ -167,22 +192,20 @@ fun dropApp(layout: HomeLayout, id: String, target: DropTarget): HomeLayout {
         is DropTarget.Home -> {
             val blocked = layout.unavailableCells()
             val targetPage = homeCellPage(target.index)
-            if (targetPage !in -1..layout.pageCount || target.index in blocked) return layout
-            if (targetPage == -1) {
-                val cells = normalizedLeadingSlots(layout.leadingSlots).toMutableList()
+            if (targetPage !in LEFT_HOME_PAGE..layout.pageCount || target.index in blocked) return layout
+            if (targetPage < 0) {
+                val cells = layout.slotsForPage(targetPage).toMutableList()
                 val targetLocal = homeCellLocal(target.index)
                 val sourceLocal = cells.indexOf(id)
                 cells.indices.filter { it != sourceLocal && cells[it] == id }.forEach { cells[it] = null }
-                val blockedLocal = blocked.filter { homeCellPage(it) == -1 }.mapTo(mutableSetOf(), ::homeCellLocal)
+                val blockedLocal = blocked.filter { homeCellPage(it) == targetPage }.mapTo(mutableSetOf(), ::homeCellLocal)
                 if (targetLocal in blockedLocal) return layout
                 if (sourceLocal == targetLocal) return layout
                 if (sourceLocal >= 0) {
                     if (cells[targetLocal] == null) {
                         cells[sourceLocal] = null
                         cells[targetLocal] = id
-                        return layout.copy(leadingSlots = cells,
-                            slots = layout.slots.map { it?.takeUnless(id::equals) }.dropLastWhile { it == null },
-                            dock = layout.dock.map { it?.takeUnless(id::equals) })
+                        return layout.placedOnSidePage(targetPage, cells, id)
                     }
                     val usable = (minOf(sourceLocal, targetLocal)..maxOf(sourceLocal, targetLocal)).filterNot { it in blockedLocal }
                     val from = usable.indexOf(sourceLocal); val to = usable.indexOf(targetLocal)
@@ -199,9 +222,7 @@ fun dropApp(layout: HomeLayout, id: String, target: DropTarget): HomeLayout {
                     else for (position in 0 until usable.lastIndex) cells[usable[position]] = cells[usable[position + 1]]
                     cells[targetLocal] = id
                 }
-                return layout.copy(leadingSlots = cells,
-                    slots = layout.slots.map { it?.takeUnless(id::equals) }.dropLastWhile { it == null },
-                    dock = layout.dock.map { it?.takeUnless(id::equals) })
+                return layout.placedOnSidePage(targetPage, cells, id)
             }
             val slots = layout.slots.toMutableList()
             val source = slots.indexOf(id)
@@ -233,8 +254,8 @@ fun dropApp(layout: HomeLayout, id: String, target: DropTarget): HomeLayout {
                     }
                 }
             }
-            layout.copy(slots = slots.dropLastWhile { it == null }, dock = layout.dock.map { it?.takeUnless { dockId -> dockId == id } },
-                leadingSlots = normalizedLeadingSlots(layout.leadingSlots).map { it?.takeUnless(id::equals) })
+            layout.withoutSideShortcut(id).copy(slots = slots.dropLastWhile { it == null },
+                dock = layout.dock.map { it?.takeUnless { dockId -> dockId == id } })
         }
         is DropTarget.Dock -> {
             if (target.index !in layout.dock.indices || !canPlaceInDock(layout, id)) return layout
@@ -257,8 +278,7 @@ fun dropApp(layout: HomeLayout, id: String, target: DropTarget): HomeLayout {
                     }
                 }
             }
-            layout.copy(slots = layout.slots.map { it?.takeUnless { app -> app == id } }.dropLastWhile { it == null }, dock = dock,
-                leadingSlots = normalizedLeadingSlots(layout.leadingSlots).map { it?.takeUnless(id::equals) })
+            layout.withoutSideShortcut(id).copy(slots = layout.slots.map { it?.takeUnless { app -> app == id } }.dropLastWhile { it == null }, dock = dock)
         }
         else -> layout
     }
@@ -316,7 +336,7 @@ fun replaceWidgetAtSameFootprint(layout: HomeLayout, placement: WidgetPlacement)
 fun moveWidget(layout: HomeLayout, slot: Int, index: Int): HomeLayout {
     val old = layout.placement(slot) ?: return layout
     val page = homeCellPage(index)
-    if (page !in -1..layout.pageCount) return layout
+    if (page !in LEFT_HOME_PAGE..layout.pageCount) return layout
     val local = homeCellLocal(index)
     return placeWidget(layout, old.copy(page = page, column = local % GRID_COLUMNS,
         row = local / GRID_COLUMNS, spanY = old.spanY.coerceAtMost(layout.rows)))
@@ -345,7 +365,7 @@ fun removePlacement(layout: HomeLayout, source: DropTarget): HomeLayout = when (
  * Hidden rows and widget footprints are skipped, and pages are added as needed.
  */
 fun appendHomeApps(layout: HomeLayout, ids: List<String>, onNewPage: Boolean): HomeLayout {
-    val placed = (layout.slots + layout.leadingSlots + layout.dock).filterNotNull().toSet() + layout.folders.flatMap { it.appIds }
+    val placed = (layout.slots + layout.leadingSlots + layout.leftSlots + layout.dock).filterNotNull().toSet() + layout.folders.flatMap { it.appIds }
     val adding = ids.filter { it !in placed }.distinct()
     if (adding.isEmpty()) return layout
     val covered = (layout.widgetPlacements.flatMap { it.coveredIndices() } + layout.largeFolderFootprints()).filter { it >= 0 }.toSet()
@@ -389,7 +409,7 @@ fun homePagesAddedForApps(layout: HomeLayout, from: Int, count: Int): Int =
 
 /** Puts [ids] on Home from the empty cell [from], adding pages after the last one when its page is full. */
 fun addHomeAppsAt(layout: HomeLayout, ids: List<String>, from: Int): HomeLayout {
-    val placed = (layout.slots + layout.leadingSlots + layout.dock).filterNotNull().toSet() + layout.folders.flatMap { it.appIds }
+    val placed = (layout.slots + layout.leadingSlots + layout.leftSlots + layout.dock).filterNotNull().toSet() + layout.folders.flatMap { it.appIds }
     val adding = ids.filter { it !in placed }.distinct()
     return homeCellsForApps(layout, from, adding.size).zip(adding).fold(layout) { next, (cell, id) -> next.withSlot(cell, id) }
 }
@@ -471,7 +491,8 @@ fun upgradeLegacyPlacement(placement: WidgetPlacement): WidgetPlacement =
 /** Rows a layout needs so that nothing it holds is hidden. */
 fun HomeLayout.requiredRows(): Int {
     val shortcutRows = (slots.indices.filter { slots[it] != null } +
-        leadingSlots.indices.filter { leadingSlots[it] != null }.map { homeCellIndex(-1, it) })
+        leadingSlots.indices.filter { leadingSlots[it] != null }.map { homeCellIndex(-1, it) } +
+        leftSlots.indices.filter { leftSlots[it] != null }.map { homeCellIndex(LEFT_HOME_PAGE, it) })
         .maxOfOrNull { homeCellLocal(it) / GRID_COLUMNS + 1 } ?: 0
     val widgetRows = widgetPlacements.filter { it.row < GRID_ROWS }.maxOfOrNull { minOf(GRID_ROWS, it.row + it.spanY) } ?: 0
     return maxOf(DEFAULT_HOME_ROWS, shortcutRows, widgetRows)
@@ -487,10 +508,12 @@ fun resizeHomeRows(layout: HomeLayout, rows: Int): HomeLayout {
     if (size >= layout.rows) return layout.copy(rows = size)
     val displacedWidgets = layout.widgetPlacements.filter { it.row < GRID_ROWS && it.row + it.spanY > size }
     val displacedLeading = layout.leadingSlots.indices.filter { layout.leadingSlots[it] != null && it / GRID_COLUMNS >= size }
+    val displacedLeft = layout.leftSlots.indices.filter { layout.leftSlots[it] != null && it / GRID_COLUMNS >= size }
     val displacedHome = layout.slots.indices.filter { layout.slots[it] != null && homeCellLocal(it) / GRID_COLUMNS >= size }
     var next = layout.copy(rows = size,
         widgetPlacements = layout.widgetPlacements - displacedWidgets.toSet(),
         leadingSlots = layout.leadingSlots.mapIndexed { index, id -> id.takeUnless { index in displacedLeading } },
+        leftSlots = layout.leftSlots.mapIndexed { index, id -> id.takeUnless { index in displacedLeft } },
         slots = layout.slots.mapIndexed { index, id -> id.takeUnless { index in displacedHome } }.dropLastWhile { it == null })
     for (widget in displacedWidgets) {
         val spanY = minOf(widget.spanY, size)
@@ -508,6 +531,9 @@ fun resizeHomeRows(layout: HomeLayout, rows: Int): HomeLayout {
     displacedLeading.forEach { local ->
         val id = layout.leadingSlots[local]
         next = next.withSlot(firstFree((0 until HOME_CELLS).asSequence().map { homeCellIndex(-1, it) } + homeCells), id)
+    }
+    displacedLeft.forEach { local ->
+        next = next.withSlot(firstFree((0 until HOME_CELLS).asSequence().map { homeCellIndex(LEFT_HOME_PAGE, it) } + homeCells), layout.leftSlots[local])
     }
     displacedHome.forEach { index ->
         val pageStart = homeCellIndex(homeCellPage(index), 0)
@@ -527,10 +553,12 @@ fun resizeHomeColumns(layout: HomeLayout, columns: Int): HomeLayout {
     fun hidden(local: Int) = local % GRID_COLUMNS >= size
     val displacedWidgets = layout.widgetPlacements.filter { it.row < GRID_ROWS && it.column + it.spanX > size }
     val displacedLeading = layout.leadingSlots.indices.filter { layout.leadingSlots[it] != null && hidden(it) }
+    val displacedLeft = layout.leftSlots.indices.filter { layout.leftSlots[it] != null && hidden(it) }
     val displacedHome = layout.slots.indices.filter { layout.slots[it] != null && hidden(homeCellLocal(it)) }
     var next = layout.copy(columns = size,
         widgetPlacements = layout.widgetPlacements - displacedWidgets.toSet(),
         leadingSlots = layout.leadingSlots.mapIndexed { index, id -> id.takeUnless { index in displacedLeading } },
+        leftSlots = layout.leftSlots.mapIndexed { index, id -> id.takeUnless { index in displacedLeft } },
         slots = layout.slots.mapIndexed { index, id -> id.takeUnless { index in displacedHome } }.dropLastWhile { it == null })
     for (widget in displacedWidgets) {
         val spanX = minOf(widget.spanX, size)
@@ -548,6 +576,9 @@ fun resizeHomeColumns(layout: HomeLayout, columns: Int): HomeLayout {
     displacedLeading.forEach { local ->
         next = next.withSlot(firstFree((0 until HOME_CELLS).asSequence().map { homeCellIndex(-1, it) } + homeCells),
             layout.leadingSlots[local])
+    }
+    displacedLeft.forEach { local ->
+        next = next.withSlot(firstFree((0 until HOME_CELLS).asSequence().map { homeCellIndex(LEFT_HOME_PAGE, it) } + homeCells), layout.leftSlots[local])
     }
     displacedHome.forEach { index ->
         val pageStart = homeCellIndex(homeCellPage(index), 0)
