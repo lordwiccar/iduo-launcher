@@ -136,6 +136,7 @@
     </plurals>
     <string name="profile_personal">Privat</string>
     <string name="profile_work">Arbeit</string>
+    <string name="profile_clone">Klon</string>
     <string name="profile_label">Profil: %1$s</string>
     <string name="profile_unavailable">%1$s – nicht verfügbar</string>
     <string name="profile_unavailable_long">Profil „%1$s“ ist nicht verfügbar</string>

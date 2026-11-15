@@ -122,6 +122,7 @@
     </plurals>
     <string name="profile_personal">个人</string>
     <string name="profile_work">工作</string>
+    <string name="profile_clone">克隆</string>
     <string name="profile_label">%1$s资料</string>
     <string name="profile_unavailable">%1$s不可用</string>
     <string name="profile_unavailable_long">%1$s资料不可用</string>

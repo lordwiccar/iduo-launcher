@@ -74,6 +74,7 @@ object AppLanguage {
 internal fun profileName(label: String): String = when (label) {
     "Personal" -> androidx.compose.ui.res.stringResource(R.string.profile_personal)
     "Work" -> androidx.compose.ui.res.stringResource(R.string.profile_work)
+    "Clone" -> androidx.compose.ui.res.stringResource(R.string.profile_clone)
     else -> label
 }
 

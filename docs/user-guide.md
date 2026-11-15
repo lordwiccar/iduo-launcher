@@ -49,6 +49,8 @@ Long press and release an app on Home, in the dock or in All apps for a menu bes
 
 If Android exposes a managed profile, **All apps** shows **Personal** and **Work** filters. A paused profile shows **Work apps are paused** and **Turn on work apps**. Availability and cross-profile widget access remain controlled by the profile administrator.
 
+Apps cloned with Samsung's Dual Messenger, or Android's own app cloning, are listed with the personal apps, right after their originals and marked with Android's badge. Put them on Home, in the dock or in folders like any other app; uninstalling a clone removes only the clone.
+
 ## Widgets
 
 Open **Widgets** from an empty-space menu, **Add widget to this page** under **Settings → Home**, or **Add a widget** during setup. Search the catalog, select **Personal** or **Work** when those choices exist, then tap a preview to place it, which opens its resize frame, or hold it to drag. Android may ask you to allow the binding, and some providers open their own setup screen.

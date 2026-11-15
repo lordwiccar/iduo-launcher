@@ -97,4 +97,12 @@ class ProfileSupportTest {
         assertEquals(emptyMap<String, String>(), renamedActivityIds(listOf("com.gone/.Main", folder),
             listOf("com.other/.Main"), personalSerial = 0))
     }
+
+    @Test fun cloneProfilesAreAndroidsAndSamsungsDualMessenger() {
+        assertEquals(true, isCloneUserType("android.os.usertype.profile.CLONE"))
+        assertEquals(true, isCloneUserType("com.samsung.android.usertype.profile.DUAL_APP"))
+        assertEquals(false, isCloneUserType("android.os.usertype.profile.MANAGED"))
+        assertEquals(false, isCloneUserType("android.os.usertype.profile.PRIVATE"))
+        assertEquals(false, isCloneUserType(null))
+    }
 }

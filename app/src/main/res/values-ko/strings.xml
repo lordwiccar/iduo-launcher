@@ -122,6 +122,7 @@
     </plurals>
     <string name="profile_personal">개인</string>
     <string name="profile_work">업무</string>
+    <string name="profile_clone">복제</string>
     <string name="profile_label">%1$s 프로필</string>
     <string name="profile_unavailable">%1$s 사용 불가</string>
     <string name="profile_unavailable_long">%1$s 프로필을 사용할 수 없습니다</string>

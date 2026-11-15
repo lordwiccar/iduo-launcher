@@ -122,6 +122,7 @@
     </plurals>
     <string name="profile_personal">個人用</string>
     <string name="profile_work">仕事用</string>
+    <string name="profile_clone">クローン</string>
     <string name="profile_label">%1$sプロファイル</string>
     <string name="profile_unavailable">%1$sは利用できません</string>
     <string name="profile_unavailable_long">%1$sプロファイルは利用できません</string>

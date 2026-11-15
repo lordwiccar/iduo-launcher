@@ -138,6 +138,7 @@
     </plurals>
     <string name="profile_personal">Osobní</string>
     <string name="profile_work">Pracovní</string>
+    <string name="profile_clone">Klon</string>
     <string name="profile_label">Profil: %1$s</string>
     <string name="profile_unavailable">%1$s – nedostupné</string>
     <string name="profile_unavailable_long">Profil %1$s není dostupný</string>

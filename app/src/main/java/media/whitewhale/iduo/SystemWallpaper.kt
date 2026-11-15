@@ -80,8 +80,7 @@ internal object SystemWallpaper {
     fun verify(context: Context) {
         if (applying > 0) return
         val mirrored = mirroredWallpaperId(context)
-        val current = homeWallpaperId(context)
-        val valid = mirrored != null && current != null && mirrored == current
+        val valid = mirrored != null && mirrored in homeWallpaperIds(context)
         if (!valid && (mirrored != null || launcherBackgroundEnabled(context))) forgetWallpaperMirror(context)
         mirrorsBundled = valid && mirrorIsBundled(context)
         if (mirrorsBundled && DefaultWallpaper.bitmap == null) {
@@ -115,8 +114,25 @@ internal object SystemWallpaper {
         return if (target.changesHome) homeWallpaperId(context) else null
     }
 
-    private fun homeWallpaperId(context: Context): Int? = runCatching {
-        WallpaperManager.getInstance(context).getWallpaperId(WallpaperManager.FLAG_SYSTEM)
+    /** The Home wallpaper's id; on a Samsung foldable, the one of the screen in use, as setting it changes only that one. */
+    private fun homeWallpaperId(context: Context): Int? = wallpaperId(context, WallpaperManager.FLAG_SYSTEM)
+
+    /**
+     * Ids of every Home wallpaper Android shows. Samsung foldables keep one per screen, and the
+     * plain Home flag reports the folded or unfolded screen's, so comparing against it alone
+     * took folding the phone for a wallpaper changed elsewhere and dropped iDuo's mirror.
+     */
+    private fun homeWallpaperIds(context: Context): Set<Int> {
+        val flags = mutableListOf(WallpaperManager.FLAG_SYSTEM)
+        if (Build.MANUFACTURER.equals("samsung", ignoreCase = true)) {
+            flags += WallpaperManager.FLAG_SYSTEM or SAMSUNG_MAIN_DISPLAY
+            flags += WallpaperManager.FLAG_SYSTEM or SAMSUNG_SUB_DISPLAY
+        }
+        return flags.mapNotNull { wallpaperId(context, it) }.toSet()
+    }
+
+    private fun wallpaperId(context: Context, which: Int): Int? = runCatching {
+        WallpaperManager.getInstance(context).getWallpaperId(which)
     }.getOrNull()?.takeIf { it > 0 }
 }
 

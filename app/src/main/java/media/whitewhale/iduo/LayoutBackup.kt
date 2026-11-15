@@ -55,7 +55,7 @@ fun encodeLayoutBackup(state: LauncherState, widgetDescriptors: List<BackupWidge
     require(inner.leadingSlots.size == HOME_CELLS) { "Unfolded-only page must contain exactly $HOME_CELLS cells" }
     val apps = JSONArray().also { array -> state.apps.forEach { app -> array.put(JSONObject()
         .put("id", app.id).put("label", app.label).put("component", app.component.flattenToString())
-        .put("userSerial", app.userSerial).put("profileLabel", app.profileLabel).put("work", app.isWork)) } }
+        .put("userSerial", app.userSerial).put("profileLabel", app.profileLabel).put("work", app.inOtherProfile)) } }
     fun preset(value: LayoutPreset) = JSONObject().put("iconSize", value.iconSize).put("rowGap", value.rowGap)
         .put("dockWidth", value.dockWidth).put("dockPosition", value.dockPosition).put("dockAlignToGrid", value.dockAlignToGrid)
     val root = JSONObject().put("version", LAYOUT_BACKUP_VERSION).put("sourceScope", sourceScope).put("apps", apps)
@@ -119,7 +119,7 @@ fun decodeLayoutBackup(raw: String, currentApps: List<AppEntry>, currentProfiles
         if (item.strictBoolean("work")) require(identity.userSerial == serial) else require(identity.userSerial == null)
         id to item.getString("label")
     } }.also { entries -> require(entries.map { it.first }.distinct().size == entries.size) }.toMap()
-    val available = currentApps.filter { !it.isWork || sameScope }.mapTo(mutableSetOf(), AppEntry::id)
+    val available = currentApps.filter { !it.inOtherProfile || sameScope }.mapTo(mutableSetOf(), AppEntry::id)
     val missing = linkedSetOf<String>()
     fun importedApp(id: String?): String? {
         if (id == null) return null

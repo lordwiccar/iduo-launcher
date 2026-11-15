@@ -6,7 +6,7 @@
 
 A native Android launcher built around a right-side dock and a home screen that makes room when you unfold your phone.
 
-**Version 1.1.8 · Android 12 or later.** Built and tested on the Galaxy Z Fold 7 (cover and inner displays) and a matching emulator. The left page shows Google News headlines, your own RSS feeds or an extra Home page.
+**Version 1.1.9 · Android 12 or later.** Built and tested on the Galaxy Z Fold 7 (cover and inner displays) and a matching emulator. The left page shows Google News headlines, your own RSS feeds or an extra Home page.
 
 <p>
   <img src="docs/images/iduo-cover.png" width="49%" alt="Home on the cover screen with large folders and the right-side dock, beside Wallpaper and appearance settings">
@@ -16,14 +16,14 @@ A native Android launcher built around a right-side dock and a home screen that 
   <img src="docs/images/iduo-settings.png" width="49%" alt="Home and dock settings, with a live preview for the cover or inner screen">
 </p>
 
-**Start here:** [User guide](docs/user-guide.md) · [Troubleshooting](docs/troubleshooting.md) · [Release notes](docs/releases/1.1.8.md) · [Privacy policy](docs/privacy-policy.md)
+**Start here:** [User guide](docs/user-guide.md) · [Troubleshooting](docs/troubleshooting.md) · [Release notes](docs/releases/1.1.9.md) · [Privacy policy](docs/privacy-policy.md)
 
 ## Features
 
 - A persistent right-side dock and vertical Home status indicators.
 - Overlapping unfolded page pairs: an extra workspace beside Home 1, then Home 1 beside Home 2, and so on.
 - Android widgets, visual widget selection, resizing, native scrolling, and drag-and-drop between pages.
-- App dragging, pages created during an edge drag, Home folders made by dropping one app onto another, and separate personal/work catalogs where device policy permits.
+- App dragging, pages created during an edge drag, Home folders made by dropping one app onto another, and separate personal/work catalogs where device policy permits, and apps cloned with Samsung's Dual Messenger beside their originals.
 - All apps as an alphabetical list, a paged grid or right on the Home pages, Home search for apps and Google with a swipe up, and a left news page with Google News or your own RSS feeds.
 - Full-screen Settings with search, a live Home preview, and a list beside the open section on the inner screen.
 - A Home grid of one to six rows of apps, widgets you resize freely by their corners, and four to eight dock apps; on the cover screen the dock can slide in from the edge or hide.

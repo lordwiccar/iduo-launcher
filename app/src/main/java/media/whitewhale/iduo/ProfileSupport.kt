@@ -16,6 +16,8 @@ data class AppProfile(
     val quiet: Boolean,
     val unlocked: Boolean,
     val available: Boolean,
+    /** Second copies of personal apps (Dual Messenger), listed with them rather than as a work profile. */
+    val isClone: Boolean = false,
 )
 
 private const val PROFILE_APP_PREFIX = "duo-profile:v1:"
@@ -83,6 +85,19 @@ fun renamedActivityIds(savedIds: Collection<String>, availableIds: Collection<St
 
 /** API 35 identifies managed profiles exactly; earlier LauncherApps exposed associated managed profiles. */
 fun isSupportedWorkProfile(launcherApps: LauncherApps, user: UserHandle): Boolean =
-    Build.VERSION.SDK_INT < 35 || runCatching {
-        launcherApps.getLauncherUserInfo(user)?.userType == UserManager.USER_TYPE_PROFILE_MANAGED
-    }.getOrDefault(false)
+    Build.VERSION.SDK_INT < 35 || launcherUserType(launcherApps, user) == UserManager.USER_TYPE_PROFILE_MANAGED
+
+/**
+ * True for a profile holding second copies of personal apps: Android's clone profile, or Samsung's
+ * Dual Messenger. Their apps belong with the personal ones, told apart by Android's badge.
+ */
+fun isCloneProfile(launcherApps: LauncherApps, user: UserHandle): Boolean =
+    Build.VERSION.SDK_INT >= 35 && isCloneUserType(launcherUserType(launcherApps, user))
+
+/** Android's clone profile, and Samsung's own type for Dual Messenger. */
+fun isCloneUserType(type: String?): Boolean =
+    type != null && (type == "android.os.usertype.profile.CLONE" || type.contains("DUAL_APP", ignoreCase = true))
+
+private fun launcherUserType(launcherApps: LauncherApps, user: UserHandle): String? =
+    if (Build.VERSION.SDK_INT < 35) null
+    else runCatching { launcherApps.getLauncherUserInfo(user)?.userType }.getOrNull()

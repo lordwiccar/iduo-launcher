@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.9
+
+Google Play release (version code 12).
+
+### New features
+- Apps cloned with Samsung's Dual Messenger (Android's clone profile) appear in All apps next to their originals, with Android's badge, and can be put on Home, in the dock and in folders.
+
+### Fixes
+- Samsung foldables: folding or unfolding the phone no longer makes iDuo forget a wallpaper it set. Liquid glass kept bending the wallpaper only until then, and Home could lose the photo's chosen position.
+
 ## 1.1.8
 
 Google Play release (version code 11).

@@ -33,6 +33,7 @@ docs/releases/*
 !docs/releases/1.1.6.md
 !docs/releases/1.1.7.md
 !docs/releases/1.1.8.md
+!docs/releases/1.1.9.md
 !docs/images/
 docs/images/*
 !docs/images/*.png
